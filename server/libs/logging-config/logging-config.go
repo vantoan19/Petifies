@@ -87,7 +87,7 @@ func NewLogger(name string) *Logger {
 	}
 }
 
-func (l *Logger) logString(level LoggingLevel, message *string, data *Data) (string, error) {
+func (l *Logger) logString(level LoggingLevel, message string, data *Data) (string, error) {
 	loggerLevel, ok := levelCodes[l.Level]
 	if !ok {
 		return "", errors.New("Unrecognized level")
@@ -113,17 +113,17 @@ func (l *Logger) logString(level LoggingLevel, message *string, data *Data) (str
 	}
 
 	s := "" +
-		colorizeMessge(&timestamp, Green) + "\t" +
-		colorizeMessge(&pID, Blue) + "\t" +
-		colorizeLogLevel(&level) + "\t" +
-		colorizeMessge(&loggerName, Purple) + "\t" +
-		*message + "\t" +
+		colorizeMessge(timestamp, Green) + "\t" +
+		colorizeMessge(pID, Blue) + "\t" +
+		colorizeLogLevel(level) + "\t" +
+		colorizeMessge(loggerName, Purple) + "\t" +
+		message + "\t" +
 		"data = " + string(data_)
 
 	return s, nil
 }
 
-func (l *Logger) log(level LoggingLevel, message *string, data *Data) {
+func (l *Logger) log(level LoggingLevel, message string, data *Data) {
 	msg, err := l.logString(level, message, data)
 	if err != nil {
 		return
@@ -132,77 +132,77 @@ func (l *Logger) log(level LoggingLevel, message *string, data *Data) {
 }
 
 func (l *Logger) DebugData(message string, data Data) {
-	l.log(Debug, &message, &data)
+	l.log(Debug, message, &data)
 }
 
 func (l *Logger) InfoData(message string, data Data) {
-	l.log(Info, &message, &data)
+	l.log(Info, message, &data)
 }
 
 func (l *Logger) NoticeData(message string, data Data) {
-	l.log(Notice, &message, &data)
+	l.log(Notice, message, &data)
 }
 
 func (l *Logger) WarningData(message string, data Data) {
-	l.log(Warning, &message, &data)
+	l.log(Warning, message, &data)
 }
 
 func (l *Logger) ErrorData(message string, data Data) {
-	l.log(Error, &message, &data)
+	l.log(Error, message, &data)
 }
 
 func (l *Logger) CriticalData(message string, data Data) {
-	l.log(Critical, &message, &data)
+	l.log(Critical, message, &data)
 }
 
 func (l *Logger) AlertData(message string, data Data) {
-	l.log(Alert, &message, &data)
+	l.log(Alert, message, &data)
 }
 
 func (l *Logger) EmergencyData(message string, data Data) {
-	l.log(Emergency, &message, &data)
+	l.log(Emergency, message, &data)
 }
 
 func (l *Logger) Debug(message string) {
-	l.log(Debug, &message, &Data{})
+	l.log(Debug, message, &Data{})
 }
 
 func (l *Logger) Info(message string) {
-	l.log(Info, &message, &Data{})
+	l.log(Info, message, &Data{})
 }
 
 func (l *Logger) Notice(message string) {
-	l.log(Notice, &message, &Data{})
+	l.log(Notice, message, &Data{})
 }
 
 func (l *Logger) Warning(message string) {
-	l.log(Warning, &message, &Data{})
+	l.log(Warning, message, &Data{})
 }
 
 func (l *Logger) Error(message string) {
-	l.log(Error, &message, &Data{})
+	l.log(Error, message, &Data{})
 }
 
 func (l *Logger) Critical(message string) {
-	l.log(Critical, &message, &Data{})
+	l.log(Critical, message, &Data{})
 }
 
 func (l *Logger) Alert(message string) {
-	l.log(Alert, &message, &Data{})
+	l.log(Alert, message, &Data{})
 }
 
 func (l *Logger) Emergency(message string) {
-	l.log(Emergency, &message, &Data{})
+	l.log(Emergency, message, &Data{})
 }
 
-func parseLogLevel(logLevel *string) (LoggingLevel, error) {
-	logLevel_ := LoggingLevel(strings.ToUpper(*logLevel))
+func parseLogLevel(logLevel string) (LoggingLevel, error) {
+	logLevel_ := LoggingLevel(strings.ToUpper(logLevel))
 
 	if _, ok := levelCodes[logLevel_]; ok {
 		return logLevel_, nil
 	}
 
-	return Undefined, errors.New("Unrecognized logging level: " + *logLevel + ". Using INFO as default.")
+	return Undefined, errors.New("Unrecognized logging level: " + logLevel + ". Using INFO as default.")
 }
 
 func isDevEnv() bool {
@@ -211,7 +211,7 @@ func isDevEnv() bool {
 
 func getEnvLogLevel() LoggingLevel {
 	if envLogLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
-		if level, err := parseLogLevel(&envLogLevel); err != nil {
+		if level, err := parseLogLevel(envLogLevel); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return Info
 		} else {
@@ -222,21 +222,21 @@ func getEnvLogLevel() LoggingLevel {
 	return Info
 }
 
-func colorizeMessge(msg *string, color string) string {
+func colorizeMessge(msg string, color string) string {
 	if !isDevEnv() {
-		return *msg
+		return msg
 	}
 
-	return color + *msg + Reset
+	return color + msg + Reset
 }
 
-func colorizeLogLevel(level *LoggingLevel) string {
-	level_ := fmt.Sprintf(defaultLogLevelTemplate, *level)
+func colorizeLogLevel(level LoggingLevel) string {
+	level_ := fmt.Sprintf(defaultLogLevelTemplate, level)
 	if !isDevEnv() {
 		return level_
 	}
 
-	switch *level {
+	switch level {
 	case Debug:
 		return Gray + level_ + Reset
 	case Info:
