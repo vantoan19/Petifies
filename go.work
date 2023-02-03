@@ -1,8 +1,11 @@
 go 1.19
 
 use (
+	./server/libs/common-utils
+	./server/libs/config-utils
 	./server/libs/grpcutils
 	./server/libs/logging-config
-	./server/services/api-gateway
-	./server/services/auth-service
+	./server/services/mobile-api-gateway
+	./server/services/user-services/auth-service
+	./server/services/user-services/user-service
 )

@@ -1,2 +1,6 @@
 *.pem
 *.srl
+*.key
+*.crt
+access_token
+/build

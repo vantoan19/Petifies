@@ -1,0 +1,4 @@
+GrpcPort: 8888
+Domain:
+TLSKeyPath: "/Users/toantran/Projects/GoWorkspace/src/github.com/vantoan19/Petifies/cert/tls.key"
+TLSCertPath: "/Users/toantran/Projects/GoWorkspace/src/github.com/vantoan19/Petifies/cert/tls.crt" 

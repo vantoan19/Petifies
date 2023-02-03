@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	common "github.com/vantoan19/Petifies/server/libs/common-utils"
 )
 
 type LoggingLevel string
@@ -75,7 +77,7 @@ var levelCodes = map[LoggingLevel]int{
 func NewLogger(name string) *Logger {
 	var level LoggingLevel
 
-	if isDevEnv() {
+	if common.IsDevEnv() {
 		level = Debug
 	} else {
 		level = getEnvLogLevel()
@@ -205,10 +207,6 @@ func parseLogLevel(logLevel string) (LoggingLevel, error) {
 	return Undefined, errors.New("Unrecognized logging level: " + logLevel + ". Using INFO as default.")
 }
 
-func isDevEnv() bool {
-	return os.Getenv("SERVER_MODE") == "development"
-}
-
 func getEnvLogLevel() LoggingLevel {
 	if envLogLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
 		if level, err := parseLogLevel(envLogLevel); err != nil {
@@ -223,7 +221,7 @@ func getEnvLogLevel() LoggingLevel {
 }
 
 func colorizeMessge(msg string, color string) string {
-	if !isDevEnv() {
+	if !common.IsDevEnv() {
 		return msg
 	}
 
@@ -232,7 +230,7 @@ func colorizeMessge(msg string, color string) string {
 
 func colorizeLogLevel(level LoggingLevel) string {
 	level_ := fmt.Sprintf(defaultLogLevelTemplate, level)
-	if !isDevEnv() {
+	if !common.IsDevEnv() {
 		return level_
 	}
 

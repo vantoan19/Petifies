@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  mobile-api-gateway:
+    build: 
+      context: ../
+      dockerfile: ./server/services/mobile-api-gateway/Dockerfile
+    restart: always
+    volumes:
+      - ../build/server/mobileApiGateway:/app/mobileApiGateway
+    ports:
+      - "443:8888"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      - SERVER_MODE=development
