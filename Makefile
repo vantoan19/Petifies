@@ -16,7 +16,7 @@ up_build: gen_cert gen_proto build_mobile_api_gateway build_auth_service
 	@echo "Stopping docker images"
 	cd server; docker-compose down
 	@echo "Building and starting docker images..."
-	cd server; docker-compose up --build 
+	cd server; docker-compose up --build -d
 
 ## down: stop docker compose
 down:
