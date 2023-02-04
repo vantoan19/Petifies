@@ -12,7 +12,7 @@ up:
 	cd server; docker-compose up 
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: build_mobile_api_gateway build_auth_service
+up_build: gen_cert gen_proto build_mobile_api_gateway build_auth_service
 	@echo "Stopping docker images"
 	cd server; docker-compose down
 	@echo "Building and starting docker images..."
@@ -37,5 +37,11 @@ build_auth_service:
 	@echo "Done!"
 
 ## gen: generates TLS certificates 
-gen-cert:
+gen_cert:
+	@echo "Generating certs"
 	cd cert; ./dev-cert-gen.sh; cd ..
+
+# gen_proto: generates proto files
+gen_proto:
+	@echo "Generating proto stubs"
+	cd proto; ./generate.sh;
