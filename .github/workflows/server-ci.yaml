@@ -32,9 +32,9 @@ jobs:
         jq --version
         go mod download
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-        go install github.com/golang/protobuf/{proto,protoc-gen-go}@latest
-        go install github.com/golang/protobuf/protoc-gen-go
-        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+        export PATH="$PATH:$(go env GOPATH)/bin"
         make gen_proto
 
     - name: Linting
