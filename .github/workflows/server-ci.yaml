@@ -25,6 +25,7 @@ jobs:
         jq --version
         go mod download
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        make gen_proto
 
     - name: Linting
       run: |
