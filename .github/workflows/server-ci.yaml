@@ -23,9 +23,11 @@ jobs:
         sudo apt update
         sudo apt install -y jq
         sudo apt install -y protobuf-compiler
+        sudo apt install golang-goprotobuf-dev
         jq --version
         go mod download
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        go install github.com/golang/protobuf/{proto,protoc-gen-go}@latest
         make gen_proto
 
     - name: Linting
