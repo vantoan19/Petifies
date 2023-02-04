@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option go_package = "github.com/vantoan19/Petifies/proto/public-gateway/v1";
+
+message HelloWorldRequest {}
+message HelloWroldResponse {}
+
+service PublicGateway {
+    rpc SayHello(HelloWorldRequest) returns (HelloWroldResponse) {}
+}

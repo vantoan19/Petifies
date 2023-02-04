@@ -4,3 +4,4 @@
 *.crt
 access_token
 /build
+*pb.go

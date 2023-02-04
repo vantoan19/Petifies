@@ -9,26 +9,30 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
+	authProtoV1 "github.com/vantoan19/Petifies/proto/auth-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
-	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/config"
-	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/interceptors/auth"
+	"github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/config"
+	authenEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/endpoints/grpc/v1/authenticate"
+	authenService "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/service/authenticate"
+	authServerV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/transport/grpc/v1"
 )
 
-var logger = logging.NewLogger("Mobile.APIGateway")
+var logger = logging.NewLogger("AuthService")
 
 func setupGRPC() (*grpc.Server, error) {
-	logger.Info("Setting up GRPC server for Mobile API Gateway")
+	logger.Info("Setting up GRPC server for Auth Service")
 
 	interceptors := grpcutils.ServerInterceptors{
-		UnaryInterceptors:  []grpc.UnaryServerInterceptor{auth.Auth.GetUnaryAuthInterceptor()},
-		StreamInterceptors: []grpc.StreamServerInterceptor{auth.Auth.GetStreamAuthInterceptor()},
+		UnaryInterceptors:  []grpc.UnaryServerInterceptor{},
+		StreamInterceptors: []grpc.StreamServerInterceptor{},
 	}
 
-	s, err := grpcutils.NewTLSGrpcServer(config.Conf.TLSKeyPath, config.Conf.TLSCertPath, interceptors)
+	s, err := grpcutils.NewInsecureGrpcServer(interceptors)
 	if err != nil {
-		logger.ErrorData("Failed to create new TLS GRPC server", logging.Data{"error": err.Error()})
+		logger.ErrorData("Failed to create new GRPC server", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
@@ -45,12 +49,17 @@ func serveGRPC(grpcServer *grpc.Server) {
 		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": config.Conf.GrpcPort})
 	}
 
+	authenSvc := authenService.NewAuthenticateService()
+	authenEndpoints := authenEndpointsV1.MakeAuthenticateEndpoint(authenSvc)
+	authProtoV1.RegisterAuthServer(grpcServer, authServerV1.NewGRPCAuthServer(authenEndpoints))
+
+	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {
 		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": config.Conf.GrpcPort})
 	}
 
-	logger.Info("Shutting down GRPC server for Mobile API Gateway")
+	logger.Info("Shutting down GRPC server")
 }
 
 func actualMain() {

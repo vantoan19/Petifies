@@ -1,6 +1,7 @@
 go 1.19
 
 use (
+	./proto
 	./server/libs/common-utils
 	./server/libs/config-utils
 	./server/libs/grpcutils
