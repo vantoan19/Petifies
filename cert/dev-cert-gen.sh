@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm ca.key ca.crt tls.key req.pem tls.crt ca.srl
 # Generate CA's private key & self-signed cert
 openssl req -x509 -newkey rsa:4096 -nodes -days 365 -keyout ca.key -out ca.crt -subj "/C=HU/ST=Budapest/L=Budapest/O=Petifies/OU=Petifies/CN=petifies.com/emailAddress=vantoan.hk14@gmail.com"
