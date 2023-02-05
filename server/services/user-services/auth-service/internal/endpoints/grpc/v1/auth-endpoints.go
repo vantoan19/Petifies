@@ -1,11 +1,11 @@
-package authenendpointsv1
+package v1
 
 import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
 
-	authenService "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/service/authenticate"
+	authenService "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/service"
 )
 
 type AuthenticateEndpoints struct {

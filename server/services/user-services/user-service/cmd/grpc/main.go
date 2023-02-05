@@ -11,13 +11,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	authProtoV1 "github.com/vantoan19/Petifies/proto/auth-service/v1"
+	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
-	"github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/config"
-	authEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/endpoints/grpc/v1"
-	authService "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/service"
-	authServerV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/transport/grpc/v1"
+	"github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/config"
+	userEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/endpoints/grpc/v1"
+	userService "github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/service"
+	userServerV1 "github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/transport/grpc/v1"
 )
 
 var logger = logging.NewLogger("AuthService")
@@ -49,9 +49,9 @@ func serveGRPC(grpcServer *grpc.Server) {
 		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": config.Conf.GrpcPort})
 	}
 
-	authSvc := authService.NewAuthenticateService()
-	authEndpoints := authEndpointsV1.MakeAuthenticateEndpoint(authSvc)
-	authProtoV1.RegisterAuthServer(grpcServer, authServerV1.NewGRPCAuthServer(authEndpoints))
+	userSvc := userService.NewUserService()
+	userEndpoints := userEndpointsV1.MakeAuthenticateEndpoint(userSvc)
+	userProtoV1.RegisterUserServer(grpcServer, userServerV1.NewGRPCUserServer(userEndpoints))
 
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)

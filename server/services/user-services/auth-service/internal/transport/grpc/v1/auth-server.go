@@ -1,4 +1,4 @@
-package authserverv1
+package v1
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 
 	authProtoV1 "github.com/vantoan19/Petifies/proto/auth-service/v1"
-	authenEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/endpoints/grpc/v1/authenticate"
+	authEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/endpoints/grpc/v1"
 )
 
 type gRPCAuthServer struct {
 	sayHello grpctransport.Handler
 }
 
-func NewGRPCAuthServer(endpoints authenEndpointsV1.AuthenticateEndpoints) authProtoV1.AuthServer {
+func NewGRPCAuthServer(endpoints authEndpointsV1.AuthenticateEndpoints) authProtoV1.AuthServer {
 	return &gRPCAuthServer{
 		sayHello: grpctransport.NewServer(
 			endpoints.SayHello,
@@ -32,10 +32,10 @@ func (s *gRPCAuthServer) SayHello(ctx context.Context, req *authProtoV1.HelloWor
 }
 
 func decodeSayHelloRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return authenEndpointsV1.SayHelloReq{}, nil
+	return authEndpointsV1.SayHelloReq{}, nil
 }
 
 func encodeMathResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(authenEndpointsV1.SayHelloResp)
+	resp := response.(authEndpointsV1.SayHelloResp)
 	return &authProtoV1.HelloWorldResponse{Greeting: resp.Greeting}, nil
 }

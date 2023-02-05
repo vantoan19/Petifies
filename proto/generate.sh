@@ -1,6 +1,6 @@
 #!/bin/bash
 MODULE_PREFIX="github.com/vantoan19/Petifies/proto"
-FOLDERS=("auth-gateway" "public-gateway" "auth-service")
+FOLDERS=("auth-gateway" "public-gateway" "auth-service" "user-service")
 
 
 for folder in "${FOLDERS[@]}"

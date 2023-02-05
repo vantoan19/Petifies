@@ -4,6 +4,7 @@ use (
 	./proto
 	./server/libs/common-utils
 	./server/libs/config-utils
+	./server/libs/dbutils
 	./server/libs/grpcutils
 	./server/libs/logging-config
 	./server/services/mobile-api-gateway

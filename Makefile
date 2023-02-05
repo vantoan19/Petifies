@@ -2,9 +2,11 @@ GO_BUILD_DIR=./build/server
 
 MOBILE_API_GATEWAY_BINARY=mobileApiGateway
 AUTH_SERVICE_BINARY=authService
+USER_SERVICE_BINARY=userService
 
 MOBILE_API_GATEWAY_MAIN=./server/services/mobile-api-gateway/cmd/grpc
 AUTH_SERVICE_MAIN=./server/services/user-services/auth-service/cmd/grpc
+USER_SERVICE_MAIN=./server/services/user-services/user-service/cmd/grpc
 
 ## up: starts all containers in the background without forcing build
 up:
@@ -12,11 +14,11 @@ up:
 	cd server; docker-compose up 
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: gen_cert gen_proto build_mobile_api_gateway build_auth_service
+up_build: gen_cert gen_proto build_mobile_api_gateway build_auth_service build_user_service
 	@echo "Stopping docker images"
 	cd server; docker-compose down
 	@echo "Building and starting docker images..."
-	cd server; docker-compose up --build -d
+	cd server; docker-compose up --build
 
 ## down: stop docker compose
 down:
@@ -36,6 +38,12 @@ build_auth_service:
 	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${AUTH_SERVICE_BINARY} ${AUTH_SERVICE_MAIN}
 	@echo "Done!"
 
+## build_broker: builds the broker binary as a linux executable
+build_user_service:
+	@echo "Building auth service binary..."
+	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${USER_SERVICE_BINARY} ${USER_SERVICE_MAIN}
+	@echo "Done!"
+
 ## gen: generates TLS certificates 
 gen_cert:
 	@echo "Generating certs"
@@ -45,3 +53,6 @@ gen_cert:
 gen_proto:
 	@echo "Generating proto stubs"
 	cd proto; ./generate.sh;
+
+format:
+	gofmt -s -w .
