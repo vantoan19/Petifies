@@ -44,4 +44,4 @@ jobs:
     - name: Bring up the server using docker compose
       id: build-image
       run: |
-        make up_build
+        make ci_up_build
