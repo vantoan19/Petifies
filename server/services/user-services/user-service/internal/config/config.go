@@ -8,7 +8,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.NewLogger("AuthService.Config")
+var logger = logging.New("AuthService.Config")
 
 type Config struct {
 	ServerMode string `yaml:"ServerMode,omitempty"`

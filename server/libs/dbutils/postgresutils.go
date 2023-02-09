@@ -9,7 +9,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.NewLogger("Libs.DBUtils.Postgres")
+var logger = logging.New("Libs.DBUtils.Postgres")
 
 func ConnectToDB(dbUrl string) (*sql.DB, error) {
 	attempt := 0

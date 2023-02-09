@@ -20,7 +20,7 @@ import (
 	userServerV1 "github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/transport/grpc/v1"
 )
 
-var logger = logging.NewLogger("AuthService")
+var logger = logging.New("AuthService")
 
 func setupGRPC() (*grpc.Server, error) {
 	logger.Info("Setting up GRPC server for Auth Service")
@@ -47,19 +47,32 @@ func serveGRPC(grpcServer *grpc.Server) {
 	listener, err := net.Listen("tcp", grpcEndpoint)
 	if err != nil {
 		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": config.Conf.GrpcPort})
+		panic(err)
 	}
 
-	userSvc := userService.NewUserService()
-	userEndpoints := userEndpointsV1.MakeAuthenticateEndpoint(userSvc)
-	userProtoV1.RegisterUserServer(grpcServer, userServerV1.NewGRPCUserServer(userEndpoints))
+	registerServices(grpcServer)
 
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {
 		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": config.Conf.GrpcPort})
+		panic(err)
 	}
 
 	logger.Info("Shutting down GRPC server")
+}
+
+func registerServices(grpcServer *grpc.Server) {
+	// Register user service
+	userSvc, err := userService.New(
+		userService.WithPostgreUserRepository(DB),
+	)
+	if err != nil {
+		logger.ErrorData("Failed to create User Service", logging.Data{"error": err.Error()})
+		panic(err)
+	}
+	userEndpoints := userEndpointsV1.New(userSvc)
+	userProtoV1.RegisterUserServiceServer(grpcServer, userServerV1.New(userEndpoints))
 }
 
 func actualMain() {

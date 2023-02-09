@@ -6,5 +6,5 @@ FOLDERS=("auth-gateway" "public-gateway" "auth-service" "user-service")
 for folder in "${FOLDERS[@]}"
 do
     mkdir -p $folder
-    protoc --proto_path=$folder $folder/*proto --go_out=$folder --go_opt=module=$MODULE_PREFIX/$folder --go-grpc_out=$folder --go-grpc_opt=module=$MODULE_PREFIX/$folder --go-grpc_opt=require_unimplemented_servers=false
+    protoc --proto_path=. $folder/*proto --go_out=$folder --go_opt=module=$MODULE_PREFIX/$folder --go-grpc_out=$folder --go-grpc_opt=module=$MODULE_PREFIX/$folder --go-grpc_opt=require_unimplemented_servers=false  --validate_out="lang=go:$folder" 
 done;

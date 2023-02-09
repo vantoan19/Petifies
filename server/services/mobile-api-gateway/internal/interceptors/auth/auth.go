@@ -11,7 +11,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.NewLogger("Mobile.APIGateway.Auth")
+var logger = logging.New("Mobile.APIGateway.Auth")
 
 type AuthInterceptor struct{}
 

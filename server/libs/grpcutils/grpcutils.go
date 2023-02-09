@@ -9,13 +9,13 @@ import (
 
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 )
 
-var logger = logging.NewLogger("Libs.GRPCUtils")
+var logger = logging.New("Libs.GRPCUtils")
 
 const timePingInterval = time.Second
 

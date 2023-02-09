@@ -13,7 +13,7 @@ type gRPCAuthServer struct {
 	sayHello grpctransport.Handler
 }
 
-func NewGRPCAuthServer(endpoints authEndpointsV1.AuthenticateEndpoints) authProtoV1.AuthServer {
+func New(endpoints authEndpointsV1.AuthenticateEndpoints) authProtoV1.AuthServer {
 	return &gRPCAuthServer{
 		sayHello: grpctransport.NewServer(
 			endpoints.SayHello,

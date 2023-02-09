@@ -20,7 +20,7 @@ import (
 	authServerV1 "github.com/vantoan19/Petifies/server/services/user-services/auth-service/internal/transport/grpc/v1"
 )
 
-var logger = logging.NewLogger("AuthService")
+var logger = logging.New("AuthService")
 
 func setupGRPC() (*grpc.Server, error) {
 	logger.Info("Setting up GRPC server for Auth Service")
@@ -51,7 +51,7 @@ func serveGRPC(grpcServer *grpc.Server) {
 
 	authSvc := authService.NewAuthenticateService()
 	authEndpoints := authEndpointsV1.MakeAuthenticateEndpoint(authSvc)
-	authProtoV1.RegisterAuthServer(grpcServer, authServerV1.NewGRPCAuthServer(authEndpoints))
+	authProtoV1.RegisterAuthServer(grpcServer, authServerV1.New(authEndpoints))
 
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)

@@ -74,7 +74,7 @@ var levelCodes = map[LoggingLevel]int{
 	Debug:     7,
 }
 
-func NewLogger(name string) *Logger {
+func New(name string) *Logger {
 	var level LoggingLevel
 
 	if common.IsDevEnv() {

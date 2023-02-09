@@ -8,25 +8,27 @@ MOBILE_API_GATEWAY_MAIN=./server/services/mobile-api-gateway/cmd/grpc
 AUTH_SERVICE_MAIN=./server/services/user-services/auth-service/cmd/grpc
 USER_SERVICE_MAIN=./server/services/user-services/user-service/cmd/grpc
 
+COMPOSE_FILES=-f docker-compose.yaml -f user-service.yaml -f auth-service.yaml
+
 ## up: starts all containers in the background without forcing build
-up:
+up: format
 	@echo "Starting Docker images..."
-	cd server; docker-compose up 
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: gen_cert gen_proto build_mobile_api_gateway build_auth_service build_user_service
+up_build: format gen_cert gen_proto build_mobile_api_gateway build_auth_service build_user_service
 	@echo "Stopping docker images"
-	cd server; docker-compose down
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} down
 	@echo "Building and starting docker images..."
-	cd server; docker-compose up --build
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build
 
 ci_up_build:
-	cd server; docker-compose up --build -d
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build -d
 
 ## down: stop docker compose
 down:
 	@echo "Stopping docker compose..."
-	cd server; docker-compose down
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} down
 	@echo "Done!"
 
 ## build_broker: builds the broker binary as a linux executable

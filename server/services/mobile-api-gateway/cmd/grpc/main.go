@@ -16,7 +16,7 @@ import (
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/interceptors/auth"
 )
 
-var logger = logging.NewLogger("Mobile.APIGateway")
+var logger = logging.New("Mobile.APIGateway")
 
 func setupGRPC() (*grpc.Server, error) {
 	logger.Info("Setting up GRPC server for Mobile API Gateway")

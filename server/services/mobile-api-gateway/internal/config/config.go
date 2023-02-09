@@ -8,7 +8,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.NewLogger("Mobile.APIGateway.Config")
+var logger = logging.New("Mobile.APIGateway.Config")
 
 type Config struct {
 	ServerMode string `yaml:"ServerMode,omitempty"`

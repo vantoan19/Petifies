@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// var logger = logging.NewLogger("AuthService.Authenticate")
+// var logger = logging.New("AuthService.Authenticate")
 
 type authenticateService struct{}
 

@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  user-service:
+    build:
+      context: ../../../
+      dockerfile: ./server/services/user-services/user-service/Dockerfile
+    restart: always
+    depends_on:
+      - user-postgres
+    volumes:
+      - ../../../build/server/userService:/app/userService
+    ports: 
+      - "81:8888"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      - SERVER_MODE=development
+
+  user-postgres:
+    image: 'postgres:15'
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports: 
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ../db-data/user-postgres/:/var/lib/postgresql/data/
+
+networks:
+  my-proxy-net: 
+      name: default_network

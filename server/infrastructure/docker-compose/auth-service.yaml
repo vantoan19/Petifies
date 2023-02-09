@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  auth-service:
+    build:
+      context: ../../../
+      dockerfile: ./server/services/user-services/auth-service/Dockerfile
+    restart: always
+    volumes:
+      - ../../../build/server/authService:/app/authService
+    ports: 
+      - "80:8888"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      - SERVER_MODE=development
+
+networks:
+  my-proxy-net: 
+      name: default_network

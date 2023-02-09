@@ -5,4 +5,5 @@
 access_token
 /build
 *pb.go
-*/db-data
+*pb.validate.go
+**/db-data

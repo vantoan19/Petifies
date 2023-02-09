@@ -8,7 +8,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.NewLogger("Libs.ConfigUtils")
+var logger = logging.New("Libs.ConfigUtils")
 
 func LoadFromYaml(configPath string, config interface{}) error {
 	logger.Info("Loading config from yaml file")

@@ -4,38 +4,52 @@ import (
 	"context"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
 	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	userEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-services/user-service/internal/endpoints/grpc/v1"
 )
 
 type gRPCUserServer struct {
-	sayHello grpctransport.Handler
+	createUser grpctransport.Handler
 }
 
-func NewGRPCUserServer(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServer {
+func New(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServiceServer {
 	return &gRPCUserServer{
-		sayHello: grpctransport.NewServer(
-			endpoints.SayHello,
-			decodeSayHelloRequest,
-			encodeSayHelloResponse,
+		createUser: grpctransport.NewServer(
+			endpoints.CreateUser,
+			decodeCreateUserRequest,
+			encodeCreateUserResponse,
 		),
 	}
 }
 
-func (s *gRPCUserServer) SayHello(ctx context.Context, req *userProtoV1.HelloWorldRequest) (*userProtoV1.HelloWorldResponse, error) {
-	_, resp, err := s.sayHello.ServeGRPC(ctx, req)
+func (s *gRPCUserServer) CreateUser(ctx context.Context, req *userProtoV1.CreateUserRequest) (*userProtoV1.User, error) {
+	_, resp, err := s.createUser.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return resp.(*userProtoV1.HelloWorldResponse), nil
+	return resp.(*userProtoV1.User), nil
 }
 
-func decodeSayHelloRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return userEndpointsV1.SayHelloReq{}, nil
+func decodeCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*userProtoV1.CreateUserRequest)
+	return userEndpointsV1.CreateUserReq{
+		Email:     req.Email,
+		Password:  req.Password,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+	}, nil
 }
 
-func encodeSayHelloResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(userEndpointsV1.SayHelloResp)
-	return &userProtoV1.HelloWorldResponse{Greeting: resp.Greeting}, nil
+func encodeCreateUserResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(userEndpointsV1.CreateUserResp)
+	return &userProtoV1.User{
+		Id:        resp.ID.String(),
+		Email:     resp.Email,
+		FirstName: resp.FirstName,
+		LastName:  resp.LastName,
+		CreatedAt: timestamppb.New(resp.CreatedAt),
+		UpdatedAt: timestamppb.New(resp.UpdatedAt),
+	}, nil
 }
