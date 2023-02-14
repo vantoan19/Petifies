@@ -1,14 +1,12 @@
 GO_BUILD_DIR=./build/server
 
 MOBILE_API_GATEWAY_BINARY=mobileApiGateway
-AUTH_SERVICE_BINARY=authService
 USER_SERVICE_BINARY=userService
 
 MOBILE_API_GATEWAY_MAIN=./server/services/mobile-api-gateway/cmd/grpc
-AUTH_SERVICE_MAIN=./server/services/user-services/auth-service/cmd/grpc
-USER_SERVICE_MAIN=./server/services/user-services/user-service/cmd/grpc
+USER_SERVICE_MAIN=./server/services/user-service/cmd/grpc
 
-COMPOSE_FILES=-f docker-compose.yaml -f user-service.yaml -f auth-service.yaml
+COMPOSE_FILES=-f common.yaml -f mobile-gateway.yaml -f user-service.yaml 
 
 ## up: starts all containers in the background without forcing build
 up: format
@@ -16,7 +14,7 @@ up: format
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: format gen_cert gen_proto build_mobile_api_gateway build_auth_service build_user_service
+up_build: format gen_cert gen_proto build_mobile_api_gateway build_user_service
 	@echo "Stopping docker images"
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} down
 	@echo "Building and starting docker images..."
@@ -37,11 +35,6 @@ build_mobile_api_gateway:
 	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${MOBILE_API_GATEWAY_BINARY} ${MOBILE_API_GATEWAY_MAIN}
 	@echo "Done!"
 
-## build_broker: builds the broker binary as a linux executable
-build_auth_service:
-	@echo "Building auth service binary..."
-	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${AUTH_SERVICE_BINARY} ${AUTH_SERVICE_MAIN}
-	@echo "Done!"
 
 ## build_broker: builds the broker binary as a linux executable
 build_user_service:

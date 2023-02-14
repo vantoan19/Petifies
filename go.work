@@ -9,6 +9,6 @@ use (
 	./server/libs/logging-config
 	./server/libs/validateutils
 	./server/services/mobile-api-gateway
-	./server/services/user-services/auth-service
-	./server/services/user-services/user-service
+	./server/services/user-service
+	./server/services/grpc-clients
 )

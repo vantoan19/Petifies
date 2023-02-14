@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var logger = logging.New("Libs.GRPCUtils")
@@ -48,7 +49,7 @@ func NewTLSGrpcServer(myKeyPath string, myCertPath string, interceptors ServerIn
 	return grpc.NewServer(serverOptions...), nil
 }
 
-func NewTLSGrpcClient(serverCAPath string, serverEndpoint string, timeout time.Duration, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
+func NewTLSGrpcClient(serverCAPath string, serverEndpoint string, retries int, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
 	logger.Info("Creating TLS Grpc client")
 
 	credential, err := LoadTLSCredentialsForGrpcClient(serverCAPath)
@@ -63,13 +64,21 @@ func NewTLSGrpcClient(serverCAPath string, serverEndpoint string, timeout time.D
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(interceptors.StreamInterceptors...)),
 	}
 
-	conn, err := grpc.Dial(serverEndpoint, dialOptions...)
-	if err != nil {
-		logger.ErrorData("Failed to TLS Grpc client", logging.Data{"error": err.Error()})
-		return nil, err
+	for i := 1; i <= retries; i++ {
+		conn, err := grpc.Dial(serverEndpoint, dialOptions...)
+		if err != nil {
+			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+		}
+
+		conn, err = waitForConn(conn, time.Second*30)
+		if err != nil {
+			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+		} else {
+			return conn, nil
+		}
 	}
 
-	return waitForConn(conn, timeout)
+	return nil, errors.New("Unable to connect")
 }
 
 func NewInsecureGrpcServer(interceptors ServerInterceptors) (*grpc.Server, error) {
@@ -84,21 +93,29 @@ func NewInsecureGrpcServer(interceptors ServerInterceptors) (*grpc.Server, error
 	return grpc.NewServer(serverOptions...), nil
 }
 
-func NewInsecureGrpcClient(serverEndpoint string, timeout time.Duration, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
+func NewInsecureGrpcClient(serverEndpoint string, retries int, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
 	logger.Info("Creating insecure Grpc client")
-
 	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(interceptors.UnaryInterceptors...)),
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(interceptors.StreamInterceptors...)),
 	}
 
-	conn, err := grpc.Dial(serverEndpoint, dialOptions...)
-	if err != nil {
-		logger.ErrorData("Failed to insecure Grpc client", logging.Data{"error": err.Error()})
-		return nil, err
+	for i := 1; i <= retries; i++ {
+		conn, err := grpc.Dial(serverEndpoint, dialOptions...)
+		if err != nil {
+			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+		}
+
+		conn, err = waitForConn(conn, time.Second*5)
+		if err != nil {
+			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+		} else {
+			return conn, nil
+		}
 	}
 
-	return waitForConn(conn, timeout)
+	return nil, errors.New("Unable to connect")
 }
 
 func LoadGrpcServerTLSCreadentials(serverKeyPath string, serverCertPath string) (credentials.TransportCredentials, error) {
@@ -155,6 +172,6 @@ func waitForConn(conn *grpc.ClientConn, timeout time.Duration) (*grpc.ClientConn
 		}
 	}
 
-	logger.Error("Creating Grpc client failed, timed out")
+	logger.Warning("Creating Grpc client failed, timed out")
 	return nil, errors.New("gRPC connection timed out, unable to connect to the server")
 }

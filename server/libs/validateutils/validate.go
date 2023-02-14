@@ -1,9 +1,7 @@
 package validateutils
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -25,7 +23,7 @@ func NewEnglishValidator() *EnglishValidator {
 	}
 }
 
-func (v *EnglishValidator) Struct(s interface{}) error {
+func (v *EnglishValidator) Struct(s interface{}) (errs []error) {
 	err := v.validator.Struct(s)
 	return translateError(err, v.translator)
 }
@@ -38,15 +36,14 @@ func engErrTranslator(validate *validator.Validate) *ut.Translator {
 	return &trans
 }
 
-func translateError(err error, trans *ut.Translator) error {
+func translateError(err error, trans *ut.Translator) (errs []error) {
 	if err == nil {
 		return nil
 	}
 	validatorErrs := err.(validator.ValidationErrors)
-	errStr := ""
 	for _, e := range validatorErrs {
 		translatedErr := fmt.Errorf(e.Translate(*trans))
-		errStr = errStr + translatedErr.Error() + "\n"
+		errs = append(errs, translatedErr)
 	}
-	return errors.New(strings.Trim(errStr, "\n"))
+	return errs
 }

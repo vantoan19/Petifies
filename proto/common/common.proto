@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option go_package = "github.com/vantoan19/Petifies/proto/common";
+
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message User {
+
+    string id = 1 [(validate.rules).string.uuid = true];
+    
+    string email = 2 [(validate.rules).string = {
+        email: true,
+        max_len: 300
+    }];
+    
+    string password = 3 [(validate.rules).string = {
+        max_len: 50
+    }];
+
+    string first_name = 4 [(validate.rules).string = {
+        max_len: 50
+    }];
+
+    string last_name = 5 [(validate.rules).string = {
+        max_len: 50
+    }];
+
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+
+}
+
+message CreateUserRequest {
+
+    string email = 1 [(validate.rules).string = {
+        email: true,
+        max_len: 300
+    }];
+
+    string password = 2 [(validate.rules).string = {
+        min_len: 8,
+        max_len: 50
+    }];
+
+    string first_name = 3 [(validate.rules).string = {
+        max_len: 50
+    }];
+
+    string last_name = 4 [(validate.rules).string = {
+        max_len: 50
+    }];
+    
+}
+
+message LoginRequest {
+
+    string email = 1 [(validate.rules).string = {
+        email: true,
+        max_len: 300
+    }];
+
+    string password = 2 [(validate.rules).string = {
+        max_len: 50
+    }];
+
+}
+
+message LoginResponse {
+
+    string access_token = 1;
+
+}

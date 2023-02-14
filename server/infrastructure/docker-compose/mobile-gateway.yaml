@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  mobile-api-gateway:
+    build: 
+      context: ../../../
+      dockerfile: ./server/services/mobile-api-gateway/Dockerfile
+    restart: always
+    volumes:
+      - ../../../build/server/mobileApiGateway:/app/mobileApiGateway
+    ports:
+      - "80:8888"
+    environment:
+      - SERVER_MODE=development
+    networks:
+      - petifies
