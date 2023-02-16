@@ -4,10 +4,7 @@ import (
 	"errors"
 
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
-	"github.com/vantoan19/Petifies/server/libs/validateutils"
 )
-
-var validate = validateutils.NewEnglishValidator()
 
 type Name struct {
 	firstName string `validate:"required,omitempty,max=50"`

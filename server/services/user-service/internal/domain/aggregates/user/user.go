@@ -6,13 +6,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
-	"github.com/vantoan19/Petifies/server/libs/validateutils"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/entities"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/utils"
 )
-
-var validate = validateutils.NewEnglishValidator()
 
 type User struct {
 	// Root of the user aggregate

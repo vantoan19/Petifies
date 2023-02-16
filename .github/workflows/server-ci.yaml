@@ -30,16 +30,18 @@ jobs:
         sudo apt install -y protobuf-compiler
         sudo apt install golang-goprotobuf-dev
         jq --version
+
         go mod download
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
         go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+        go install github.com/envoyproxy/protoc-gen-validate
         export PATH="$PATH:$(go env GOPATH)/bin"
         make gen_proto
 
-    # - name: Linting
-    #   run: |
-    #     golangci-lint run --out-format=github-actions -- $(go work edit -json | jq -c -r '[.Use[].DiskPath] | map_values(. + "/...")[]')
+    - name: Linting
+      run: |
+        golangci-lint run --out-format=github-actions -- $(go work edit -json | jq -c -r '[.Use[].DiskPath] | map_values(. + "/...")[]')
 
     - name: Bring up the server using docker compose
       id: build-image

@@ -92,16 +92,16 @@ func New(name string) *Logger {
 func (l *Logger) logString(level LoggingLevel, message string, data *Data) (string, error) {
 	loggerLevel, ok := levelCodes[l.Level]
 	if !ok {
-		return "", errors.New("Unrecognized level")
+		return "", errors.New("unrecognized level")
 	}
 
 	level_, ok := levelCodes[level]
 	if !ok {
-		return "", errors.New("Unrecognized level")
+		return "", errors.New("unrecognized level")
 	}
 
 	if level_ > loggerLevel {
-		return "", errors.New("Message log level is too high")
+		return "", errors.New("message log level is too high")
 	}
 
 	var (
@@ -204,7 +204,7 @@ func parseLogLevel(logLevel string) (LoggingLevel, error) {
 		return logLevel_, nil
 	}
 
-	return Undefined, errors.New("Unrecognized logging level: " + logLevel + ". Using INFO as default.")
+	return Undefined, errors.New("unrecognized logging level: " + logLevel + ", using INFO as default.")
 }
 
 func getEnvLogLevel() LoggingLevel {

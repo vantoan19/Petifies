@@ -21,10 +21,10 @@ import (
 	grpcServers "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/transport/grpc/v1"
 )
 
-var logger = logging.New("Mobile.APIGateway")
+var logger = logging.New("MobileGateway.Cmd.Grpc")
 
 func setupGRPC() (*grpc.Server, error) {
-	logger.Info("Setting up GRPC server for Mobile API Gateway")
+	logger.Info("Start setupGRPC")
 
 	interceptors := grpcutils.ServerInterceptors{
 		UnaryInterceptors:  []grpc.UnaryServerInterceptor{auth.Auth.GetUnaryAuthInterceptor()},
@@ -33,21 +33,25 @@ func setupGRPC() (*grpc.Server, error) {
 
 	s, err := grpcutils.NewTLSGrpcServer(cmd.Conf.TLSKeyPath, cmd.Conf.TLSCertPath, interceptors)
 	if err != nil {
-		logger.ErrorData("Failed to create new TLS GRPC server", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished setupGRPC: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
-	logger.Info("Set up GRPC server successfully")
+	logger.Info("Finished setupGRPC: SUCCESSFUL")
 	return s, nil
 }
 
 func serveGRPC(grpcServer *grpc.Server) {
-	logger.InfoData("Serving GRPC server", logging.Data{"port": cmd.Conf.GrpcPort})
+	logger.InfoData("Start serveGRPC", logging.Data{"port": cmd.Conf.GrpcPort})
 
 	grpcEndpoint := fmt.Sprintf(":%d", cmd.Conf.GrpcPort)
 	listener, err := net.Listen("tcp", grpcEndpoint)
 	if err != nil {
-		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": cmd.Conf.GrpcPort})
+		logger.ErrorData("Finished serveGRPC: FAILED", logging.Data{
+			"error": err.Error(),
+			"port":  cmd.Conf.GrpcPort,
+		})
+		panic(err)
 	}
 
 	registerServices(grpcServer)
@@ -55,21 +59,29 @@ func serveGRPC(grpcServer *grpc.Server) {
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {
-		logger.ErrorData("Failed to serve GRPC server", logging.Data{"error": err.Error(), "port": cmd.Conf.GrpcPort})
+		logger.ErrorData("Finished serveGRPC: FAILED", logging.Data{
+			"error": err.Error(),
+			"port":  cmd.Conf.GrpcPort,
+		})
+		panic(err)
 	}
 
-	logger.Info("Shutting down GRPC server for Mobile API Gateway")
+	logger.Info("Finished serveGRPC: SUCCESSFUL")
 }
 
 func registerServices(grpcServer *grpc.Server) {
+	logger.Info("Start registerServices")
+
 	// Register user service
 	userSvc, err := services.NewUserService(cmd.UserServiceConn)
 	if err != nil {
-		logger.ErrorData("Failed to create User Service", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
 		panic(err)
 	}
 	userEndpoints := endpointsV1.NewUserEndpoints(userSvc)
 	publicProtoV1.RegisterPublicGatewayServer(grpcServer, grpcServers.NewPublicServer(userEndpoints))
+
+	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
 func actualMain() {

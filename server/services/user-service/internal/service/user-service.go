@@ -57,35 +57,37 @@ func WithPostgreUserRepository(db *sql.DB) UserConfiguration {
 }
 
 func (s *userService) CreateUser(ctx context.Context, email, password, firstName, lastName string) (*userAggre.User, error) {
-	logger.Info("Creating User...")
+	logger.Info("Start UserService.CreateUser")
+
 	userAg, errs := userAggre.New(email, password, firstName, lastName)
 	if errs.Exist() {
-		logger.ErrorData("Failed to create User", logging.Data{"error": errs.Error()})
+		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": errs.Error()})
 		return nil, errs[0]
 	}
 	createdUser, err := s.userRepository.Add(userAg)
 	if err != nil {
-		logger.ErrorData("Failed to create User", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
-	logger.Info("Created User successfully")
+	logger.Info("Finished UserService.CreateUser: SUCCESSFUL")
 	return &createdUser, nil
 }
 
 func (s *userService) Login(ctx context.Context, email, password string) (string, error) {
-	logger.Info("Login User...")
+	logger.Info("Start UserService.Login")
+
 	userAg, err := s.userRepository.GetByEmail(email)
 	if err != nil {
-		logger.ErrorData("Failed to login user", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{"error": err.Error()})
 		return "", err
 	}
 
 	if !utils.ComparePassword(password, userAg.GetPassword()) {
-		logger.Error("Failed to login user: Incorrect password")
+		logger.Error("Finished UserService.Login: FAILED: incorrect password")
 		return "", errors.New("incorrect password")
 	}
 
-	logger.Info("Login User successfully")
+	logger.Info("Finished UserService.Login: SUCCESSFUL")
 	return s.tokenMaker.CreateToken(userAg.GetID(), cmd.Conf.AccessTokenDuration)
 }

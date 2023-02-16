@@ -11,7 +11,7 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.New("Mobile.APIGateway.Auth")
+var logger = logging.New("MobileGateway.Auth")
 
 type AuthInterceptor struct{}
 
@@ -26,28 +26,28 @@ func (m *AuthInterceptor) GetStreamAuthInterceptor() grpc.StreamServerIntercepto
 }
 
 func authenticate(ctx context.Context) (context.Context, error) {
-	logger.Info("Authencating request")
+	logger.Info("Start authenticate")
 
 	callingService, err := getGrpcService(ctx)
 	if err != nil {
-		logger.ErrorData("Failed to authenticate request", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished authenticate: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	// Bypass authenticate for public apis (apis that do not require auth)
 	if callingService == "PublicGateway" {
-		logger.Info("Authenticated request successfull")
+		logger.Info("Finished authenticate: SUCCESSFUL")
 		return ctx, nil
 	}
 
-	logger.Info("Authenticated request successfull")
+	logger.Info("Finished authenticate: SUCCESSFUL")
 	return ctx, nil
 }
 
 func getGrpcService(ctx context.Context) (string, error) {
 	method, ok := grpc.Method(ctx)
 	if !ok {
-		return "", errors.New("Cannot retrieve the method from the context")
+		return "", errors.New("cannot retrieve the method from the context")
 	}
 
 	service := strings.Split(method, "/")[1]

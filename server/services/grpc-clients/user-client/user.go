@@ -72,7 +72,8 @@ func New(conn *grpc.ClientConn) UserClient {
 }
 
 func (c *userClient) CreateUser(ctx context.Context, email, password, firstName, lastName string) (*models.CreateUserResp, error) {
-	logger.Info("Calling User Service to create User")
+	logger.Info("Start UserClient.CreateUser")
+
 	req := &models.CreateUserReq{
 		Email:     email,
 		Password:  password,
@@ -81,47 +82,54 @@ func (c *userClient) CreateUser(ctx context.Context, email, password, firstName,
 	}
 	resp, err := c.createUser(ctx, req)
 	if err != nil {
-		logger.ErrorData("Failed to call User Service to create User", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserClient.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	logger.Info("Received Create User resp from User Service")
+
+	logger.Info("Finished UserClient.CreateUser: SUCCESSFUL")
 	return resp.(*models.CreateUserResp), nil
 }
 
 func (c *userClient) CreateUserForward(ctx context.Context, req *commonProto.CreateUserRequest) (*commonProto.User, error) {
-	logger.Info("Calling User Service to create User")
+	logger.Info("Start UserClient.CreateUserForward")
+
 	resp, err := c.createUserForward(ctx, req)
 	if err != nil {
-		logger.ErrorData("Failed to call User Service to create User", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserClient.CreateUserForward: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	logger.Info("Received Create User resp from User Service")
+
+	logger.Info("Finished UserClient.CreateUserForward: SUCCESSFUL")
 	return resp.(*commonProto.User), nil
 }
 
 func (c *userClient) Login(ctx context.Context, email, password string) (string, error) {
-	logger.Info("Calling User Service to login")
+	logger.Info("Start UserClient.Login")
+
 	req := &models.LoginReq{
 		Email:    email,
 		Password: password,
 	}
 	resp, err := c.login(ctx, req)
 	if err != nil {
-		logger.ErrorData("Failed to call User Service to login", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserClient.Login: FAILED", logging.Data{"error": err.Error()})
 		return "", err
 	}
-	logger.Info("Received login token from User Service")
+
+	logger.Info("Finished UserClient.Login: SUCCESSFUL")
 	loginResp := resp.(*models.LoginResp)
 	return loginResp.AccessToken, nil
 }
 
 func (c *userClient) LoginForward(ctx context.Context, req *commonProto.LoginRequest) (*commonProto.LoginResponse, error) {
-	logger.Info("Calling User Service to login")
+	logger.Info("Start UserClient.LoginForward")
+
 	resp, err := c.loginForward(ctx, req)
 	if err != nil {
-		logger.ErrorData("Failed to call User Service to login", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished UserClient.LoginForward: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	logger.Info("Received login token from User Service")
+
+	logger.Info("Finished UserClient.LoginForward: SUCCESSFUL")
 	return resp.(*commonProto.LoginResponse), nil
 }

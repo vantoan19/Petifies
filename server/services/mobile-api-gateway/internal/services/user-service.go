@@ -1,4 +1,4 @@
-package userservice
+package services
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var logger = logging.New("MobileGateway.Service")
+var logger = logging.New("MobileGateway.UserService")
 
 type UserConfiguration func(us *userService) error
 
@@ -36,21 +36,29 @@ func NewUserService(conn *grpc.ClientConn, cfgs ...UserConfiguration) (UserServi
 }
 
 func (s *userService) CreateUser(ctx context.Context, req *commonProto.CreateUserRequest) (*commonProto.User, error) {
-	logger.Info("Forwarding CreateUser request to User Service")
+	logger.Info("Start UserService.CreateUser")
+
+	logger.Info("Executing UserService.CreateUser: forwarding the request to UserService")
 	resp, err := s.userClient.CreateUserForward(ctx, req)
 	if err != nil {
+		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	logger.Info("Returning CreateUser response from User Service")
+
+	logger.Info("Finished UserService.CreateUser: SUCCESSFUL")
 	return resp, nil
 }
 
 func (s *userService) Login(ctx context.Context, req *commonProto.LoginRequest) (*commonProto.LoginResponse, error) {
-	logger.Info("Forwarding Login request to User Service")
+	logger.Info("Start UserService.Login")
+
+	logger.Info("Executing UserService.Login: forwarding the request to UserService")
 	resp, err := s.userClient.LoginForward(ctx, req)
 	if err != nil {
+		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	logger.Info("Returning Login response from User Service")
+
+	logger.Info("Finished UserService.Login: SUCCESSFUL")
 	return resp, nil
 }

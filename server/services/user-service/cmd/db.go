@@ -11,25 +11,25 @@ import (
 )
 
 func initializePostgresDatabase() error {
-	logger.Info("Init DB")
+	logger.Info("Start initializePostgresDatabase")
 
 	db, err := dbutils.ConnectToDB(Conf.PostgresUrl)
 	if err != nil {
-		logger.ErrorData("Failed to Init DB", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished initializePostgresDatabase: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 	DB = db
 
-	logger.Info("Init DB successfully")
+	logger.Info("Finished initializePostgresDatabase: SUCCESSFUL")
 	return nil
 }
 
 func runMigrations() error {
-	logger.Info("Start running migrations")
+	logger.Info("Start runMigrations")
 
 	driver, err := postgres.WithInstance(DB, &postgres.Config{})
 	if err != nil {
-		logger.ErrorData("Failed to get DB driver", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished runMigrations: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
@@ -37,15 +37,15 @@ func runMigrations() error {
 		"file:///migrations",
 		"postgres", driver)
 	if err != nil {
-		logger.ErrorData("Failed to get migrate", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished runMigrations: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		logger.ErrorData("Failed to upgrade the db", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished runMigrations: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
-	logger.Info("Migrated the DB successfully")
+	logger.Info("Finished runMigrations: SUCCESSFUL")
 	return nil
 }

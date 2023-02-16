@@ -13,24 +13,24 @@ var logger = logging.New("Libs.DBUtils.Postgres")
 
 func ConnectToDB(dbUrl string) (*sql.DB, error) {
 	attempt := 0
-	logger.InfoData("Connecting to the database", logging.Data{"dbUrl": dbUrl})
+	logger.InfoData("Start ConnectToDB", logging.Data{"dbUrl": dbUrl})
 
 	for {
 		conn, err := openDB(dbUrl)
 		if err != nil {
 			attempt++
-			logger.WarningData("Connect to the database fails, attempt again...", logging.Data{"attempt": attempt})
+			logger.WarningData("Executing ConnectToDB: Connect to the database fails, attempt again...", logging.Data{"attempt": attempt})
 		} else {
-			logger.InfoData("Connected to the database successfully", logging.Data{"dbUrl": dbUrl})
+			logger.InfoData("Finished ConnectToDB: SUCCESSFUL", logging.Data{"dbUrl": dbUrl})
 			return conn, nil
 		}
 
 		if attempt > 10 {
-			logger.ErrorData("Failed to connect to the database", logging.Data{"dbUrl": dbUrl, "error": err.Error()})
+			logger.ErrorData("Finished ConnectToDB: FAILED", logging.Data{"dbUrl": dbUrl, "error": err.Error()})
 			return nil, err
 		}
 
-		logger.Info("Wait for 2 seconds before retrying to connect to the database")
+		logger.Info("Executing ConnectToDB: Wait for 2 seconds before retrying to connect to the database")
 		time.Sleep(2 * time.Second)
 		continue
 	}

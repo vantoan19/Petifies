@@ -1,7 +1,7 @@
 package configutils
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/go-yaml/yaml"
 
@@ -11,20 +11,20 @@ import (
 var logger = logging.New("Libs.ConfigUtils")
 
 func LoadFromYaml(configPath string, config interface{}) error {
-	logger.Info("Loading config from yaml file")
+	logger.Info("Start LoadFromYaml")
 
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if err != nil {
-		logger.ErrorData("Fail to load config from yaml file", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished LoadFromYaml: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
-		logger.ErrorData("Fail to load config from yaml file", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished LoadFromYaml: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
-	logger.Info("Loaded config from yaml file successfully")
+	logger.Info("Finished LoadFromYaml: SUCCESSFUL")
 	return nil
 }

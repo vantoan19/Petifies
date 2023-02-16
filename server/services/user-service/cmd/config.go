@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"time"
 
 	common "github.com/vantoan19/Petifies/server/libs/common-utils"
@@ -9,7 +8,7 @@ import (
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
-var logger = logging.New("UserService.Config")
+var logger = logging.New("UserService.Cmd")
 
 type Config struct {
 	ServerMode string `yaml:"ServerMode,omitempty"`
@@ -28,17 +27,19 @@ var (
 )
 
 func initializeConfig() error {
-	logger.Info("Initializing config for mobile api gateway")
+	logger.Info("Start initializeConfig")
 
 	if common.IsDevEnv() {
+		logger.Info("Executing initializeConfig: DEV environment")
 		err := config.LoadFromYaml(yamlPath, &Conf)
 		if err != nil {
-			logger.Error("Failed to initialize the config")
-			return errors.New("Unable to read configuration")
+			logger.ErrorData("Finished initializeConfig: FAILED", logging.Data{"error": err.Error()})
+			return err
 		}
 	} else {
-		// Load from k8s for production
+		logger.Info("Executing initializeConfig: PRODUCTION environment")
 	}
 
+	logger.Info("Finished initializeConfig: SUCCESSFUL")
 	return nil
 }

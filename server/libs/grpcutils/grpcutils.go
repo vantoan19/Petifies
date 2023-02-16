@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"io/ioutil"
+	"os"
 	"time"
 
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
@@ -31,11 +31,11 @@ type ClientInterceptors struct {
 }
 
 func NewTLSGrpcServer(myKeyPath string, myCertPath string, interceptors ServerInterceptors) (*grpc.Server, error) {
-	logger.Info("Creating TLS Grpc server")
+	logger.Info("Start NewTLSGrpcServer")
 
 	credential, err := LoadGrpcServerTLSCreadentials(myKeyPath, myCertPath)
 	if err != nil {
-		logger.ErrorData("Failed to TLS Grpc server", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finised NewTLSGrpcServer: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
@@ -45,16 +45,16 @@ func NewTLSGrpcServer(myKeyPath string, myCertPath string, interceptors ServerIn
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(interceptors.StreamInterceptors...)),
 	}
 
-	logger.Info("Created TLS Grpc server successfully")
+	logger.Info("Finished NewTLSGrpcServer: SUCCESSFUL")
 	return grpc.NewServer(serverOptions...), nil
 }
 
 func NewTLSGrpcClient(serverCAPath string, serverEndpoint string, retries int, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
-	logger.Info("Creating TLS Grpc client")
+	logger.Info("Start NewTLSGrpcClient")
 
 	credential, err := LoadTLSCredentialsForGrpcClient(serverCAPath)
 	if err != nil {
-		logger.ErrorData("Failed to TLS Grpc client", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished NewTLSGrpcClient: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
@@ -67,34 +67,36 @@ func NewTLSGrpcClient(serverCAPath string, serverEndpoint string, retries int, i
 	for i := 1; i <= retries; i++ {
 		conn, err := grpc.Dial(serverEndpoint, dialOptions...)
 		if err != nil {
-			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+			logger.WarningData("Executing NewTLSGrpcClient: failed to dial the server, retrying", logging.Data{"error": err.Error()})
 		}
 
 		conn, err = waitForConn(conn, time.Second*30)
 		if err != nil {
-			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+			logger.WarningData("Executing NewTLSGrpcClient: failed to dial the server, retrying", logging.Data{"error": err.Error()})
 		} else {
+			logger.Info("Finished NewTLSGrpcClient: SUCCESSFUL")
 			return conn, nil
 		}
 	}
 
-	return nil, errors.New("Unable to connect")
+	logger.Error("Finished NewTLSGrpcClient: FAILED")
+	return nil, errors.New("unable to connect to the GRPC server")
 }
 
 func NewInsecureGrpcServer(interceptors ServerInterceptors) (*grpc.Server, error) {
-	logger.Info("Creating insecure Grpc server")
+	logger.Info("Start NewInsecureGrpcServer")
 
 	serverOptions := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(interceptors.UnaryInterceptors...)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(interceptors.StreamInterceptors...)),
 	}
 
-	logger.Info("Created insecure Grpc server successfully")
+	logger.Info("Finished NewInsecureGrpcServer: SUCCESSFUL")
 	return grpc.NewServer(serverOptions...), nil
 }
 
 func NewInsecureGrpcClient(serverEndpoint string, retries int, interceptors ClientInterceptors) (*grpc.ClientConn, error) {
-	logger.Info("Creating insecure Grpc client")
+	logger.Info("Start NewInsecureGrpcClient")
 	dialOptions := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(interceptors.UnaryInterceptors...)),
@@ -104,25 +106,27 @@ func NewInsecureGrpcClient(serverEndpoint string, retries int, interceptors Clie
 	for i := 1; i <= retries; i++ {
 		conn, err := grpc.Dial(serverEndpoint, dialOptions...)
 		if err != nil {
-			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+			logger.WarningData("Executing NewInsecureGrpcClient: failed to dial the server, retrying", logging.Data{"error": err.Error()})
 		}
 
 		conn, err = waitForConn(conn, time.Second*5)
 		if err != nil {
-			logger.WarningData("Failed to dial the server, retrying", logging.Data{"error": err.Error()})
+			logger.WarningData("Executing NewInsecureGrpcClient: failed to dial the server, retrying", logging.Data{"error": err.Error()})
 		} else {
+			logger.Info("Finished NewInsecureGrpcClient: SUCCESSFUL")
 			return conn, nil
 		}
 	}
 
-	return nil, errors.New("Unable to connect")
+	logger.Error("Finished NewInsecureGrpcClient: FAILED")
+	return nil, errors.New("unable to connect to the GRPC server")
 }
 
 func LoadGrpcServerTLSCreadentials(serverKeyPath string, serverCertPath string) (credentials.TransportCredentials, error) {
-	logger.Info("Loading server creadentials")
+	logger.Info("Start LoadGrpcServerTLSCreadentials")
 	certificate, err := tls.LoadX509KeyPair(serverCertPath, serverKeyPath)
 	if err != nil {
-		logger.ErrorData("Failed to load certificate", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished LoadGrpcServerTLSCreadentials: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
@@ -131,30 +135,30 @@ func LoadGrpcServerTLSCreadentials(serverKeyPath string, serverCertPath string) 
 		ClientAuth:   tls.NoClientCert,
 	}
 
-	logger.Info("Loaded server creadentials successfully")
+	logger.Info("Finished LoadGrpcServerTLSCreadentials: SUCCESSFUL")
 	return credentials.NewTLS(config), nil
 }
 
 func LoadTLSCredentialsForGrpcClient(serverCAPath string) (credentials.TransportCredentials, error) {
-	logger.Info("Loading creadentials for client")
-	serverCA, err := ioutil.ReadFile(serverCAPath)
+	logger.Info("Start LoadTLSCredentialsForGrpcClient")
+	serverCA, err := os.ReadFile(serverCAPath)
 	if err != nil {
-		logger.ErrorData("Failed to read CA", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished LoadTLSCredentialsForGrpcClient: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	certPool := x509.NewCertPool()
 	ok := certPool.AppendCertsFromPEM(serverCA)
 	if !ok {
-		logger.Error("Failed to parse server CA as pem")
-		return nil, errors.New("LoadClientTLSCredentials: failed to parse server CA as pem")
+		logger.ErrorData("Finished LoadTLSCredentialsForGrpcClient: FAILED", logging.Data{"error": err.Error()})
+		return nil, errors.New("failed to parse server CA as pem")
 	}
 
 	config := &tls.Config{
 		RootCAs: certPool,
 	}
 
-	logger.Info("Loaded creadentials for client successfully")
+	logger.Info("Finished LoadTLSCredentialsForGrpcClient: SUCCESSFUL")
 	return credentials.NewTLS(config), nil
 }
 

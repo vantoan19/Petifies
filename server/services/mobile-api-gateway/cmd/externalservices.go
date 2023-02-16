@@ -11,18 +11,19 @@ var (
 )
 
 func initUserServiceClient() error {
-	logger.Info("Init User Client...")
+	logger.Info("Start initUserServiceClient")
+
 	conn, err := grpcutils.NewInsecureGrpcClient(
 		Conf.UserServiceHost,
 		10,
 		grpcutils.ClientInterceptors{},
 	)
 	if err != nil {
-		logger.ErrorData("Failed to init user client", logging.Data{"error": err.Error()})
+		logger.ErrorData("Finished initUserServiceClient: FAILED", logging.Data{"error": err.Error()})
 		return err
 	}
 
-	logger.Info("Finished Init User Client...")
+	logger.Info("Finished initUserServiceClient: SUCCESSFUL")
 	UserServiceConn = conn
 	return nil
 }
