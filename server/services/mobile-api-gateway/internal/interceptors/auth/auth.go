@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/vantoan19/Petifies/server/libs/common-utils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	userclient "github.com/vantoan19/Petifies/server/services/grpc-clients/user-client"
 )
@@ -20,6 +21,7 @@ var logger = logging.New("MobileGateway.Auth")
 const (
 	authHeaderKey    = "authorization"
 	authHeaderPrefix = "Bearer "
+	userIdKey        = "user_id"
 )
 
 type AuthInterceptor struct {
@@ -62,10 +64,14 @@ func (m *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 	}
 
 	userID, err := m.userClient.VerifyToken(context.Background(), token)
+	if err != nil {
+		logger.ErrorData("Finished authenticate: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
 	newCtx := removeAuthFromCtx(ctx)
 
 	logger.Info("Finished authenticate: SUCCESSFUL")
-	return context.WithValue(newCtx, "user_id", userID), nil
+	return context.WithValue(newCtx, common.AuthKey{}, common.AuthData{UserID: userID}), nil
 }
 
 func extractAuthMetadata(ctx context.Context) (string, error) {

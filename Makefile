@@ -54,3 +54,8 @@ gen_proto:
 
 format:
 	gofmt -s -w .
+
+lint: lint-server
+
+lint-server:
+	golangci-lint run --out-format=github-actions -- $$(go work edit -json | jq -c -r '[.Use[].DiskPath] | map_values(. + "/...")[]')

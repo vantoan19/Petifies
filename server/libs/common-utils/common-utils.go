@@ -8,6 +8,14 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
+type AuthKey struct{}
+
+type AuthData struct {
+	UserID string
+}
+
+// ===========================
+
 type MultiError []error
 
 func (m MultiError) Exist() bool {
@@ -31,6 +39,8 @@ func (m MultiError) Error() string {
 func IsDevEnv() bool {
 	return os.Getenv("SERVER_MODE") == "development"
 }
+
+// ============================
 
 type Translator func(context.Context, interface{}) (interface{}, error)
 
