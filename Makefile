@@ -20,7 +20,7 @@ up_build: format gen_cert gen_proto build_mobile_api_gateway build_user_service
 	@echo "Building and starting docker images..."
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build
 
-ci_up_build:
+ci_up_build: gen_cert gen_proto build_mobile_api_gateway build_user_service
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build -d
 
 ## down: stop docker compose
