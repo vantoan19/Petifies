@@ -11,3 +11,11 @@ type LoginReq struct {
 	Email    string
 	Password string
 }
+
+type VerifyTokenReq struct {
+	Token string
+}
+
+type VerifyTokenResp struct {
+	UserID string
+}

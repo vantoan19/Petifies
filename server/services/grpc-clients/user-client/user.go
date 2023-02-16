@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
+	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
@@ -15,16 +16,19 @@ import (
 )
 
 const (
-	serviceName = "UserService"
+	userService = "UserService"
+	authService = "AuthService"
 )
 
 var logger = logging.New("Clients.UserClient")
 
 type userClient struct {
-	createUser        endpoint.Endpoint
-	createUserForward endpoint.Endpoint
-	login             endpoint.Endpoint
-	loginForward      endpoint.Endpoint
+	createUser         endpoint.Endpoint
+	createUserForward  endpoint.Endpoint
+	login              endpoint.Endpoint
+	loginForward       endpoint.Endpoint
+	verifyToken        endpoint.Endpoint
+	verifyTokenForward endpoint.Endpoint
 }
 
 type UserClient interface {
@@ -32,13 +36,15 @@ type UserClient interface {
 	CreateUserForward(ctx context.Context, req *commonProto.CreateUserRequest) (*commonProto.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
 	LoginForward(ctx context.Context, req *commonProto.LoginRequest) (*commonProto.LoginResponse, error)
+	VerifyToken(ctx context.Context, token string) (string, error)
+	VerifyTokenForward(ctx context.Context, req *userProtoV1.VerifyTokenRequest) (*userProtoV1.VerifyTokenResponse, error)
 }
 
 func New(conn *grpc.ClientConn) UserClient {
 	return &userClient{
 		createUser: grpctransport.NewClient(
 			conn,
-			serviceName,
+			userService,
 			"CreateUser",
 			translator.EncodeCreateUserRequest,
 			translator.DecodeCreateUserResponse,
@@ -46,7 +52,7 @@ func New(conn *grpc.ClientConn) UserClient {
 		).Endpoint(),
 		createUserForward: grpctransport.NewClient(
 			conn,
-			serviceName,
+			userService,
 			"CreateUser",
 			common.CreateClientForwardEncodeRequestFunc[*commonProto.CreateUserRequest](),
 			common.CreateClientForwardDecodeResponseFunc[*commonProto.User](),
@@ -54,7 +60,7 @@ func New(conn *grpc.ClientConn) UserClient {
 		).Endpoint(),
 		login: grpctransport.NewClient(
 			conn,
-			serviceName,
+			userService,
 			"Login",
 			translator.EncodeLoginRequest,
 			translator.DecodeLoginResponse,
@@ -62,11 +68,27 @@ func New(conn *grpc.ClientConn) UserClient {
 		).Endpoint(),
 		loginForward: grpctransport.NewClient(
 			conn,
-			serviceName,
+			userService,
 			"Login",
 			common.CreateClientForwardEncodeRequestFunc[*commonProto.LoginRequest](),
 			common.CreateClientForwardDecodeResponseFunc[*commonProto.LoginResponse](),
 			commonProto.LoginResponse{},
+		).Endpoint(),
+		verifyToken: grpctransport.NewClient(
+			conn,
+			authService,
+			"VerifyToken",
+			translator.EncodeVerifyTokenRequest,
+			translator.DecodeVerifyTokenResponse,
+			userProtoV1.VerifyTokenResponse{},
+		).Endpoint(),
+		verifyTokenForward: grpctransport.NewClient(
+			conn,
+			authService,
+			"VerifyToken",
+			common.CreateClientForwardEncodeRequestFunc[*userProtoV1.VerifyTokenRequest](),
+			common.CreateClientForwardDecodeResponseFunc[*userProtoV1.VerifyTokenResponse](),
+			userProtoV1.VerifyTokenResponse{},
 		).Endpoint(),
 	}
 }
@@ -132,4 +154,34 @@ func (c *userClient) LoginForward(ctx context.Context, req *commonProto.LoginReq
 
 	logger.Info("Finished UserClient.LoginForward: SUCCESSFUL")
 	return resp.(*commonProto.LoginResponse), nil
+}
+
+func (c *userClient) VerifyToken(ctx context.Context, token string) (string, error) {
+	logger.Info("Start UserClient.VerifyToken")
+
+	req := &models.VerifyTokenReq{
+		Token: token,
+	}
+	resp, err := c.verifyToken(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finished UserClient.VerifyToken: FAILED", logging.Data{"error": err.Error()})
+		return "", err
+	}
+
+	logger.Info("Finished UserClient.VerifyToken: SUCCESSFUL")
+	loginResp := resp.(*models.LoginResp)
+	return loginResp.AccessToken, nil
+}
+
+func (c *userClient) VerifyTokenForward(ctx context.Context, req *userProtoV1.VerifyTokenRequest) (*userProtoV1.VerifyTokenResponse, error) {
+	logger.Info("Start UserClient.VerifyTokenForward")
+
+	resp, err := c.verifyTokenForward(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finished UserClient.VerifyTokenForward: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finished UserClient.VerifyTokenForward: SUCCESSFUL")
+	return resp.(*userProtoV1.VerifyTokenResponse), nil
 }

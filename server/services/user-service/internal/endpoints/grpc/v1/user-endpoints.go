@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 
-	userService "github.com/vantoan19/Petifies/server/services/user-service/internal/service"
+	services "github.com/vantoan19/Petifies/server/services/user-service/internal/services"
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
 )
 
@@ -14,14 +14,14 @@ type UserEndpoints struct {
 	Login      endpoint.Endpoint
 }
 
-func New(s userService.UserService) UserEndpoints {
+func NewUserEndpoints(s services.UserService) UserEndpoints {
 	return UserEndpoints{
 		CreateUser: makeCreateUserEndpoint(s),
 		Login:      makeLoginEndpoint(s),
 	}
 }
 
-func makeCreateUserEndpoint(s userService.UserService) endpoint.Endpoint {
+func makeCreateUserEndpoint(s services.UserService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.CreateUserReq)
 		result, err := s.CreateUser(ctx, req.Email, req.Password, req.FirstName, req.LastName)
@@ -39,7 +39,7 @@ func makeCreateUserEndpoint(s userService.UserService) endpoint.Endpoint {
 	}
 }
 
-func makeLoginEndpoint(s userService.UserService) endpoint.Endpoint {
+func makeLoginEndpoint(s services.UserService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.LoginReq)
 		token, err := s.Login(ctx, req.Email, req.Password)

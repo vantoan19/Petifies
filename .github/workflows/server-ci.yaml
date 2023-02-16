@@ -41,7 +41,7 @@ jobs:
 
     - name: Linting
       run: |
-        golangci-lint run --out-format=github-actions -- $(go work edit -json | jq -c -r '[.Use[].DiskPath] | map_values(. + "/...")[]')
+        make lint
 
     - name: Bring up the server using docker compose
       id: build-image

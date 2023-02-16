@@ -15,9 +15,9 @@ import (
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	cmd "github.com/vantoan19/Petifies/server/services/user-service/cmd"
-	userEndpointsV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/endpoints/grpc/v1"
-	userService "github.com/vantoan19/Petifies/server/services/user-service/internal/service"
-	userServerV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/transport/grpc/v1"
+	endpointsV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/endpoints/grpc/v1"
+	services "github.com/vantoan19/Petifies/server/services/user-service/internal/services"
+	serversV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/transport/grpc/v1"
 )
 
 var logger = logging.New("UserService.Cmd.Grpc")
@@ -66,16 +66,18 @@ func registerServices(grpcServer *grpc.Server) {
 	logger.Info("Start registerServices")
 
 	// Register user service
-	userSvc, err := userService.New(
-		userService.WithPostgreUserRepository(cmd.DB),
+	userSvc, err := services.NewUserService(
+		services.WithPostgreUserRepository(cmd.DB),
 	)
 	if err != nil {
 		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
 		panic(err)
 	}
 
-	userEndpoints := userEndpointsV1.New(userSvc)
-	userProtoV1.RegisterUserServiceServer(grpcServer, userServerV1.New(userEndpoints))
+	userEndpoints := endpointsV1.NewUserEndpoints(userSvc)
+	authEndpoints := endpointsV1.NewAuthEndpoints(userSvc)
+	userProtoV1.RegisterUserServiceServer(grpcServer, serversV1.NewUserServer(userEndpoints))
+	userProtoV1.RegisterAuthServiceServer(grpcServer, serversV1.NewAuthServer(authEndpoints))
 	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
