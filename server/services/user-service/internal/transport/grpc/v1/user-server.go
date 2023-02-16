@@ -16,7 +16,7 @@ type gRPCUserServer struct {
 	login      grpctransport.Handler
 }
 
-func New(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServiceServer {
+func NewUserServer(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServiceServer {
 	return &gRPCUserServer{
 		createUser: grpctransport.NewServer(
 			endpoints.CreateUser,

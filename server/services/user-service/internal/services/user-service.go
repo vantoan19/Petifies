@@ -1,4 +1,4 @@
-package userservice
+package services
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	userAggre "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 	userRepo "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/repositories/user"
 	postgreRepo "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/repositories/user/postgres"
-	"github.com/vantoan19/Petifies/server/services/user-service/internal/jwt"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/handlers/jwt"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/utils"
 )
 
@@ -26,9 +26,10 @@ type userService struct {
 type UserService interface {
 	CreateUser(ctx context.Context, email, password, firstName, lastName string) (*userAggre.User, error)
 	Login(ctx context.Context, email, password string) (string, error)
+	VerifyToken(ctx context.Context, token string) (string, error)
 }
 
-func New(cfgs ...UserConfiguration) (UserService, error) {
+func NewUserService(cfgs ...UserConfiguration) (UserService, error) {
 	us := &userService{
 		tokenMaker: jwt.NewJWTMaker(cmd.Conf.TokenSecretKey),
 	}
@@ -90,4 +91,23 @@ func (s *userService) Login(ctx context.Context, email, password string) (string
 
 	logger.Info("Finished UserService.Login: SUCCESSFUL")
 	return s.tokenMaker.CreateToken(userAg.GetID(), cmd.Conf.AccessTokenDuration)
+}
+
+func (s *userService) VerifyToken(ctx context.Context, token string) (string, error) {
+	logger.Info("Start UserService.VerifyToken")
+
+	claims, err := s.tokenMaker.VerifyToken(token)
+	if err != nil {
+		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{"error": err.Error()})
+		return "", err
+	}
+
+	userAg, err := s.userRepository.GetByUUID(claims.UserID)
+	if err != nil {
+		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{"error": err.Error()})
+		return "", err
+	}
+
+	logger.Info("Finished UserService.VerifyToken: SUCCESSFUL")
+	return userAg.GetID().String(), nil
 }

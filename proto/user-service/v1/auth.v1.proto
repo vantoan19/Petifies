@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "github.com/vantoan19/Petifies/proto/user-service/v1";
+
+import "common/common.proto";
+
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message VerifyTokenRequest {
+    string token = 1;
+}
+
+message VerifyTokenResponse {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+}
+
+service AuthService {
+    rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {}
+}

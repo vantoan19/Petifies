@@ -26,9 +26,10 @@ var logger = logging.New("MobileGateway.Cmd.Grpc")
 func setupGRPC() (*grpc.Server, error) {
 	logger.Info("Start setupGRPC")
 
+	authInterceptor := auth.New(cmd.UserServiceConn)
 	interceptors := grpcutils.ServerInterceptors{
-		UnaryInterceptors:  []grpc.UnaryServerInterceptor{auth.Auth.GetUnaryAuthInterceptor()},
-		StreamInterceptors: []grpc.StreamServerInterceptor{auth.Auth.GetStreamAuthInterceptor()},
+		UnaryInterceptors:  []grpc.UnaryServerInterceptor{authInterceptor.GetUnaryAuthInterceptor()},
+		StreamInterceptors: []grpc.StreamServerInterceptor{authInterceptor.GetStreamAuthInterceptor()},
 	}
 
 	s, err := grpcutils.NewTLSGrpcServer(cmd.Conf.TLSKeyPath, cmd.Conf.TLSCertPath, interceptors)

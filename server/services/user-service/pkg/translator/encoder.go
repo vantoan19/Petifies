@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
+	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
 )
 
@@ -61,5 +62,27 @@ func EncodeLoginResponse(_ context.Context, response interface{}) (interface{}, 
 
 	return &commonProto.LoginResponse{
 		AccessToken: resp.AccessToken,
+	}, nil
+}
+
+func EncodeVerifyTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.VerifyTokenReq)
+	if !ok {
+		return nil, errors.New("must be endpoints' request")
+	}
+
+	return &userProtoV1.VerifyTokenRequest{
+		Token: req.Token,
+	}, nil
+}
+
+func EncodeVerifyTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.VerifyTokenResp)
+	if !ok {
+		return nil, errors.New("must be endpoints' response")
+	}
+
+	return &userProtoV1.VerifyTokenResponse{
+		UserId: resp.UserID,
 	}, nil
 }

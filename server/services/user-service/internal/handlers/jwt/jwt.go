@@ -14,10 +14,10 @@ var (
 )
 
 type Claim struct {
-	ID         uuid.UUID
-	UserID     uuid.UUID
-	IssuedAt   time.Time
-	ExpriredAt time.Time
+	ID         uuid.UUID `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	IssuedAt   time.Time `json:"issued_at"`
+	ExpriredAt time.Time `json:"expired_at"`
 }
 
 func NewClaim(userID uuid.UUID, duration time.Duration) (*Claim, error) {
