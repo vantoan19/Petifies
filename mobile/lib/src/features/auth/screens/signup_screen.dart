@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/custom_widgets/auth_appbar/auth_appbar.dart';
-import 'package:mobile/src/custom_widgets/auth_button/auth_button.dart';
+import 'package:mobile/src/custom_widgets/buttons/auth_button.dart';
 import 'package:mobile/src/custom_widgets/text_divider/text_divider.dart';
 import 'package:mobile/src/theme/themes.dart';
 
@@ -52,15 +53,15 @@ class _SignUpButtons extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(0, 80, 0, 40),
       child: Column(children: [
         AuthButton(
-            label: 'Create account',
+            label: Language.translate(context).createAccountLabel,
             action: () => {Navigator.of(context).pushNamed('/signup/form')}),
-        const TextDivider(
-          text: "or",
+        TextDivider(
+          text: Language.translate(context).orText,
           thickness: 1.5,
         ),
         ThirdpartyAuthButton.withColor(
           icon: const Icon(FontAwesomeIcons.google),
-          label: 'Create account with Google',
+          label: Language.translate(context).googleSignUpLabel,
           action: () => {},
           color: Themes.greyColor,
         )
@@ -83,21 +84,27 @@ class _SignUpAgreement extends StatelessWidget {
         child: RichText(
           text: TextSpan(children: [
             TextSpan(
-                text: "By signing up, you agree to our ", style: textStyle),
+                text: Language.translate(context).agreementFirstPart,
+                style: textStyle),
             TextSpan(
-                text: "Terms of Service",
+                text: Language.translate(context).agreementSecondPart,
                 style: linkStyle,
                 recognizer: TapGestureRecognizer()..onTap = () {}),
             TextSpan(text: ", ", style: textStyle),
             TextSpan(
-                text: "Privacy Policy",
+                text: Language.translate(context).agreementThirdPart,
                 style: linkStyle,
                 recognizer: TapGestureRecognizer()..onTap = () {}),
-            TextSpan(text: " and ", style: textStyle),
             TextSpan(
-                text: "Uses of Cookies",
+                text: Language.translate(context).agreementFourthPart,
+                style: textStyle),
+            TextSpan(
+                text: Language.translate(context).agreementFifthPart,
                 style: linkStyle,
                 recognizer: TapGestureRecognizer()..onTap = () {}),
+            TextSpan(
+                text: Language.translate(context).agreementSixthPart,
+                style: textStyle),
           ]),
         ));
   }

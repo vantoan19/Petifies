@@ -1,0 +1,3 @@
+arb-dir: lib/src/localization
+template-arb-file: petifies_en.arb
+output-localization-file: petifies_localizations.dart

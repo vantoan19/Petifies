@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/petifies_localizations.dart';
 import 'package:mobile/src/features/auth/screens/introduction_screens.dart';
 import 'package:mobile/src/features/auth/screens/signin_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_form_screen.dart';
@@ -7,18 +8,20 @@ import 'package:mobile/src/features/auth/screens/splash_screen.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const Petifies());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Petifies extends StatelessWidget {
+  const Petifies({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Petifies',
-      theme: Themes.lightModeAppTheme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: Locale('en', ''),
+      theme: Themes.darkModeAppTheme,
       initialRoute: "/introduction",
       onGenerateRoute: (settings) {
         switch (settings.name) {

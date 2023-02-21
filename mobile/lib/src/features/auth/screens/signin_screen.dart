@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/custom_widgets/auth_appbar/auth_appbar.dart';
-import 'package:mobile/src/custom_widgets/auth_button/auth_button.dart';
+import 'package:mobile/src/custom_widgets/buttons/auth_button.dart';
 import 'package:mobile/src/custom_widgets/auth_textfield/auth_textfiled.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -50,19 +51,20 @@ class _SignInBody extends StatelessWidget {
         width: width,
       ),
       AuthTextField(
-          label: 'E-Mail',
+          label: Language.translate(context).emailLabel,
           icon: const Icon(Icons.email),
           controller: _emailController),
       AuthTextField(
-        label: 'Password',
+        label: Language.translate(context).passwordLabel,
         icon: const Icon(Icons.lock),
         controller: _passwordController,
         isObscureText: true,
       ),
       const _SignInForgotPasswordButton(),
-      AuthButton(label: 'Sign In', action: () => {}),
+      AuthButton(
+          label: Language.translate(context).signInLabel, action: () => {}),
       ThirdpartyAuthButton.withColor(
-        label: 'Sign in with Google',
+        label: Language.translate(context).googleSignInLabel,
         action: () => {},
         icon: const FaIcon(FontAwesomeIcons.google),
         color: Theme.of(context).colorScheme.secondary,
@@ -85,7 +87,9 @@ class _SignInForgotPasswordButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           TextButton(
-              onPressed: () => {}, child: const Text('Forgot your password')),
+            onPressed: () => {},
+            child: Text(Language.translate(context).forgotPasswordText),
+          ),
         ],
       ),
     );
@@ -102,10 +106,10 @@ class _SignInToRegisterButton extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text('New to Petifies?'),
+            Text(Language.translate(context).newbieText),
             TextButton(
                 onPressed: () => {Navigator.of(context).pushNamed('/signup')},
-                child: const Text('Register'))
+                child: Text(Language.translate(context).registerLabel))
           ],
         )
       ],

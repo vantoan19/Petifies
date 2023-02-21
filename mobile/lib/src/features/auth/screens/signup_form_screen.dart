@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/custom_widgets/auth_appbar/auth_appbar.dart';
-import 'package:mobile/src/custom_widgets/auth_button/auth_button.dart';
+import 'package:mobile/src/custom_widgets/buttons/auth_button.dart';
 import 'package:mobile/src/custom_widgets/auth_textfield/auth_textfiled.dart';
-import 'package:mobile/src/theme/themes.dart';
 
 class SignUpFormScreen extends StatefulWidget {
   const SignUpFormScreen({super.key});
@@ -66,32 +64,35 @@ class SignUpFormBody extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: Constants.horizontalScreenPadding, vertical: 50),
           child: Text(
-            'Welcome to the pet lovers\' community',
+            Language.translate(context).greetingRegistration,
             style: headerStyle,
           ),
         ),
         AuthTextField(
-            label: 'E-Mail',
+            label: Language.translate(context).emailLabel,
             icon: const Icon(Icons.email),
             controller: _emailController),
         AuthTextField(
-          label: 'Password',
+          label: Language.translate(context).passwordLabel,
           icon: const Icon(Icons.password),
           controller: _passwordController,
           isObscureText: true,
         ),
         AuthTextField(
-            label: 'First name',
+            label: Language.translate(context).firstNameLabel,
             icon: const Icon(FontAwesomeIcons.signature),
             controller: _firstNameController),
         AuthTextField(
-            label: 'Family name',
+            label: Language.translate(context).familyNameLabel,
             icon: const Icon(FontAwesomeIcons.peopleRoof),
             controller: _familyNameController),
         Container(
           height: 50,
         ),
-        AuthButton(label: 'Create account', action: () => {})
+        AuthButton(
+          label: Language.translate(context).createAccountLabel,
+          action: () => {},
+        )
       ],
     );
   }
