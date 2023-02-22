@@ -9,3 +9,5 @@ openssl req -newkey rsa:4096 -nodes -keyout tls.key -out req.pem -subj "/C=HU/ST
 
 # Sign server's CSR with CA's private key and get back server cert
 openssl x509 -req -in req.pem -days 60 -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt -extfile ext.cnf
+
+cp ca.key ca.crt tls.key req.pem tls.crt ca.srl ../mobile/assets/cert
