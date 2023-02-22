@@ -1,28 +1,32 @@
+
 import 'package:flutter/material.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/theme/themes.dart';
 
-class AuthTextField extends StatelessWidget {
+class CustomTextFormField extends StatelessWidget {
   final String label;
   final Widget icon;
-  final TextEditingController controller;
   final bool isObscureText;
+  final Function(String) onChange;
+  final String? Function(String?)? validator;
 
-  const AuthTextField(
+  const CustomTextFormField(
       {super.key,
       required this.label,
       required this.icon,
-      required this.controller,
-      this.isObscureText = false});
+      this.isObscureText = false,
+      required this.onChange,
+      this.validator});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
           vertical: 8, horizontal: Constants.horizontalScreenPadding),
-      child: TextField(
+      child: TextFormField(
         obscureText: isObscureText,
-        controller: controller,
+        onChanged: onChange,
+        validator: validator,
         decoration: InputDecoration(
           label: Text(label),
           prefixIcon: icon,

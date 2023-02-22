@@ -1,24 +1,26 @@
-
 import 'package:flutter/material.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 class AuthButton extends StatelessWidget {
   final String label;
-  final Function action;
   final Color color;
+  final Function? action;
+  final bool isLoading;
 
   const AuthButton(
       {super.key,
       required this.label,
       required this.action,
-      this.color = Themes.blueColor});
+      this.color = Themes.blueColor,
+      this.isLoading = false});
 
   const AuthButton.withColor(
       {super.key,
       required this.label,
       required this.action,
-      required this.color});
+      required this.color,
+      this.isLoading = false});
 
   Text get _label {
     return Text(label);
@@ -33,17 +35,19 @@ class AuthButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: Constants.horizontalScreenPadding, vertical: 8),
-      child: ElevatedButton.icon(
-        onPressed: () => {action()},
-        icon: _icon,
-        label: _label,
-        style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            minimumSize: const Size(double.infinity, 50.0),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            textStyle: Theme.of(context).textTheme.titleMedium),
-      ),
+      child: isLoading
+          ? ElevatedButton(onPressed: null, child: CircularProgressIndicator())
+          : ElevatedButton.icon(
+              onPressed: () => {action!()},
+              icon: _icon,
+              label: _label,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  minimumSize: const Size(double.infinity, 50.0),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  textStyle: Theme.of(context).textTheme.titleMedium),
+            ),
     );
   }
 }
@@ -55,14 +59,16 @@ class ThirdpartyAuthButton extends AuthButton {
       {super.key,
       required super.label,
       required super.action,
-      required this.icon});
+      required this.icon,
+      super.isLoading = false});
 
   const ThirdpartyAuthButton.withColor(
       {super.key,
       required super.label,
       required super.action,
       required super.color,
-      required this.icon});
+      required this.icon,
+      super.isLoading = false});
 
   @override
   Widget get _icon {

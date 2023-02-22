@@ -12,12 +12,7 @@ class Constants {
   static const logoLightThemePath = 'assets/images/petify_logo_light.png';
   static const logoDarkThemePath = 'assets/images/petify_logo_dark.png';
   static const splashIconMp4Path = 'assets/images/Petify.mp4';
+  static const caCertPath = 'assets/cert/ca.crt';
 
   static const horizontalScreenPadding = 30.0;
-
-  static void goBack(context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
 }

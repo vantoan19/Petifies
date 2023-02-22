@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/utils/navigation.dart';
 
 class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
   final GlobalKey<IntroductionScreenState>? _introScreenKey;
@@ -28,7 +29,7 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
                     _introScreenKey?.currentState?.previous()
                   } // In case this is the introduction screen
                 else
-                  {Constants.goBack(context)}
+                  {NavigatorUtil.goBack(context)}
               },
           icon: const Icon(Icons.arrow_back)),
     );

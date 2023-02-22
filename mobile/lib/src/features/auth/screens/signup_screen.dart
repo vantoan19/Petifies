@@ -4,9 +4,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/constants/languages.dart';
-import 'package:mobile/src/custom_widgets/auth_appbar/auth_appbar.dart';
-import 'package:mobile/src/custom_widgets/buttons/auth_button.dart';
-import 'package:mobile/src/custom_widgets/text_divider/text_divider.dart';
+import 'package:mobile/src/utils/navigation.dart';
+import 'package:mobile/src/widgets/auth_appbar/auth_appbar.dart';
+import 'package:mobile/src/widgets/buttons/auth_button.dart';
+import 'package:mobile/src/widgets/text_divider/text_divider.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 class SignUpScreen extends StatelessWidget {
@@ -54,7 +55,7 @@ class _SignUpButtons extends StatelessWidget {
       child: Column(children: [
         AuthButton(
             label: Language.translate(context).createAccountLabel,
-            action: () => {Navigator.of(context).pushNamed('/signup/form')}),
+            action: () => NavigatorUtil.toSignUpForm(context)),
         TextDivider(
           text: Language.translate(context).orText,
           thickness: 1.5,
@@ -103,8 +104,9 @@ class _SignUpAgreement extends StatelessWidget {
                 style: linkStyle,
                 recognizer: TapGestureRecognizer()..onTap = () {}),
             TextSpan(
-                text: Language.translate(context).agreementSixthPart,
-                style: textStyle),
+              text: Language.translate(context).agreementSixthPart,
+              style: textStyle,
+            ),
           ]),
         ));
   }

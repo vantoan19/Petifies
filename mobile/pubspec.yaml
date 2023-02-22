@@ -44,6 +44,11 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  protobuf: ^2.1.0
+  grpc: ^3.1.0
+  fpdart: ^0.4.0
+  riverpod: ^2.2.0
+  path_provider: ^2.0.12
 
 dev_dependencies:
   flutter_native_splash: ^2.2.18
@@ -99,6 +104,7 @@ flutter:
     - assets/images/petify_splash_logo_and12_light.png
     - assets/images/petify_splash_logo_and12_dark.png
     - assets/images/Petify.mp4
+    - assets/cert/ca.crt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

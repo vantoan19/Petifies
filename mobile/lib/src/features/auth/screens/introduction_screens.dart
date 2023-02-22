@@ -3,7 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/constants/languages.dart';
-import 'package:mobile/src/custom_widgets/auth_appbar/auth_appbar.dart';
+import 'package:mobile/src/widgets/auth_appbar/auth_appbar.dart';
 
 class IntroductionScreens extends StatelessWidget {
   const IntroductionScreens({super.key});
@@ -85,24 +85,25 @@ class _IntroductionPage extends PageViewModel {
       required assetPath,
       required deviceWidth})
       : super(
-            titleWidget: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: Constants.horizontalScreenPadding),
-              child: Text(
-                title,
-                style: headerStyle,
-              ),
+          titleWidget: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: Constants.horizontalScreenPadding),
+            child: Text(
+              title,
+              style: headerStyle,
             ),
-            bodyWidget: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: Constants.horizontalScreenPadding),
-              child: Text(
-                bodyText,
-                style: textStyle,
-              ),
+          ),
+          bodyWidget: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: Constants.horizontalScreenPadding),
+            child: Text(
+              bodyText,
+              style: textStyle,
             ),
-            image: SvgPicture.asset(
-              assetPath,
-              width: deviceWidth,
-            ));
+          ),
+          image: SvgPicture.asset(
+            assetPath,
+            width: deviceWidth,
+          ),
+        );
 }
