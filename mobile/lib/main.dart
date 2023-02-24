@@ -21,7 +21,7 @@ class Petifies extends StatelessWidget {
       title: 'Petifies',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: Locale('en', ''),
+      locale: Locale('vi', ''),
       theme: Themes.darkModeAppTheme,
       initialRoute: "/introduction",
       onGenerateRoute: (settings) {

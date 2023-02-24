@@ -1,10 +1,10 @@
-package user_test
+package useragg_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
+	useragg "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 )
 
 func TestUser_NewUser(t *testing.T) {
@@ -46,7 +46,7 @@ func TestUser_NewUser(t *testing.T) {
 
 	for _, tc := range failedTestCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			_, errs := user.New(tc.email, tc.password, tc.firstName, tc.lastName)
+			_, errs := useragg.New(tc.email, tc.password, tc.firstName, tc.lastName, false)
 			if !strings.Contains(errs.Error(), tc.errMsg) {
 				t.Errorf("Expected error %s, got %s", tc.errMsg, errs.Error())
 			}

@@ -6,15 +6,20 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateUserResp struct {
-	ID        uuid.UUID
-	Email     string
-	FirstName string
-	LastName  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+type LoginResp struct {
+	SessionID             uuid.UUID
+	AccessToken           string
+	AccessTokenExpiresAt  time.Time
+	RefreshToken          string
+	RefreshTokenExpiresAt time.Time
+	User                  User
 }
 
-type LoginResp struct {
-	AccessToken string
+type VerifyTokenResp struct {
+	UserID string
+}
+
+type RefreshTokenResp struct {
+	AccessToken          string
+	AccessTokenExpiresAt time.Time
 }

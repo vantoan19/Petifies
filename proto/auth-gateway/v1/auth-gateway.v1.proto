@@ -2,9 +2,12 @@ syntax = "proto3";
 
 option go_package = "github.com/vantoan19/Petifies/proto/auth-gateway/v1";
 
-message HelloWorldRequest {}
-message HelloWroldResponse {}
+import "common/common.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message GetMyInfoRequest {}
 
 service AuthGateway {
-    rpc SayHello(HelloWorldRequest) returns (HelloWroldResponse) {}
+    rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
 }

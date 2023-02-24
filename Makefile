@@ -59,3 +59,9 @@ lint: lint-server
 
 lint-server:
 	golangci-lint run --out-format=github-actions -- $$(go work edit -json | jq -c -r '[.Use[].DiskPath] | map_values(. + "/...")[]')
+
+user-db-up:
+	cd server/services/user-service; migrate -path db/migrations -database "postgresql://postgres:password@localhost:5433/users?sslmode=disable" up
+
+user-db-down:
+	cd server/services/user-service; migrate -path db/migrations -database "postgresql://postgres:password@localhost:5433/users?sslmode=disable" down

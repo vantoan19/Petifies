@@ -15,9 +15,9 @@ import (
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	cmd "github.com/vantoan19/Petifies/server/services/user-service/cmd"
-	endpointsV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/endpoints/grpc/v1"
-	services "github.com/vantoan19/Petifies/server/services/user-service/internal/services"
-	serversV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/transport/grpc/v1"
+	services "github.com/vantoan19/Petifies/server/services/user-service/internal/application/services"
+	endpointsV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/presentation/endpoints/grpc/v1"
+	serversV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/presentation/transport/grpc/v1"
 )
 
 var logger = logging.New("UserService.Cmd.Grpc")
