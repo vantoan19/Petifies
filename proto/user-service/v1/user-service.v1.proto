@@ -7,8 +7,14 @@ import "common/common.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 
+message GetUserRequest {
+
+    string user_id = 1 [(validate.rules).string.uuid = true];
+
+}
 
 service UserService {
     rpc CreateUser(CreateUserRequest) returns (User) {}
     rpc Login(LoginRequest) returns (LoginResponse) {}
+    rpc GetUser(GetUserRequest) returns (User) {}
 }

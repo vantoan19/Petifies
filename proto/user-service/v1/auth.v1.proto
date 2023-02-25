@@ -17,4 +17,5 @@ message VerifyTokenResponse {
 
 service AuthService {
     rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {}
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
 }

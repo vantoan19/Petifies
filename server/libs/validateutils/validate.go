@@ -2,6 +2,7 @@ package validateutils
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -9,23 +10,40 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 )
 
-type EnglishValidator struct {
+var lock = &sync.Mutex{}
+
+type englishValidator struct {
 	validator  *validator.Validate
 	translator *ut.Translator
 }
 
-func NewEnglishValidator() *EnglishValidator {
-	v := validator.New()
-	trans := engErrTranslator(v)
-	return &EnglishValidator{
-		validator:  v,
-		translator: trans,
+var englishValidatorInstance *englishValidator
+
+func GetEnglishValidatorInstance() *englishValidator {
+	if englishValidatorInstance == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if englishValidatorInstance == nil {
+			v := validator.New()
+			trans := engErrTranslator(v)
+			englishValidatorInstance = &englishValidator{
+				validator:  v,
+				translator: trans,
+			}
+		}
 	}
+
+	return englishValidatorInstance
 }
 
-func (v *EnglishValidator) Struct(s interface{}) (errs []error) {
+func (v *englishValidator) Struct(s interface{}) (errs []error) {
 	err := v.validator.Struct(s)
 	return translateError(err, v.translator)
+}
+
+func (v *englishValidator) Var(va interface{}, rules string) error {
+	err := v.validator.Var(va, rules)
+	return err
 }
 
 func engErrTranslator(validate *validator.Validate) *ut.Translator {

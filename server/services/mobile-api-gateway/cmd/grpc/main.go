@@ -11,14 +11,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	authProtoV1 "github.com/vantoan19/Petifies/proto/auth-gateway/v1"
 	publicProtoV1 "github.com/vantoan19/Petifies/proto/public-gateway/v1"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/cmd"
-	endpointsV1 "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/endpoints/grpc/v1"
-	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/interceptors/auth"
-	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/services"
-	grpcServers "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/transport/grpc/v1"
+	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services"
+	endpointsV1 "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/endpoints/grpc/v1"
+	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/interceptors/auth"
+	grpcServers "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/transport/grpc/v1"
 )
 
 var logger = logging.New("MobileGateway.Cmd.Grpc")
@@ -79,8 +80,10 @@ func registerServices(grpcServer *grpc.Server) {
 		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
 		panic(err)
 	}
+
 	userEndpoints := endpointsV1.NewUserEndpoints(userSvc)
 	publicProtoV1.RegisterPublicGatewayServer(grpcServer, grpcServers.NewPublicServer(userEndpoints))
+	authProtoV1.RegisterAuthGatewayServer(grpcServer, grpcServers.NewAuthServer(userEndpoints))
 
 	logger.Info("Finished registerServices: SUCCESSFUL")
 }

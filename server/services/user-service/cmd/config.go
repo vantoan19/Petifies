@@ -17,8 +17,9 @@ type Config struct {
 	GrpcPort    int    `yaml:"GrpcPort,omitempty"`
 	PostgresUrl string `yaml:"PostgresUrl,omitempty"`
 
-	TokenSecretKey      string        `yaml:"TokenSecretKey,omitempty"`
-	AccessTokenDuration time.Duration `yaml:"AccessTokenDuration,omitempty"`
+	TokenSecretKey       string        `yaml:"TokenSecretKey,omitempty"`
+	AccessTokenDuration  time.Duration `yaml:"AccessTokenDuration,omitempty"`
+	RefreshTokenDuration time.Duration `yaml:"RefreshTokenDuration,omitempty"`
 }
 
 var (

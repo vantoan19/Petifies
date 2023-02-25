@@ -11,21 +11,23 @@ SELECT * FROM users;
 
 -- name: CreateUser :one
 INSERT INTO users (
-  email, password, first_name, last_name
+  id, email, password, first_name, last_name, is_activated
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5, $6
 )
 RETURNING *;
 
--- name: UpdateUserName :one
-UPDATE users SET first_name = $2, last_name = $3
+-- name: UpdateUser :one
+UPDATE users SET email = $2, password = $3, first_name = $4, last_name = $5, is_activated = $6, updated_at = $7
 WHERE id = $1
 RETURNING *;
 
--- name: DeleteUserByID :exec
+-- name: DeleteUserByID :one
 DELETE FROM users
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
--- name: DeleteUserByEmail :exec
+-- name: DeleteUserByEmail :one
 DELETE FROM users
-WHERE email = $1;
+WHERE email = $1
+RETURNING *;

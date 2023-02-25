@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type CreateUserReq struct {
 	Email     string
 	Password  string
@@ -16,6 +18,10 @@ type VerifyTokenReq struct {
 	Token string
 }
 
-type VerifyTokenResp struct {
-	UserID string
+type RefreshTokenReq struct {
+	RefreshToken string
+}
+
+type GetUserReq struct {
+	ID uuid.UUID
 }

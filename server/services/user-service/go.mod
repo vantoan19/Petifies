@@ -16,4 +16,5 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 )

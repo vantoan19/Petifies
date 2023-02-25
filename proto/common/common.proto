@@ -26,9 +26,11 @@ message User {
         max_len: 50
     }];
 
-    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    bool is_activated = 6;
 
-    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp created_at = 7 [(validate.rules).timestamp.required = true];
+
+    google.protobuf.Timestamp updated_at = 8 [(validate.rules).timestamp.required = true];
 
 }
 
@@ -69,6 +71,30 @@ message LoginRequest {
 
 message LoginResponse {
 
+    string session_id = 1 [(validate.rules).string.uuid = true];
+
+    string refresh_token = 2;
+
+    google.protobuf.Timestamp refresh_token_expires_at = 3 [(validate.rules).timestamp.required = true];
+
+    string access_token = 4;
+
+    google.protobuf.Timestamp access_token_expires_at = 5 [(validate.rules).timestamp.required = true]; 
+
+    User user = 6;
+
+}
+
+message RefreshTokenRequest {
+
+    string refresh_token = 1;
+
+}
+
+message RefreshTokenResponse {
+
     string access_token = 1;
+
+    google.protobuf.Timestamp access_token_expires_at = 2 [(validate.rules).timestamp.required = true]; 
 
 }
