@@ -12,7 +12,7 @@ final userCreateControllerProvider =
 class UserCreateController extends AutoDisposeAsyncNotifier<UserModel?> {
   @override
   FutureOr<UserModel?> build() {
-    return ref.read(userModelProvider.notifier).state;
+    return null;
   }
 
   Future<void> handle({

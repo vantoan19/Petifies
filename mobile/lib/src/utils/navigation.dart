@@ -17,6 +17,10 @@ class NavigatorUtil {
     Navigator.of(context).pushNamed('/introduction');
   }
 
+  static void toHomePage(context) {
+    Navigator.of(context).pushNamed('/home-page');
+  }
+
   static void goBack(context) {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();

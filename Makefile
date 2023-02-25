@@ -51,6 +51,7 @@ gen_cert:
 gen_proto:
 	@echo "Generating proto stubs"
 	cd proto; ./generate.sh;
+	cd mobile; ./gen-proto.sh;
 
 format:
 	gofmt -s -w .

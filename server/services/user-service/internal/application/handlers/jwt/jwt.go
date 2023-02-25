@@ -38,7 +38,7 @@ func NewClaim(userID uuid.UUID, sessionId uuid.UUID, duration time.Duration) (*C
 
 func (p *Claim) Valid() error {
 	if time.Now().After(p.ExpriresAt) {
-		return errors.New("token has expired")
+		return ExpriedTokenError
 	}
 
 	return nil

@@ -111,7 +111,6 @@ func ToSlice[T interface{}](c chan T) []T {
 }
 
 func Filter[T any](data []T, f func(T) bool) []T {
-
 	fltd := make([]T, 0, len(data))
 
 	for _, e := range data {
@@ -119,7 +118,6 @@ func Filter[T any](data []T, f func(T) bool) []T {
 			fltd = append(fltd, e)
 		}
 	}
-
 	return fltd
 }
 

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -155,6 +156,9 @@ func (s *userService) VerifyToken(ctx context.Context, token string) (string, er
 		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{
 			"error": err.Error(),
 		})
+		if errors.Is(err, jwt.ExpriedTokenError) {
+			return "", status.Error(codes.Unauthenticated, err.Error())
+		}
 		return "", status.Error(codes.Internal, err.Error())
 	}
 
@@ -192,6 +196,9 @@ func (s *userService) RefreshToken(ctx context.Context, token string) (string, t
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{
 			"error": err.Error(),
 		})
+		if errors.Is(err, jwt.ExpriedTokenError) {
+			return "", time.Time{}, status.Error(codes.Unauthenticated, err.Error())
+		}
 		return "", time.Time{}, status.Error(codes.Internal, err.Error())
 	}
 
@@ -219,7 +226,7 @@ func (s *userService) RefreshToken(ctx context.Context, token string) (string, t
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{
 			"error": "refresh token has expired",
 		})
-		return "", time.Time{}, status.Error(codes.PermissionDenied, "refresh token has expired")
+		return "", time.Time{}, status.Error(codes.Unauthenticated, "refresh token has expired")
 	}
 
 	accessToken, accessClaim, err := s.tokenMaker.CreateToken(user.GetID(), session.ID, cmd.Conf.AccessTokenDuration)
