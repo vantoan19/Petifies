@@ -120,6 +120,10 @@ func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*u
 			return err
 		}
 		user_, err = mapper.DbModelsToUserAggregate(&userDb, &sessionsDb)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -154,6 +158,10 @@ func (pr *UserRepository) UpdateUser(ctx context.Context, user *userAggre.User) 
 			return err
 		}
 		user_, err = mapper.DbModelsToUserAggregate(&userDb, &sessionsDb)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {

@@ -127,6 +127,13 @@ func (s *userService) Login(ctx context.Context, email, password string) (uuid.U
 		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
 	}
 	updatedUser, err := s.userRepository.UpdateUser(ctx, user)
+	if err != nil {
+		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{
+			"error": err.Error(),
+		})
+		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
+	}
+
 	addedSession := updatedUser.GetSessionById(session.ID)
 	if addedSession == nil || addedSession.RefreshToken != refreshToken {
 		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{
@@ -203,6 +210,13 @@ func (s *userService) RefreshToken(ctx context.Context, token string) (string, t
 	}
 
 	user, err := s.userRepository.GetByUUID(ctx, claims.UserID)
+	if err != nil {
+		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{
+			"error": err.Error(),
+		})
+		return "", time.Time{}, status.Error(codes.Internal, err.Error())
+	}
+
 	session := user.GetSessionById(claims.ID)
 	if session == nil {
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{

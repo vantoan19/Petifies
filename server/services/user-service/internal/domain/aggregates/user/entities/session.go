@@ -31,8 +31,5 @@ func (s *Session) Validate() (errs common.MultiError) {
 }
 
 func (s *Session) HasExpired() bool {
-	if time.Now().After(s.ExpiresAt) {
-		return true
-	}
-	return false
+	return time.Now().After(s.ExpiresAt)
 }
