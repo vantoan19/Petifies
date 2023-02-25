@@ -1,3 +1,5 @@
+#!/bin/bash
+
 OUT_DIR_DART=./lib/src/proto
 PROTO_DIR=../proto
 PROTO_FILES=("common/common.proto" "public-gateway/v1/public-gateway.v1.proto" "auth-gateway/v1/auth-gateway.v1.proto"
