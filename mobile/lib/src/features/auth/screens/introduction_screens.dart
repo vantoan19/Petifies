@@ -3,7 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/constants/languages.dart';
-import 'package:mobile/src/widgets/auth_appbar/auth_appbar.dart';
+import 'package:mobile/src/widgets/appbars/auth_appbar.dart';
 
 class IntroductionScreens extends StatelessWidget {
   const IntroductionScreens({super.key});

@@ -14,7 +14,7 @@ up: format
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: format gen_cert gen_proto build_mobile_api_gateway build_user_service
+up_build: format gen_cert gen_proto_server build_mobile_api_gateway build_user_service
 	@echo "Stopping docker images"
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} down
 	@echo "Building and starting docker images..."

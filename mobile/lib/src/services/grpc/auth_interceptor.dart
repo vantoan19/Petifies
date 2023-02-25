@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grpc/service_api.dart';
-import 'package:mobile/src/providers/secure_storage_provider.dart';
+import 'package:mobile/src/providers/storages_provider.dart';
 
 class AuthInterceptor extends ClientInterceptor {
   final Ref _ref;

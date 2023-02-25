@@ -5,7 +5,7 @@ import 'package:mobile/src/proto/auth-gateway/v1/auth-gateway.v1.pbgrpc.dart';
 import 'package:mobile/src/proto/common/common.pb.dart';
 import 'package:mobile/src/proto/public-gateway/v1/public-gateway.v1.pbgrpc.dart';
 import 'package:mobile/src/providers/model_providers.dart';
-import 'package:mobile/src/providers/secure_storage_provider.dart';
+import 'package:mobile/src/providers/storages_provider.dart';
 import 'package:mobile/src/services/grpc/auth_interceptor.dart';
 import 'package:mobile/src/services/grpc/grpc_flutter_client.dart';
 import 'package:retry/retry.dart';

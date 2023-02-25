@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/utils/navigation.dart';
-import 'package:mobile/src/widgets/auth_appbar/auth_appbar.dart';
+import 'package:mobile/src/widgets/appbars/auth_appbar.dart';
 import 'package:mobile/src/widgets/buttons/auth_button.dart';
 import 'package:mobile/src/widgets/text_divider/text_divider.dart';
 import 'package:mobile/src/theme/themes.dart';

@@ -8,7 +8,7 @@ import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/features/auth/controllers/user_controllers.dart';
 import 'package:mobile/src/models/user_model.dart';
 import 'package:mobile/src/utils/navigation.dart';
-import 'package:mobile/src/widgets/auth_appbar/auth_appbar.dart';
+import 'package:mobile/src/widgets/appbars/auth_appbar.dart';
 import 'package:mobile/src/widgets/buttons/auth_button.dart';
 import 'package:mobile/src/widgets/textfield/textformfield.dart';
 
