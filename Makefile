@@ -48,10 +48,15 @@ gen_cert:
 	cd cert; ./dev-cert-gen.sh; cd ..
 
 # gen_proto: generates proto files
-gen_proto:
-	@echo "Generating proto stubs"
+gen_proto: gen_proto_server gen_proto_client
+
+gen_proto_server:
+	@echo "Generating proto stubs for server"
 	cd proto; ./generate.sh;
-	cd mobile; ./gen-proto.sh;
+
+gen_proto_client:
+	@echo "Generating proto stubs for mobile"
+	cd mobile; ./gen-proto.sh;	
 
 format:
 	gofmt -s -w .

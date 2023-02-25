@@ -37,7 +37,7 @@ jobs:
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
         go install github.com/envoyproxy/protoc-gen-validate
         export PATH="$PATH:$(go env GOPATH)/bin"
-        make gen_proto
+        make gen_proto_server
 
     - name: Linting
       run: |
