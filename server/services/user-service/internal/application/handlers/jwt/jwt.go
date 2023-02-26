@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -10,7 +9,9 @@ import (
 )
 
 var (
-	ExpriedTokenError = errors.New("token has expired")
+	ExpriedTokenError      = errors.New("token has expired")
+	MismatchedAlgorithmErr = errors.New("the algorithm of the token doesn't match with the signing method")
+	WrongClaimErr          = errors.New("Wrong token claim")
 )
 
 type Claim struct {
@@ -75,7 +76,7 @@ func (j *JWTMaker) CreateToken(userID uuid.UUID, sessionID uuid.UUID, duration t
 func (j *JWTMaker) VerifyToken(token string) (*Claim, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid token, the algorithm of the token doesn't match with the signing method")
+			return nil, MismatchedAlgorithmErr
 		}
 		return []byte(j.secretKey), nil
 	}
@@ -86,12 +87,12 @@ func (j *JWTMaker) VerifyToken(token string) (*Claim, error) {
 		if ok && errors.Is(err_.Inner, ExpriedTokenError) {
 			return nil, ExpriedTokenError
 		}
-		return nil, fmt.Errorf("invalid token, %v", err)
+		return nil, err
 	}
 
 	claim, ok := jwtToken.Claims.(*Claim)
 	if !ok {
-		return nil, errors.New("invalid token")
+		return nil, WrongClaimErr
 	}
 
 	return claim, nil

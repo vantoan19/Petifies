@@ -1,0 +1,5 @@
+GrpcPort: 8888
+Domain:
+TLSKeyPath: "/app/cert/tls.key"
+TLSCertPath: "/app/cert/tls.crt" 
+UserServiceHost: "user-service:8888"
