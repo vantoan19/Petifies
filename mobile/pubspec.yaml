@@ -106,6 +106,7 @@ flutter:
     - assets/images/petify_splash_logo_and12_light.png
     - assets/images/petify_splash_logo_and12_dark.png
     - assets/images/Petify.mp4
+    - assets/images/default_avatar.png
     - assets/cert/ca.crt
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -12,6 +12,7 @@ class Constants {
   static const logoLightThemePath = 'assets/images/petify_logo_light.png';
   static const logoDarkThemePath = 'assets/images/petify_logo_dark.png';
   static const splashIconMp4Path = 'assets/images/Petify.mp4';
+  static const defaultAvatarPng = 'assets/images/default_avatar.png';
   static const caCertPath = 'assets/cert/ca.crt';
 
   static const horizontalScreenPadding = 30.0;
