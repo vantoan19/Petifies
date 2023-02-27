@@ -15,6 +15,11 @@ import (
 	sqlc "github.com/vantoan19/Petifies/server/services/user-service/internal/infra/db/sqlc"
 )
 
+var (
+	UserNotExistErr     = errors.New("user doesn't exist")
+	UserAlreadyExistErr = errors.New("user already existed")
+)
+
 type UserRepository struct {
 	db      *sql.DB
 	queries *sqlc.Queries
@@ -36,7 +41,7 @@ func (pr *UserRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*userAgg
 		userDb, err := q.GetUserByID(tCtx, id)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return errors.New("user doesn't exist")
+				return UserNotExistErr
 			}
 			return err
 		}
@@ -67,7 +72,7 @@ func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAg
 		userDb, err := q.GetUserByEmail(tCtx, email)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return errors.New("user doesn't exist")
+				return UserNotExistErr
 			}
 			return err
 		}
@@ -107,7 +112,7 @@ func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*u
 			if pqErr, ok := err.(*pq.Error); ok {
 				switch pqErr.Code.Name() {
 				case "unique_violation":
-					return errors.New("user already exists")
+					return UserAlreadyExistErr
 				}
 			}
 			return err

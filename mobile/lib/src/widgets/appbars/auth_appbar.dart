@@ -10,7 +10,7 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
       : _introScreenKey = introScreenKey;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(70);
 
   @override
   Widget build(BuildContext context) {
@@ -23,15 +23,16 @@ class AuthAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       centerTitle: true,
       leading: IconButton(
-          onPressed: () => {
-                if (_introScreenKey != null)
-                  {
-                    _introScreenKey?.currentState?.previous()
-                  } // In case this is the introduction screen
-                else
-                  {NavigatorUtil.goBack(context)}
-              },
-          icon: const Icon(Icons.arrow_back)),
+        onPressed: () => {
+          if (_introScreenKey != null)
+            {
+              _introScreenKey?.currentState?.previous()
+            } // In case this is the introduction screen
+          else
+            {NavigatorUtil.goBack(context)}
+        },
+        icon: const Icon(Icons.arrow_back),
+      ),
     );
   }
 }

@@ -11,4 +11,5 @@ use (
 	./server/services/mobile-api-gateway
 	./server/services/user-service
 	./server/services/grpc-clients
+	./server/services/media-service
 )

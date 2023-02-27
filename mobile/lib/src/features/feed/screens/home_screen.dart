@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/widgets/appbars/main_appbar.dart';
+import 'package:mobile/src/widgets/bottom_nav_bars/main_bottom_nav_bar.dart';
+import 'package:mobile/src/widgets/story_circle/story_circle.dart';
 
 class HomeScreeen extends ConsumerWidget {
   const HomeScreeen({super.key});
+
+  Widget get _stories {
+    return SizedBox(
+      height: 100,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+          StoryCircle(),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,23 +47,21 @@ class HomeScreeen extends ConsumerWidget {
     );
 
     return Scaffold(
+      appBar: const MainAppBar(),
       body: Column(
         children: [
-          SizedBox(
-            height: 100,
+          Container(
+            height: 5,
+            color: Color.fromRGBO(10, 10, 10, 10),
           ),
-          Text(err),
-          Center(
-            heightFactor: 20,
-            child: userInfo != null ? Text(userInfo.email) : Text("nothing"),
+          _stories,
+          Container(
+            height: 5,
+            color: Color.fromRGBO(10, 10, 10, 10),
           ),
-          ElevatedButton(
-              onPressed: () {
-                ref.watch(myUserProvider.notifier).refetch();
-              },
-              child: Text("Click me"))
         ],
       ),
+      bottomNavigationBar: MainButtomNavBar(),
     );
   }
 }

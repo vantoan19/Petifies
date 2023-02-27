@@ -18,10 +18,11 @@ class Themes {
 
   // Themes
   static var darkModeAppTheme = ThemeData.dark().copyWith(
-    scaffoldBackgroundColor: blackColor,
+    scaffoldBackgroundColor: drawerColor,
     cardColor: whiteColor,
     appBarTheme: const AppBarTheme(
-      backgroundColor: blackColor,
+      backgroundColor: drawerColor,
+      elevation: 0,
       iconTheme: IconThemeData(
         color: whiteColor,
       ),
@@ -30,9 +31,11 @@ class Themes {
       backgroundColor: drawerColor,
     ),
     colorScheme: const ColorScheme.dark().copyWith(
-        primary: blueColor,
-        inversePrimary: whiteColor,
-        secondary: lightGreyColor),
+      primary: blueColor,
+      inversePrimary: whiteColor,
+      secondary: lightGreyColor,
+      tertiary: blackColor,
+    ),
     primaryColor: blueColor,
     primaryTextTheme: textTheme.apply(displayColor: whiteColor),
   );
@@ -51,7 +54,11 @@ class Themes {
       backgroundColor: whiteColor,
     ),
     colorScheme: const ColorScheme.light().copyWith(
-        primary: blueColor, inversePrimary: blackColor, secondary: greyColor),
+      primary: blueColor,
+      inversePrimary: blackColor,
+      secondary: greyColor,
+      tertiary: lightGreyColor,
+    ),
     primaryColor: blueColor,
   );
 }

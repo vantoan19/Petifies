@@ -12,10 +12,15 @@ import (
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
 )
 
+var (
+	MustBeEndpointReqErr  = status.Error(codes.InvalidArgument, "must be endpoints' request")
+	MustBeEndpointRespErr = status.Error(codes.InvalidArgument, "must be endpoints' response")
+)
+
 func EncodeCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*models.CreateUserReq)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &commonProto.CreateUserRequest{
@@ -29,7 +34,7 @@ func EncodeCreateUserRequest(_ context.Context, request interface{}) (interface{
 func EncodeCreateUserResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*models.User)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	// No password in the response
@@ -47,7 +52,7 @@ func EncodeCreateUserResponse(_ context.Context, response interface{}) (interfac
 func EncodeLoginRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*models.LoginReq)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &commonProto.LoginRequest{
@@ -59,7 +64,7 @@ func EncodeLoginRequest(_ context.Context, request interface{}) (interface{}, er
 func EncodeLoginResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*models.LoginResp)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &commonProto.LoginResponse{
@@ -83,7 +88,7 @@ func EncodeLoginResponse(_ context.Context, response interface{}) (interface{}, 
 func EncodeVerifyTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*models.VerifyTokenReq)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &userProtoV1.VerifyTokenRequest{
@@ -94,7 +99,7 @@ func EncodeVerifyTokenRequest(_ context.Context, request interface{}) (interface
 func EncodeVerifyTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*models.VerifyTokenResp)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &userProtoV1.VerifyTokenResponse{
@@ -105,7 +110,7 @@ func EncodeVerifyTokenResponse(_ context.Context, response interface{}) (interfa
 func EncodeRefreshTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*models.RefreshTokenReq)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &commonProto.RefreshTokenRequest{
@@ -116,7 +121,7 @@ func EncodeRefreshTokenRequest(_ context.Context, request interface{}) (interfac
 func EncodeRefreshTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*models.RefreshTokenResp)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &commonProto.RefreshTokenResponse{
@@ -128,7 +133,7 @@ func EncodeRefreshTokenResponse(_ context.Context, response interface{}) (interf
 func EncodeGetUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*models.GetUserReq)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &userProtoV1.GetUserRequest{
@@ -139,7 +144,7 @@ func EncodeGetUserRequest(_ context.Context, request interface{}) (interface{}, 
 func EncodeGetUserResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*models.User)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be endpoints' response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &commonProto.User{
