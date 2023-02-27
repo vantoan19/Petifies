@@ -17,18 +17,23 @@ type MediaRepository struct {
 	rootDir string
 }
 
-func New(rootDir string) *MediaRepository {
+func New(rootDir string) (*MediaRepository, error) {
+	if err := os.MkdirAll(rootDir, 0755); err != nil {
+		return nil, err
+	}
+
 	return &MediaRepository{
 		rootDir: rootDir,
-	}
+	}, nil
 }
 
 func (m *MediaRepository) Save(ctx context.Context, media *mediaaggre.Media) (string, error) {
-	if err := os.MkdirAll(m.rootDir, 0755); err != nil {
-		return "", nil
+	directory := filepath.Join(m.rootDir, media.GetMetadata().GetUploaderID().String())
+	if err := os.MkdirAll(directory, 0755); err != nil {
+		return "", err
 	}
 
-	filePath := filepath.Join(m.rootDir, media.GetMetadata().GetUploaderID().String(), media.GetFilename())
+	filePath := filepath.Join(directory, media.GetFilename())
 
 	file, err := os.Create(filePath)
 	if err != nil {

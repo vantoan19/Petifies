@@ -3,3 +3,5 @@ Domain:
 TLSKeyPath: "/app/cert/tls.key"
 TLSCertPath: "/app/cert/tls.crt" 
 UserServiceHost: "user-service:8888"
+StorageRootDir: "/storage"
+MaxFileSize: 25000000

@@ -11,9 +11,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	mediaProtoV1 "github.com/vantoan19/Petifies/proto/media-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	cmd "github.com/vantoan19/Petifies/server/services/media-service/cmd"
+	"github.com/vantoan19/Petifies/server/services/media-service/internal/application/services"
+	serversV1 "github.com/vantoan19/Petifies/server/services/media-service/internal/presentation/transport/grpc/v1"
 )
 
 var logger = logging.New("MediaService.Cmd.Grpc")
@@ -36,6 +39,22 @@ func setupGRPC() (*grpc.Server, error) {
 	return s, nil
 }
 
+func registerServices(grpcServer *grpc.Server) {
+	logger.Info("Start registerServices")
+
+	// Register user service
+	mediaSvc, err := services.NewMediaService(
+		services.WithInDiskMediaRepository(),
+	)
+	if err != nil {
+		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
+		panic(err)
+	}
+
+	mediaProtoV1.RegisterMediaServiceServer(grpcServer, serversV1.NewMediaServer(mediaSvc))
+	logger.Info("Finished registerServices: SUCCESSFUL")
+}
+
 func serveGRPC(grpcServer *grpc.Server) {
 	logger.InfoData("Start serveGRPC", logging.Data{"port": cmd.Conf.GrpcPort})
 
@@ -46,6 +65,7 @@ func serveGRPC(grpcServer *grpc.Server) {
 		panic(err)
 	}
 
+	registerServices(grpcServer)
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {

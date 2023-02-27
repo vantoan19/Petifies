@@ -11,8 +11,10 @@ var logger = logging.New("MediaService.Cmd")
 type Config struct {
 	ServerMode string `yaml:"ServerMode,omitempty"`
 
-	WebDomain string `yaml:"WebDomain,omitempty"`
-	GrpcPort  int    `yaml:"GrpcPort,omitempty"`
+	WebDomain      string `yaml:"WebDomain,omitempty"`
+	GrpcPort       int    `yaml:"GrpcPort,omitempty"`
+	StorageRootDir string `yaml:"StorageRootDir,omitempty"`
+	MaxFileSize    int    `yaml:"MaxFileSize,omitempty"`
 }
 
 var (

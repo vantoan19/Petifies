@@ -3,10 +3,12 @@ package mediaaggre
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media/entities"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media/valueobjects"
+	"github.com/vantoan19/Petifies/server/services/media-service/pkg/models"
 )
 
 // Media represents an aggregate for media.
@@ -14,10 +16,28 @@ type Media struct {
 	media *entities.Media
 }
 
+func New(md *models.FileMetadata, data *bytes.Buffer) (*Media, error) {
+	m := entities.Media{
+		ID:        uuid.New(),
+		Filename:  md.FileName,
+		MediaType: valueobjects.MediaType(md.MediaType),
+		Metadata:  valueobjects.NewMediaMetadata(md.UploaderId, md.Size, md.Width, md.Height, md.Duration),
+		Data:      data,
+		CreatedAt: time.Now(),
+	}
+	if errs := m.Validate(); errs.Exist() {
+		return nil, fmt.Errorf("invalid media: %s", errs.Error())
+	}
+
+	return &Media{
+		media: &m,
+	}, nil
+}
+
 // NewMedia creates a new media aggregate.
-func NewMedia(media *entities.Media) (*Media, error) {
-	if err := media.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid media: %w", err)
+func NewFromEntity(media *entities.Media) (*Media, error) {
+	if errs := media.Validate(); errs.Exist() {
+		return nil, fmt.Errorf("invalid media: %s", errs.Error())
 	}
 	return &Media{
 		media: media,
