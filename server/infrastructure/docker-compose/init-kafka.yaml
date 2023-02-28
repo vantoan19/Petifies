@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  init-kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --list
+
+      echo -e 'Deleting old kafka topics'
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic user-request --delete --if-exists
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic user-response --delete --if-exists
+
+      echo -e 'Creating new kafka topics'
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic user-request --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic user-response --replication-factor 3 --partitions 3
+
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --list
+      "
+    networks:
+      - petifies
