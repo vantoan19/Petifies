@@ -10,3 +10,4 @@ access_token
 /.vscode
 .DS_Store
 **/upload-storage-data
+**/volumes
