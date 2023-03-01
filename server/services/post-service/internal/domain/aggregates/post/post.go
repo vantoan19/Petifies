@@ -56,6 +56,19 @@ func NewPost(content *models.PostContent) (*Post, error) {
 	}, nil
 }
 
+func (p *Post) SetPostEntity(post entities.Post) error {
+	if errs := post.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
+
+	p.post = &post
+	return nil
+}
+
+func (p *Post) GetPostEntity() entities.Post {
+	return *p.post
+}
+
 func (p *Post) UpdateTextContent(content valueobjects.TextContent) {
 	p.post.TextContent = content
 }
@@ -66,6 +79,23 @@ func (p *Post) AddImage(image valueobjects.ImageContent) error {
 
 func (p *Post) AddVideo(video valueobjects.VideoContent) error {
 	return p.post.AddVideoContent(video)
+}
+
+// AddSubcommentByEntity adds a UUID of a subcomment to the Comment
+// This method is used for DTO
+func (p *Post) AddCommentByEntity(comment entities.Comment) error {
+	if comment.ParentID != p.post.ID {
+		return ErrNotChildComment
+	}
+	if comment.IsPostParent {
+		return ErrNotPostParent
+	}
+	if errs := comment.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
+
+	p.comments = append(p.comments, comment.ID)
+	return nil
 }
 
 // AddComment adds a new comment to the post
@@ -116,7 +146,22 @@ func (p *Post) RemoveCommentAndDelete(commentID uuid.UUID, repo comment.CommentR
 }
 
 // AddLike adds a new like to the post
-func (p *Post) AddLove(authorID uuid.UUID) error {
+func (p *Post) AddLoveByEntity(love entities.Love) error {
+	for _, love_ := range p.loves {
+		if love_.AuthorID == love.AuthorID {
+			return ErrDuplicatedLove
+		}
+	}
+	if errs := love.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
+
+	p.loves = append(p.loves, &love)
+	return nil
+}
+
+// AddLike adds a new like to the post
+func (p *Post) AddLoveByAuthorID(authorID uuid.UUID) error {
 	for _, love := range p.loves {
 		if love.AuthorID == authorID {
 			return ErrDuplicatedLove

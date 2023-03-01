@@ -79,7 +79,6 @@ func (c *Comment) AddLoveByEntity(love entities.Love) error {
 			return ErrDuplicatedLove
 		}
 	}
-
 	if errs := love.Validate(); errs.Exist() {
 		return errors.New(errs[0].Error())
 	}
@@ -130,17 +129,20 @@ func (c *Comment) GetLoves() []entities.Love {
 	return loves
 }
 
-// AddSubcomment adds a UUID of a subcomment to the Comment
+// AddSubcommentByEntity adds a UUID of a subcomment to the Comment
 // This method is used for DTO
-func (c *Comment) AddSubcomment(subcomment *Comment) error {
-	if subcomment.GetCommentEntity().ParentID != c.comment.ID {
+func (c *Comment) AddSubcommentByEntity(subcomment entities.Comment) error {
+	if subcomment.ParentID != c.comment.ID {
 		return ErrNotChildComment
 	}
-	if subcomment.GetCommentEntity().IsPostParent {
+	if subcomment.IsPostParent {
 		return ErrPostParent
 	}
+	if errs := subcomment.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
 
-	c.subcomments = append(c.subcomments, subcomment.GetCommentEntity().ID)
+	c.subcomments = append(c.subcomments, subcomment.ID)
 	return nil
 }
 
@@ -200,4 +202,8 @@ func (c *Comment) ExistsSubcomment(id uuid.UUID) bool {
 	}
 
 	return false
+}
+
+func (c *Comment) GetSubcommentsID() []uuid.UUID {
+	return c.subcomments
 }

@@ -7,8 +7,8 @@ import (
 )
 
 type PostRepository interface {
-	GetByUUID(ctx context.Context, id uuid.UUID) (Post, error)
-	SavePost(ctx context.Context, user Post) (Post, error)
-	UpdatePost(ctx context.Context, user Post) (Post, error)
-	DeleteByUUID(ctx context.Context, id uuid.UUID) (Post, error)
+	GetByUUID(ctx context.Context, id uuid.UUID) (*Post, error)
+	SavePost(ctx context.Context, post Post) (*Post, error)
+	UpdatePost(ctx context.Context, post Post) (*Post, error)
+	DeleteByUUID(ctx context.Context, id uuid.UUID) (*Post, error)
 }
