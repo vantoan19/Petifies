@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/vantoan19/Petifies/proto/post-service/v1";
+
+import "common/common.proto";
+
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message Post {
+
+}
+
+message CreatePostRequest {
+
+
+}
+
+service UserService {
+    rpc CreatePost(CreatePostRequest) returns (Post) {}
+}

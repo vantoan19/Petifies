@@ -12,4 +12,5 @@ use (
 	./server/services/user-service
 	./server/services/grpc-clients
 	./server/services/media-service
+	./server/services/post-service
 )

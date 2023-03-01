@@ -9,8 +9,8 @@ import (
 	db "github.com/vantoan19/Petifies/server/services/user-service/internal/infra/db/sqlc"
 )
 
-func DbUserToEntity(u *db.User) *entities.User {
-	return &entities.User{
+func DbUserToEntity(u *db.User) entities.User {
+	return entities.User{
 		ID:          u.ID,
 		Email:       u.Email,
 		Password:    u.Password,
@@ -21,7 +21,7 @@ func DbUserToEntity(u *db.User) *entities.User {
 	}
 }
 
-func EntityUserToDb(u *entities.User) *db.User {
+func EntityUserToDb(u entities.User) *db.User {
 	return &db.User{
 		ID:          u.ID,
 		Email:       u.Email,

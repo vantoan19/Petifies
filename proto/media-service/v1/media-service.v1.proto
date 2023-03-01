@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/vantoan19/Petifies/proto/user-service/v1";
+option go_package = "github.com/vantoan19/Petifies/proto/media-service/v1";
 
 import "common/common.proto";
 import "validate/validate.proto";
