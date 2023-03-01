@@ -14,24 +14,24 @@ var mongoLogger = logging.New("Libs.DBUtils.Mongo")
 
 func ConnectToMongoDB(dbUrl string) (*mongo.Client, error) {
 	attempt := 0
-	logger.InfoData("Start ConnectToMongoDB", logging.Data{"dbUrl": dbUrl})
+	mongoLogger.InfoData("Start ConnectToMongoDB", logging.Data{"dbUrl": dbUrl})
 
 	for {
 		client, err := openMongoDB(dbUrl)
 		if err != nil {
 			attempt++
-			logger.WarningData("Executing ConnectToMongoDB: Connect to the database fails, attempt again...", logging.Data{"attempt": attempt})
+			mongoLogger.WarningData("Executing ConnectToMongoDB: Connect to the database fails, attempt again...", logging.Data{"attempt": attempt})
 		} else {
-			logger.InfoData("Finished ConnectToMongoDB: SUCCESSFUL", logging.Data{"dbUrl": dbUrl})
+			mongoLogger.InfoData("Finished ConnectToMongoDB: SUCCESSFUL", logging.Data{"dbUrl": dbUrl})
 			return client, nil
 		}
 
 		if attempt > 10 {
-			logger.ErrorData("Finished ConnectToMongoDB: FAILED", logging.Data{"dbUrl": dbUrl, "error": err.Error()})
+			mongoLogger.ErrorData("Finished ConnectToMongoDB: FAILED", logging.Data{"dbUrl": dbUrl, "error": err.Error()})
 			return nil, err
 		}
 
-		logger.Info("Executing ConnectToMongoDB: Wait for 2 seconds before retrying to connect to the database")
+		mongoLogger.Info("Executing ConnectToMongoDB: Wait for 2 seconds before retrying to connect to the database")
 		time.Sleep(2 * time.Second)
 		continue
 	}

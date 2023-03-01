@@ -27,6 +27,10 @@ func (i ImageContent) Validate() (errs common.MultiError) {
 	return errs
 }
 
+func (i ImageContent) IsEmpty() bool {
+	return i.url == ""
+}
+
 func (i ImageContent) URL() string {
 	return i.url
 }

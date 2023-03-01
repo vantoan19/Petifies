@@ -29,6 +29,34 @@ func DbPostToEntityPost(p *models.Post) *entities.Post {
 	}
 }
 
+func EntityPostToDbPost(p *entities.Post) *models.Post {
+	images := make([]models.Image, 0)
+	videos := make([]models.Video, 0)
+
+	for _, image := range p.Images {
+		images = append(images, models.Image{
+			URL:         image.URL(),
+			Description: image.Description(),
+		})
+	}
+	for _, video := range p.Videos {
+		videos = append(videos, models.Video{
+			URL:         video.URL(),
+			Description: video.Description(),
+		})
+	}
+
+	return &models.Post{
+		ID:          p.ID,
+		AuthorID:    p.AuthorID,
+		TextContent: p.TextContent.Content(),
+		Images:      images,
+		Videos:      videos,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
+	}
+}
+
 func DbModelsToPostAggregate(p *models.Post, ls *[]models.Love, cs *[]models.Comment) (*postaggre.Post, error) {
 	post := &postaggre.Post{}
 

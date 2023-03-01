@@ -1,3 +1,4 @@
 GrpcPort: 8888
 Domain:
 MongoUrl: "postgresql://postgres:password@user-postgres:5432/users?sslmode=disable"
+DatabaseName: "postServiceDatabase"
