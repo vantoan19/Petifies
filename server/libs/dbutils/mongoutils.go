@@ -40,7 +40,10 @@ func ConnectToMongoDB(dbUrl string) (*mongo.Client, error) {
 func openMongoDB(dbUrl string) (*mongo.Client, error) {
 	serverAPI := options.ServerAPI((options.ServerAPIVersion1))
 	opts := options.Client().ApplyURI(dbUrl).SetServerAPIOptions(serverAPI)
-	client, err := mongo.Connect(context.TODO(), opts)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
