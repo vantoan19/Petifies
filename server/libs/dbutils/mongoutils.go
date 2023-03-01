@@ -39,7 +39,7 @@ func ConnectToMongoDB(dbUrl string) (*mongo.Client, error) {
 
 func openMongoDB(dbUrl string) (*mongo.Client, error) {
 	serverAPI := options.ServerAPI((options.ServerAPIVersion1))
-	opts := options.Client().ApplyURI(dbUrl).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(dbUrl).SetServerAPIOptions(serverAPI).SetTimeout(time.Second * 2)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
