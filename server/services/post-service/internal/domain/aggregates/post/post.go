@@ -26,7 +26,7 @@ type Post struct {
 	comments []uuid.UUID
 }
 
-func NewPost(content *models.PostContent) (*Post, error) {
+func NewPost(content *models.CreatePostReq) (*Post, error) {
 	imageValues := make([]valueobjects.ImageContent, 0)
 	videoValues := make([]valueobjects.VideoContent, 0)
 
@@ -191,6 +191,8 @@ func (p *Post) RemoveLove(authorID uuid.UUID) {
 	}
 }
 
+// ========== Aggregate Root Getters ===========
+
 func (p *Post) GetPostID() uuid.UUID {
 	return p.post.ID
 }
@@ -210,6 +212,16 @@ func (p *Post) GetImages() []valueobjects.ImageContent {
 func (p *Post) GetVideos() []valueobjects.VideoContent {
 	return p.post.Videos
 }
+
+func (p *Post) GetCreatedAt() time.Time {
+	return p.post.CreatedAt
+}
+
+func (p *Post) GetUpdatedAt() time.Time {
+	return p.post.UpdatedAt
+}
+
+// =============== Aggregate Entities Getters ================
 
 func (p *Post) GetLoves() []entities.Love {
 	loves := make([]entities.Love, 0)

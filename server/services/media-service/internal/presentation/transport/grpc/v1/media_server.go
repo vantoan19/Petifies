@@ -55,6 +55,7 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 	logger.Info("Executing UploadFile: Reading data")
 	data := bytes.Buffer{}
 	recvSize := 0
+	willBeDiscarded := true
 
 	for {
 		req, err := stream.Recv()
@@ -68,29 +69,41 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 		}
 
 		chunk := req.GetChunkData()
-		size := len(chunk)
+		if chunk != nil {
+			size := len(chunk)
 
-		recvSize += size
-		if recvSize > cmd.Conf.MaxFileSize {
-			logger.Error("Finished UploadFile: Failed - file too big")
-			return status.Errorf(codes.Canceled, "file too big")
+			recvSize += size
+			if recvSize > cmd.Conf.MaxFileSize {
+				logger.Error("Finished UploadFile: Failed - file too big")
+				return status.Errorf(codes.Canceled, "file too big")
+			}
+
+			_, err = data.Write(chunk)
+			if err != nil {
+				logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
+				return err
+			}
+		} else {
+			willBeDiscarded = req.GetWillBeDiscarded()
 		}
+	}
 
-		_, err = data.Write(chunk)
+	var resp *mediaProtoV1.UploadFileResponse
+	if !willBeDiscarded {
+		uri, err := m.mediaService.UploadFile(stream.Context(), &md, &data)
 		if err != nil {
 			logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
 			return err
 		}
-	}
-
-	uri, err := m.mediaService.UploadFile(stream.Context(), &md, &data)
-	if err != nil {
-		logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-		return err
-	}
-	resp := &mediaProtoV1.UploadFileResponse{
-		Uri:  uri,
-		Size: uint64(recvSize),
+		resp = &mediaProtoV1.UploadFileResponse{
+			Uri:  uri,
+			Size: uint64(recvSize),
+		}
+	} else {
+		resp = &mediaProtoV1.UploadFileResponse{
+			Uri:  "",
+			Size: 0,
+		}
 	}
 	err = stream.SendAndClose(resp)
 	if err != nil {

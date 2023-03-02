@@ -26,7 +26,7 @@ type Comment struct {
 	subcomments []uuid.UUID
 }
 
-func New(content models.CommentContent) (*Comment, error) {
+func New(content *models.CreateCommentReq) (*Comment, error) {
 	commentEntity := &entities.Comment{
 		ID:           uuid.New(),
 		PostID:       content.PostID,
@@ -206,4 +206,50 @@ func (c *Comment) ExistsSubcomment(id uuid.UUID) bool {
 
 func (c *Comment) GetSubcommentsID() []uuid.UUID {
 	return c.subcomments
+}
+
+// ============= Root Entity Getters =================
+
+func (c *Comment) GetID() uuid.UUID {
+	return c.comment.ID
+}
+
+func (c *Comment) GetPostID() uuid.UUID {
+	return c.comment.PostID
+}
+
+func (c *Comment) GetAuthorID() uuid.UUID {
+	return c.comment.AuthorID
+}
+
+func (c *Comment) GetParentID() uuid.UUID {
+	return c.comment.ParentID
+}
+
+func (c *Comment) GetIsPostParent() bool {
+	return c.comment.IsPostParent
+}
+
+func (c *Comment) GetContent() valueobjects.TextContent {
+	return c.comment.Content
+}
+
+func (c *Comment) GetImageContent() valueobjects.ImageContent {
+	return c.comment.ImageContent
+}
+
+func (c *Comment) GetVideoContent() valueobjects.VideoContent {
+	return c.comment.VideoContent
+}
+
+func (c *Comment) GetCreatedAt() time.Time {
+	return c.comment.CreatedAt
+}
+
+func (c *Comment) GetUpdatedAt() time.Time {
+	return c.comment.UpdatedAt
+}
+
+func (c *Comment) CountSubcomments() int {
+	return len(c.subcomments)
 }

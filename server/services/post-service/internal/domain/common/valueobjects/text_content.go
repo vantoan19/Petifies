@@ -12,6 +12,6 @@ func (t TextContent) IsEmpty() bool {
 	return t.content == ""
 }
 
-func (t *TextContent) Content() string {
+func (t TextContent) Content() string {
 	return t.content
 }
