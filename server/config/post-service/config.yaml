@@ -1,0 +1,4 @@
+GrpcPort: 8888
+Domain:
+MongoUrl: "mongodb://post-mongo-1:27017,post-mongo-2:27017,post-mongo-3:27017/?replicaSet=my-mongo-set"
+DatabaseName: "postServiceDatabase"

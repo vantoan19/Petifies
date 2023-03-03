@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/vantoan19/Petifies/proto/common"
 	mediaProtoV1 "github.com/vantoan19/Petifies/proto/media-service/v1"
 	"github.com/vantoan19/Petifies/server/services/media-service/pkg/models"
 )
@@ -34,9 +35,9 @@ func (m *mediaClient) CreateUploadFileStream(ctx context.Context) (mediaProtoV1.
 }
 
 func (m *mediaClient) UploadFileMetadata(stream mediaProtoV1.MediaService_UploadFileClient, md *models.FileMetadata) error {
-	mdReq := &mediaProtoV1.UploadFileRequest{
-		Data: &mediaProtoV1.UploadFileRequest_Metadata{
-			Metadata: &mediaProtoV1.FileMetadata{
+	mdReq := &common.UploadFileRequest{
+		Data: &common.UploadFileRequest_Metadata{
+			Metadata: &common.FileMetadata{
 				FileName:   md.FileName,
 				MediaType:  md.MediaType,
 				UploaderId: md.UploaderId.String(),
@@ -51,8 +52,8 @@ func (m *mediaClient) UploadFileMetadata(stream mediaProtoV1.MediaService_Upload
 }
 
 func (m *mediaClient) UploadFileChunkData(stream mediaProtoV1.MediaService_UploadFileClient, chunk []byte, len int) error {
-	dataReq := &mediaProtoV1.UploadFileRequest{
-		Data: &mediaProtoV1.UploadFileRequest_ChunkData{
+	dataReq := &common.UploadFileRequest{
+		Data: &common.UploadFileRequest_ChunkData{
 			ChunkData: chunk[:len],
 		},
 	}

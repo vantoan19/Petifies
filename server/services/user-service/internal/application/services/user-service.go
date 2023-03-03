@@ -110,7 +110,7 @@ func (s *userService) Login(ctx context.Context, email, password string) (uuid.U
 		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
 	}
 	p, _ := peer.FromContext(ctx)
-	session := &entities.Session{
+	session := entities.Session{
 		ID:           refreshClaim.ID,
 		UserID:       refreshClaim.UserID,
 		RefreshToken: refreshToken,
@@ -134,8 +134,8 @@ func (s *userService) Login(ctx context.Context, email, password string) (uuid.U
 		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
 	}
 
-	addedSession := updatedUser.GetSessionById(session.ID)
-	if addedSession == nil || addedSession.RefreshToken != refreshToken {
+	addedSession, err := updatedUser.GetSessionById(session.ID)
+	if err != nil || addedSession.RefreshToken != refreshToken {
 		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{
 			"error": "failed to add new session to the db",
 		})
@@ -176,12 +176,12 @@ func (s *userService) VerifyToken(ctx context.Context, token string) (string, er
 		})
 		return "", status.Error(codes.NotFound, err.Error())
 	}
-	session := userAg.GetSessionById(claims.SessionID)
-	if session == nil {
+	session, err := userAg.GetSessionById(claims.SessionID)
+	if err != nil {
 		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{
 			"error": "session not found",
 		})
-		return "", status.Error(codes.NotFound, "session not found")
+		return "", status.Error(codes.NotFound, err.Error())
 	}
 	if session.IsDisabled {
 		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{
@@ -217,12 +217,12 @@ func (s *userService) RefreshToken(ctx context.Context, token string) (string, t
 		return "", time.Time{}, status.Error(codes.Internal, err.Error())
 	}
 
-	session := user.GetSessionById(claims.ID)
-	if session == nil {
+	session, err := user.GetSessionById(claims.ID)
+	if err != nil {
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{
 			"error": "session doesn't exist",
 		})
-		return "", time.Time{}, status.Error(codes.NotFound, "session doesn't exist")
+		return "", time.Time{}, status.Error(codes.NotFound, err.Error())
 	}
 	if session.IsDisabled {
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{

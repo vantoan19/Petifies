@@ -16,6 +16,11 @@ import (
 
 var validate = validateutils.GetEnglishValidatorInstance()
 
+var (
+	ErrSessionNotExist     = errors.New("session does not exist")
+	ErrSessionAlreadyExist = errors.New("session already exists")
+)
+
 type User struct {
 	// Root of the user aggregate
 	user     *entities.User
@@ -45,11 +50,11 @@ func New(email, password, firstName, lastName string, isActivated bool) (User, c
 	}, nil
 }
 
-func (u *User) SetUserEntity(ue *entities.User) common.MultiError {
+func (u *User) SetUserEntity(ue entities.User) common.MultiError {
 	if errs := ue.Validate(); errs.Exist() {
 		return errs
 	}
-	u.user = ue
+	u.user = &ue
 	return nil
 }
 
@@ -134,27 +139,31 @@ func (u *User) SetUpdatedAt(t time.Time) error {
 	return nil
 }
 
-func (u *User) GetSessions() []*entities.Session {
-	return u.sessions
+func (u *User) GetSessions() []entities.Session {
+	sessions := make([]entities.Session, 0)
+	for _, s := range u.sessions {
+		sessions = append(sessions, *s)
+	}
+	return sessions
 }
 
-func (u *User) GetSessionById(id uuid.UUID) *entities.Session {
+func (u *User) GetSessionById(id uuid.UUID) (entities.Session, error) {
 	idx := slices.IndexFunc(u.sessions,
 		func(s *entities.Session) bool {
 			return s.ID.String() == id.String()
 		})
 
 	if idx != -1 {
-		return u.sessions[idx]
+		return *u.sessions[idx], nil
 	}
-	return nil
+	return entities.Session{}, ErrSessionNotExist
 }
 
-func (u *User) AddSession(s *entities.Session) error {
-	if u.GetSessionById(s.ID) != nil {
-		return errors.New("")
+func (u *User) AddSession(s entities.Session) error {
+	_, err := u.GetSessionById(s.ID)
+	if err != nil {
+		u.sessions = append(u.sessions, &s)
+		return nil
 	}
-
-	u.sessions = append(u.sessions, s)
-	return nil
+	return ErrSessionAlreadyExist
 }

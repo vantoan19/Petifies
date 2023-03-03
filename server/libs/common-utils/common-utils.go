@@ -102,6 +102,7 @@ func CreateClientForwardEncodeResponseFunc[T interface{}]() grpctransport.Encode
 }
 
 // ============================
+
 func ToSlice[T interface{}](c chan T) []T {
 	s := make([]T, 0)
 	for i := range c {

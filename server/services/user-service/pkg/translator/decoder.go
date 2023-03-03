@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	commonProto "github.com/vantoan19/Petifies/proto/common"
 	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
