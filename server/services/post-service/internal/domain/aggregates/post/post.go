@@ -88,7 +88,7 @@ func (p *Post) AddCommentByEntity(comment entities.Comment) error {
 	if comment.ParentID != p.post.ID {
 		return ErrNotChildComment
 	}
-	if comment.IsPostParent {
+	if !comment.IsPostParent {
 		return ErrNotPostParent
 	}
 	if errs := comment.Validate(); errs.Exist() {
@@ -222,6 +222,34 @@ func (p *Post) GetUpdatedAt() time.Time {
 	return p.post.UpdatedAt
 }
 
+func (p *Post) SetPostTextContent(content valueobjects.TextContent) {
+	p.post.TextContent = content
+}
+
+func (p *Post) RemoveAllImages() {
+	p.post.Images = []valueobjects.ImageContent{}
+}
+
+func (p *Post) RemoveAllVideos() {
+	p.post.Videos = []valueobjects.VideoContent{}
+}
+
+func (p *Post) AddNewImage(image valueobjects.ImageContent) error {
+	if errs := image.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
+	p.post.Images = append(p.post.Images, image)
+	return nil
+}
+
+func (p *Post) AddNewVideo(video valueobjects.VideoContent) error {
+	if errs := video.Validate(); errs.Exist() {
+		return errors.New(errs[0].Error())
+	}
+	p.post.Videos = append(p.post.Videos, video)
+	return nil
+}
+
 // =============== Aggregate Entities Getters ================
 
 func (p *Post) GetLoves() []entities.Love {
@@ -231,6 +259,16 @@ func (p *Post) GetLoves() []entities.Love {
 	}
 
 	return loves
+}
+
+func (p *Post) GetLovesByAuthorID(authorId uuid.UUID) entities.Love {
+	for _, love := range p.loves {
+		if love.AuthorID == authorId {
+			return *love
+		}
+	}
+
+	return entities.Love{}
 }
 
 func (p *Post) GetComments() []uuid.UUID {

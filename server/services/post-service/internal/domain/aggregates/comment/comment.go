@@ -208,6 +208,16 @@ func (c *Comment) GetSubcommentsID() []uuid.UUID {
 	return c.subcomments
 }
 
+func (c *Comment) GetLovesByAuthorID(authorId uuid.UUID) entities.Love {
+	for _, love := range c.loves {
+		if love.AuthorID == authorId {
+			return *love
+		}
+	}
+
+	return entities.Love{}
+}
+
 // ============= Root Entity Getters =================
 
 func (c *Comment) GetID() uuid.UUID {

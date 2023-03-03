@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -14,14 +12,6 @@ type Image struct {
 type Video struct {
 	URL         string
 	Description string
-}
-
-type Love struct {
-	ID        uuid.UUID
-	PostID    uuid.UUID
-	CommentID uuid.UUID
-	AuthorID  uuid.UUID
-	CreatedAt time.Time
 }
 
 type CreatePostReq struct {
@@ -39,4 +29,32 @@ type CreateCommentReq struct {
 	Content      string
 	ImageContent Image
 	VideoContent Video
+}
+
+type EditCommentReq struct {
+	ID      uuid.UUID
+	Content string
+	Image   Image
+	Video   Video
+}
+
+type EditPostReq struct {
+	ID      uuid.UUID
+	Content string
+	Images  []Image
+	Videos  []Video
+}
+
+type LoveReactReq struct {
+	TargetID     uuid.UUID
+	AuthorID     uuid.UUID
+	IsTargetPost bool
+}
+
+type ListCommentsReq struct {
+	CommentIDs []uuid.UUID
+}
+
+type ListPostsReq struct {
+	PostIDs []uuid.UUID
 }

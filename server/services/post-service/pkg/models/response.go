@@ -31,3 +31,19 @@ type Comment struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
+
+type Love struct {
+	ID        uuid.UUID
+	PostID    uuid.UUID
+	CommentID uuid.UUID
+	AuthorID  uuid.UUID
+	CreatedAt time.Time
+}
+
+type ListCommentsResp struct {
+	Comments []*Comment
+}
+
+type ListPostsResp struct {
+	Posts []*Post
+}

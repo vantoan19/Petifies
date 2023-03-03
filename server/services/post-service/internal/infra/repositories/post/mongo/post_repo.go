@@ -179,11 +179,32 @@ func (pr *PostRepository) UpdatePostWithSession(ctx context.Context, post *posta
 		return nil, err
 	}
 
-	loves := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
+	// Get all loves
+	var allLoves []models.Love
+	cursor, err := pr.loveCollection.Find(ctx, bson.D{{Key: "post_id", Value: post.GetPostID()}})
+	if err != nil {
+		return nil, err
+	}
+	if err := cursor.All(ctx, &allLoves); err != nil {
+		return nil, err
+	}
+
+	// Mark loves which currently exist in the aggregate
+	existence := make(map[uuid.UUID]bool)
+	for _, l := range post.GetLoves() {
+		existence[l.ID] = true
+	}
+	lovesToDelete := utils.Filter(allLoves, func(l models.Love) bool { return !existence[l.ID] })
+
+	operations := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
 		return mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}).SetUpsert(true).SetReplacement(mapper.EntityLoveToDbLove(&l))
 	})
-	if len(loves) > 0 {
-		_, err = pr.loveCollection.BulkWrite(ctx, loves)
+	operations = append(operations, utils.Map2(lovesToDelete, func(l models.Love) mongo.WriteModel {
+		return mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}})
+	})...)
+
+	if len(operations) > 0 {
+		_, err = pr.loveCollection.BulkWrite(ctx, operations)
 		if err != nil {
 			return nil, err
 		}
