@@ -8,15 +8,23 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readconcern"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 
+	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/cmd"
 	commentaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
+	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/mapper"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/models"
 )
 
 var (
 	ErrCommentNoExist = errors.New("comment does not exist")
+	wc                = writeconcern.New(writeconcern.WMajority())
+	rc                = readconcern.Snapshot()
+	transOpts         = options.Transaction().SetWriteConcern(wc).SetReadConcern(rc)
 )
 
 type CommentRepository struct {
@@ -37,8 +45,8 @@ func New(client *mongo.Client) *CommentRepository {
 
 func (cr *CommentRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
 	var comment *commentaggre.Comment
-	err := cr.execSession(ctx, func(ss mongo.Session) error {
-		comment_, err := cr.GetByUUIDWithSession(ctx, id, ss)
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comment_, err := cr.GetByUUIDWithSession(ssCtx, id)
 		if err != nil {
 			return err
 		}
@@ -54,8 +62,8 @@ func (cr *CommentRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*comm
 
 func (cr *CommentRepository) SaveComment(ctx context.Context, comment commentaggre.Comment) (*commentaggre.Comment, error) {
 	var savedComment *commentaggre.Comment
-	err := cr.execSession(ctx, func(ss mongo.Session) error {
-		comment_, err := cr.SavePostWithSession(ctx, &comment, ss)
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comment_, err := cr.SavePostWithSession(ssCtx, &comment)
 		if err != nil {
 			return err
 		}
@@ -71,8 +79,8 @@ func (cr *CommentRepository) SaveComment(ctx context.Context, comment commentagg
 
 func (cr *CommentRepository) UpdateComment(ctx context.Context, comment commentaggre.Comment) (*commentaggre.Comment, error) {
 	var updatedComment *commentaggre.Comment
-	err := cr.execSession(ctx, func(ss mongo.Session) error {
-		comment_, err := cr.UpdatePostWithSession(ctx, &comment, ss)
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comment_, err := cr.UpdatePostWithSession(ssCtx, &comment)
 		if err != nil {
 			return err
 		}
@@ -88,8 +96,8 @@ func (cr *CommentRepository) UpdateComment(ctx context.Context, comment commenta
 
 func (cr *CommentRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
 	var comment *commentaggre.Comment
-	err := cr.execSession(ctx, func(ss mongo.Session) error {
-		comment_, err := cr.DeleteByUUIDWithSession(ctx, id, ss)
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comment_, err := cr.DeleteByUUIDWithSession(ssCtx, id)
 		if err != nil {
 			return err
 		}
@@ -103,145 +111,112 @@ func (cr *CommentRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*c
 	return comment, nil
 }
 
-func (cr *CommentRepository) GetByUUIDWithSession(ctx context.Context, id uuid.UUID, ss mongo.Session) (*commentaggre.Comment, error) {
-	commentDb, err := ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var result models.Comment
-		err := cr.commentCollection.FindOne(ctx, bson.D{{Key: "id", Value: id}}).Decode(&result)
-		return &result, err
-	})
+func (cr *CommentRepository) GetByUUIDWithSession(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
+	var comment models.Comment
+	err := cr.commentCollection.FindOne(ctx, bson.D{{Key: "id", Value: id}}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrCommentNoExist
 		}
 		return nil, err
 	}
-	commentDb_, _ := commentDb.(*models.Comment)
 
-	loves, err := ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var results []models.Love
-		cursor, err := cr.loveCollection.Find(ctx, bson.D{{Key: "comment_id", Value: id}})
-		if err != nil {
-			return nil, err
-		}
-		if err := cursor.All(ctx, &results); err != nil {
-			return nil, err
-		}
-		return &results, nil
-	})
+	var loves []models.Love
+	cursor, err := cr.loveCollection.Find(ctx, bson.D{{Key: "comment_id", Value: id}})
 	if err != nil {
 		return nil, err
 	}
-	loves_, _ := loves.(*[]models.Love)
+	if err := cursor.All(ctx, &loves); err != nil {
+		return nil, err
+	}
 
-	comments, err := ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var results []models.Comment
-		cursor, err := cr.commentCollection.Find(ctx, bson.D{{Key: "parent_id", Value: id}})
-		if err != nil {
-			return nil, err
-		}
-		if err := cursor.All(ctx, &results); err != nil {
-			return nil, err
-		}
-		return &results, err
-	})
+	var comments []models.Comment
+	cursor, err = cr.commentCollection.Find(ctx, bson.D{{Key: "parent_id", Value: id}})
 	if err != nil {
 		return nil, err
 	}
-	comments_, _ := comments.(*[]models.Comment)
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, err
+	}
 
-	comment, err := mapper.DbModelsToCommentAggregate(commentDb_, loves_, comments_)
+	result, err := mapper.DbModelsToCommentAggregate(&comment, &loves, &comments)
 	if err != nil {
 		return nil, err
 	}
-	return comment, nil
+	return result, nil
 }
 
-func (cr *CommentRepository) SavePostWithSession(ctx context.Context, comment *commentaggre.Comment, ss mongo.Session) (*commentaggre.Comment, error) {
-	_, err := ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		commentEntity := comment.GetCommentEntity()
-		result, err := cr.commentCollection.InsertOne(ctx, mapper.EntityCommentToDbComment(&commentEntity))
-		return result, err
-	})
+func (cr *CommentRepository) SavePostWithSession(ctx context.Context, comment *commentaggre.Comment) (*commentaggre.Comment, error) {
+	commentEntity := comment.GetCommentEntity()
+	_, err := cr.commentCollection.InsertOne(ctx, mapper.EntityCommentToDbComment(&commentEntity))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var loves []interface{}
-		for _, l := range comment.GetLoves() {
-			loves = append(loves, *mapper.EntityLoveToDbLove(&l))
+	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
+		return mongo.NewInsertOneModel().SetDocument(mapper.EntityLoveToDbLove(&l))
+	})
+	if len(loves) > 0 {
+		_, err = cr.loveCollection.BulkWrite(ctx, loves)
+		if err != nil {
+			return nil, err
 		}
-		result, err := cr.loveCollection.InsertMany(ctx, loves)
-		return result, err
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID, ss)
+	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID)
 	if err != nil {
 		return nil, err
 	}
 	return comment_, nil
 }
 
-func (cr *CommentRepository) UpdatePostWithSession(ctx context.Context, comment *commentaggre.Comment, ss mongo.Session) (*commentaggre.Comment, error) {
-	_, err := ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		commentEntity := comment.GetCommentEntity()
-		result, err := cr.commentCollection.ReplaceOne(ctx, bson.D{{Key: "id", Value: commentEntity.ID}}, mapper.EntityCommentToDbComment(&commentEntity))
-		return result, err
-	})
+func (cr *CommentRepository) UpdatePostWithSession(ctx context.Context, comment *commentaggre.Comment) (*commentaggre.Comment, error) {
+	commentEntity := comment.GetCommentEntity()
+	_, err := cr.commentCollection.ReplaceOne(ctx, bson.D{{Key: "id", Value: commentEntity.ID}}, mapper.EntityCommentToDbComment(&commentEntity))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var loves []mongo.WriteModel
-		for _, l := range comment.GetLoves() {
-			loves = append(loves, mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}).SetUpsert(true).SetReplacement(mapper.EntityLoveToDbLove(&l)))
+	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
+		return mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}).SetUpsert(true).SetReplacement(mapper.EntityLoveToDbLove(&l))
+	})
+	if len(loves) > 0 {
+		_, err = cr.loveCollection.BulkWrite(ctx, loves)
+		if err != nil {
+			return nil, err
 		}
-		result, err := cr.loveCollection.BulkWrite(ctx, loves)
-		return result, err
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID, ss)
+	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID)
 	if err != nil {
 		return nil, err
 	}
 	return comment_, nil
 }
 
-func (cr *CommentRepository) DeleteByUUIDWithSession(ctx context.Context, id uuid.UUID, ss mongo.Session) (*commentaggre.Comment, error) {
-	comment, err := cr.GetByUUIDWithSession(ctx, id, ss)
+func (cr *CommentRepository) DeleteByUUIDWithSession(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
+	comment, err := cr.GetByUUIDWithSession(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		result, err := cr.commentCollection.DeleteOne(ctx, bson.D{{Key: "id", Value: comment.GetCommentEntity().ID}})
-		return result, err
+	_, err = cr.commentCollection.DeleteOne(ctx, bson.D{{Key: "id", Value: comment.GetCommentEntity().ID}})
+	if err != nil {
+		return nil, err
+	}
+
+	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
+		return mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}})
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ss.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		var loves []mongo.WriteModel
-		for _, l := range comment.GetLoves() {
-			loves = append(loves, mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}))
+	if len(loves) > 0 {
+		_, err = cr.loveCollection.BulkWrite(ctx, loves)
+		if err != nil {
+			return nil, err
 		}
-		result, err := cr.loveCollection.BulkWrite(ctx, loves)
-		return result, err
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	for _, subcommentID := range comment.GetSubcommentsID() {
-		_, err = cr.DeleteByUUIDWithSession(ctx, subcommentID, ss)
+		_, err = cr.DeleteByUUIDWithSession(ctx, subcommentID)
 		if err != nil {
 			return nil, err
 		}
@@ -250,14 +225,18 @@ func (cr *CommentRepository) DeleteByUUIDWithSession(ctx context.Context, id uui
 	return comment, nil
 }
 
-func (cr *CommentRepository) execSession(ctx context.Context, fn func(ss mongo.Session) error) error {
+func (cr *CommentRepository) execSession(ctx context.Context, fn func(ssCtx mongo.SessionContext) error) error {
 	session, err := cr.client.StartSession()
 	defer session.EndSession(ctx)
 	if err != nil {
 		return err
 	}
+	err = session.StartTransaction(transOpts)
+	if err != nil {
+		return err
+	}
 
-	if err = fn(session); err != nil {
+	if err = fn(mongo.NewSessionContext(ctx, session)); err != nil {
 		if abErr := session.AbortTransaction(ctx); abErr != nil {
 			return fmt.Errorf("session err: %v, abort err: %v", err, abErr)
 		}

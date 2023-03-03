@@ -48,8 +48,8 @@ message Video {
 
 message Love {
     string id = 1 [(validate.rules).string.uuid = true];
-    string post_id = 2 [(validate.rules).string.uuid = true];
-    string comment_id = 3 [(validate.rules).string.uuid = true];
+    string post_id = 2;
+    string comment_id = 3;
     string author_id = 4 [(validate.rules).string.uuid = true];
     google.protobuf.Timestamp created_at = 5;
 }
@@ -91,23 +91,6 @@ message UploadFileRequest {
 message UploadFileResponse {
     string uri = 1;
     uint64 size = 2;
-}
-
-message CreatePostRequest {
-    string author_id = 2 [(validate.rules).string.uuid = true];
-    string content = 3;
-    repeated Image images = 4;
-    repeated Video videos = 5;
-}
-
-message CreateCommentRequest {
-    string post_id = 2 [(validate.rules).string.uuid = true];
-    string author_id = 3 [(validate.rules).string.uuid = true];
-    string parent_id = 4 [(validate.rules).string.uuid = true];
-    bool is_post_parent = 5;
-    string content = 6;
-    Image image = 7;
-    Video video = 8;
 }
 
 message CreateUserRequest {

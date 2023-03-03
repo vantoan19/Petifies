@@ -6,6 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
+	postProtoV1 "github.com/vantoan19/Petifies/proto/post-service/v1"
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 )
@@ -16,7 +17,7 @@ func EncodeCreatePostRequest(_ context.Context, request interface{}) (interface{
 		return nil, MustBeEndpointReqErr
 	}
 
-	return &commonProto.CreatePostRequest{
+	return &postProtoV1.CreatePostRequest{
 		AuthorId: req.AuthorID.String(),
 		Content:  req.TextContent,
 		Images: utils.Map2(req.Images, func(i models.Image) *commonProto.Image {
@@ -70,7 +71,7 @@ func EncodeCreateCommentRequest(_ context.Context, request interface{}) (interfa
 		return nil, MustBeEndpointReqErr
 	}
 
-	return &commonProto.CreateCommentRequest{
+	return &postProtoV1.CreateCommentRequest{
 		PostId:       req.PostID.String(),
 		AuthorId:     req.AuthorID.String(),
 		ParentId:     req.ParentID.String(),

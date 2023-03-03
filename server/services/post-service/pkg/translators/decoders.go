@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
+	postProtoV1 "github.com/vantoan19/Petifies/proto/post-service/v1"
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 )
@@ -20,7 +21,7 @@ var (
 )
 
 func DecodeCreatePostRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(*commonProto.CreatePostRequest)
+	req, ok := request.(*postProtoV1.CreatePostRequest)
 	if !ok {
 		return nil, MustBeEndpointReqErr
 	}
@@ -98,7 +99,7 @@ func DecodeCreatePostResponse(_ context.Context, response interface{}) (interfac
 }
 
 func DecodeCreateCommentRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(*commonProto.CreateCommentRequest)
+	req, ok := request.(*postProtoV1.CreateCommentRequest)
 	if !ok {
 		return nil, MustBeEndpointReqErr
 	}

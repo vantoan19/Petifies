@@ -6,7 +6,8 @@ import (
 	"github.com/go-kit/kit/endpoint"
 
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
-	"github.com/vantoan19/Petifies/server/services/post-service/internal/application/services"
+	commentservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/comment"
+	postservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/post"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
@@ -17,14 +18,14 @@ type PostEndpoints struct {
 	CreateComment endpoint.Endpoint
 }
 
-func NewPostEndpoints(ps services.PostService, cs services.CommentService) PostEndpoints {
+func NewPostEndpoints(ps postservice.PostService, cs commentservice.CommentService) PostEndpoints {
 	return PostEndpoints{
 		CreatePost:    makeCreatePostEndpoint(ps),
 		CreateComment: makeCreateCommentEndpoint(cs),
 	}
 }
 
-func makeCreatePostEndpoint(ps services.PostService) endpoint.Endpoint {
+func makeCreatePostEndpoint(ps postservice.PostService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.CreatePostReq)
 		result, err := ps.CreatePost(ctx, req)
@@ -61,7 +62,7 @@ func makeCreatePostEndpoint(ps services.PostService) endpoint.Endpoint {
 	}
 }
 
-func makeCreateCommentEndpoint(cs services.CommentService) endpoint.Endpoint {
+func makeCreateCommentEndpoint(cs commentservice.CommentService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.CreateCommentReq)
 		result, err := cs.CreateComment(ctx, req)

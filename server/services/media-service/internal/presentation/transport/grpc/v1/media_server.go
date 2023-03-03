@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/google/uuid"
+	"github.com/vantoan19/Petifies/proto/common"
 	mediaProtoV1 "github.com/vantoan19/Petifies/proto/media-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/media-service/cmd"
@@ -88,19 +89,19 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 		}
 	}
 
-	var resp *mediaProtoV1.UploadFileResponse
+	var resp *common.UploadFileResponse
 	if !willBeDiscarded {
 		uri, err := m.mediaService.UploadFile(stream.Context(), &md, &data)
 		if err != nil {
 			logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
 			return err
 		}
-		resp = &mediaProtoV1.UploadFileResponse{
+		resp = &common.UploadFileResponse{
 			Uri:  uri,
 			Size: uint64(recvSize),
 		}
 	} else {
-		resp = &mediaProtoV1.UploadFileResponse{
+		resp = &common.UploadFileResponse{
 			Uri:  "",
 			Size: 0,
 		}

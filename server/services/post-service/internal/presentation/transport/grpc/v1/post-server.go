@@ -31,7 +31,7 @@ func NewPostServer(endpoints endpointsV1.PostEndpoints) postProtoV1.PostServiceS
 	}
 }
 
-func (s *gRPCPostServer) CreatePost(ctx context.Context, req *commonProto.CreatePostRequest) (*commonProto.Post, error) {
+func (s *gRPCPostServer) CreatePost(ctx context.Context, req *postProtoV1.CreatePostRequest) (*commonProto.Post, error) {
 	_, resp, err := s.createPost.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (s *gRPCPostServer) CreatePost(ctx context.Context, req *commonProto.Create
 	return resp.(*commonProto.Post), nil
 }
 
-func (s *gRPCPostServer) CreateComment(ctx context.Context, req *commonProto.CreateCommentRequest) (*commonProto.Comment, error) {
+func (s *gRPCPostServer) CreateComment(ctx context.Context, req *postProtoV1.CreateCommentRequest) (*commonProto.Comment, error) {
 	_, resp, err := s.createComment.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err

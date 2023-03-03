@@ -44,6 +44,7 @@ func NewPost(content *models.CreatePostReq) (*Post, error) {
 		Images:      imageValues,
 		Videos:      videoValues,
 		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	if errs := postEntity.Validate(); errs.Exist() {
 		return nil, errors.New(errs[0].Error())

@@ -11,9 +11,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	postProtoV1 "github.com/vantoan19/Petifies/proto/post-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
-	cmd "github.com/vantoan19/Petifies/server/services/user-service/cmd"
+	cmd "github.com/vantoan19/Petifies/server/services/post-service/cmd"
+	commentservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/comment"
+	postservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/post"
+	v1 "github.com/vantoan19/Petifies/server/services/post-service/internal/presentation/endpoints/grpc/v1"
+	serversV1 "github.com/vantoan19/Petifies/server/services/post-service/internal/presentation/transport/grpc/v1"
 )
 
 var logger = logging.New("PostService.Cmd.Grpc")
@@ -46,6 +51,8 @@ func serveGRPC(grpcServer *grpc.Server) {
 		panic(err)
 	}
 
+	registerServices(grpcServer)
+
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {
@@ -54,6 +61,35 @@ func serveGRPC(grpcServer *grpc.Server) {
 	}
 
 	logger.Info("Finished serveGRPC: SUCCESSFUL")
+}
+
+func registerServices(grpcServer *grpc.Server) {
+	logger.Info("Start registerServices")
+
+	// Register user service
+	postSvc, err := postservice.NewPostService(
+		postservice.WithMongoPostRepository(cmd.MongoClient),
+		postservice.WithMongoCommentRepository(cmd.MongoClient),
+	)
+	if err != nil {
+		panic(err)
+	}
+	commentSvc, err := commentservice.NewCommentService(
+		commentservice.WithMongoCommentRepository(cmd.MongoClient),
+		commentservice.WithMongoPostRepository(cmd.MongoClient),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	postEndpointsV1 := v1.NewPostEndpoints(postSvc, commentSvc)
+	if err != nil {
+		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
+		panic(err)
+	}
+
+	postProtoV1.RegisterPostServiceServer(grpcServer, serversV1.NewPostServer(postEndpointsV1))
+	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
 func actualMain() {
