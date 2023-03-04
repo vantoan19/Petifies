@@ -49,7 +49,11 @@ func (u *UserEventPublisher) Publish(ctx context.Context, event models.UserReque
 	now := time.Now()
 	outboxEvent_.LockedBy = &lockerID
 	outboxEvent_.LockedAt = &now
-	u.eventRepo.UpdateEvent(*outboxEvent_)
+	err = u.eventRepo.UpdateEvent(*outboxEvent_)
+	if err != nil {
+		logger.WarningData("Executing Publish: error at setting lock, publishing event later by outbox", logging.Data{"error": err.Error()})
+		return nil
+	}
 
 	_, err = u.producer.SendMessage(&payload)
 	if err != nil {

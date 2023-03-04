@@ -8,10 +8,9 @@ import (
 
 type KafkaProducer struct {
 	producer sarama.SyncProducer
-	topic    string
 }
 
-func NewKafkaProducer(kafkaConfig *config.KafkaConfig) (*KafkaProducer, error) {
+func NewKafkaProducer(kafkaConfig *config.KafkaProducerConfig) (*KafkaProducer, error) {
 	producer, err := sarama.NewSyncProducer(kafkaConfig.Brokers, kafkaConfig.ProducerConfig)
 	if err != nil {
 		return nil, err
@@ -19,31 +18,30 @@ func NewKafkaProducer(kafkaConfig *config.KafkaConfig) (*KafkaProducer, error) {
 
 	return &KafkaProducer{
 		producer: producer,
-		topic:    kafkaConfig.Topic,
 	}, nil
 }
 
-func (p *KafkaProducer) SendMessage(key []byte, value models.KafkaModel) (*models.KafkaMessage, error) {
-	bytes, err := value.Serialize()
+func (p *KafkaProducer) SendMessage(msg *models.KafkaMessage) (*models.KafkaMessage, error) {
+	bytes, err := msg.Value.Serialize()
 	if err != nil {
 		return nil, err
 	}
 
-	msg := &sarama.ProducerMessage{
-		Topic: p.topic,
-		Key:   sarama.ByteEncoder(key),
+	pmsg := &sarama.ProducerMessage{
+		Topic: msg.Topic,
+		Key:   sarama.ByteEncoder(msg.Key),
 		Value: sarama.ByteEncoder(bytes),
 	}
-	partition, offset, err := p.producer.SendMessage(msg)
+	partition, offset, err := p.producer.SendMessage(pmsg)
 	if err != nil {
 		return nil, err
 	}
 	return &models.KafkaMessage{
-		Topic:     p.topic,
+		Topic:     msg.Topic,
 		Partition: partition,
 		Offset:    offset,
-		Key:       key,
-		Value:     value,
+		Key:       msg.Key,
+		Value:     msg.Value,
 	}, nil
 }
 

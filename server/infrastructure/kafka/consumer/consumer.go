@@ -22,7 +22,7 @@ type kafkaConsumerHandler struct {
 	msgModel models.KafkaModel
 }
 
-func NewKafkaConsumer(kafkaConfig *config.KafkaConfig, handler KafkaMessageHandler, msgModel models.KafkaModel) (*KafkaConsumer, error) {
+func NewKafkaConsumer(kafkaConfig *config.KafkaConsumerConfig, handler KafkaMessageHandler, msgModel models.KafkaModel) (*KafkaConsumer, error) {
 	consumerGroup, err := sarama.NewConsumerGroup(kafkaConfig.Brokers, kafkaConfig.ConsumerGroup, kafkaConfig.ConsumerConfig)
 	if err != nil {
 		return nil, err
