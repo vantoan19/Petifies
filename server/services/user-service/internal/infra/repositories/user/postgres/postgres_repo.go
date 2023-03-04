@@ -33,7 +33,7 @@ func New(db *sql.DB) (*UserRepository, error) {
 }
 
 func (pr *UserRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
 	var user *userAggre.User
@@ -64,7 +64,7 @@ func (pr *UserRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*userAgg
 }
 
 func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
 	var user *userAggre.User
@@ -95,7 +95,7 @@ func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAg
 }
 
 func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	var user_ *userAggre.User
@@ -138,7 +138,7 @@ func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*u
 }
 
 func (pr *UserRepository) UpdateUser(ctx context.Context, user *userAggre.User) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	var user_ *userAggre.User
@@ -176,7 +176,7 @@ func (pr *UserRepository) UpdateUser(ctx context.Context, user *userAggre.User) 
 }
 
 func (pr *UserRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	var user *userAggre.User
@@ -199,7 +199,7 @@ func (pr *UserRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*user
 }
 
 func (pr *UserRepository) DeleteByEmail(ctx context.Context, email string) (*userAggre.User, error) {
-	tCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	var user *userAggre.User

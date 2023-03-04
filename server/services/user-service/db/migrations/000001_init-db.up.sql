@@ -26,3 +26,16 @@ ALTER TABLE "sessions"
     REFERENCES "users" ("id") 
     ON DELETE CASCADE
     ON UPDATE CASCADE;
+
+DROP TYPE IF EXISTS "outbox_status";
+CREATE TYPE "outbox_state" AS ENUM ('STARTED', 'COMPLETED');
+CREATE TABLE IF NOT EXISTS "user_events" (
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    "payload" JSONB NOT NULL,
+    "outbox_state" outbox_state NOT NULL,
+    "locked_by" uuid NULL,
+    "locked_at" timestamptz NULL,
+    "error" VARCHAR NULL,
+    "completed_at" timestamptz NULL,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+);

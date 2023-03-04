@@ -20,6 +20,8 @@ type Config struct {
 	TokenSecretKey       string        `yaml:"TokenSecretKey,omitempty"`
 	AccessTokenDuration  time.Duration `yaml:"AccessTokenDuration,omitempty"`
 	RefreshTokenDuration time.Duration `yaml:"RefreshTokenDuration,omitempty"`
+
+	UserRequestTopic string `yaml:"UserRequestTopic"`
 }
 
 var (
