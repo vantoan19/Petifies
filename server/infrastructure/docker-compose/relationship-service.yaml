@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  relationship-service:
+    build: 
+      context: ../../../
+      dockerfile: ./server/services/relationship-service/Dockerfile
+    restart: always
+    volumes:
+      - ../../../build/server/relationshipService:/app/relationshipService
+    ports:
+      - "84:8888"
+    environment:
+      - SERVER_MODE=development
+    networks:
+      - petifies
+
+  relationship-neo4j:
+    image: neo4j:5.5
+    ports:                            
+      - "7474:7474"                            
+      - "7687:7687"
