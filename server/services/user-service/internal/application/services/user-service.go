@@ -11,12 +11,17 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
+	"github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
+	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
+	outbox_repo "github.com/vantoan19/Petifies/server/infrastructure/outbox/repository"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/user-service/cmd"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/application/handlers/jwt"
 	userAggre "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/entities"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/publisher"
 	userRepo "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/repository"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/publishers/kafka"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/repositories/user/postgres"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/utils"
 )
@@ -27,6 +32,7 @@ type UserConfiguration func(us *userService) error
 
 type userService struct {
 	userRepository userRepo.UserRepository
+	userPublisher  publisher.UserRequestMessagePublisher
 	tokenMaker     jwt.TokenMaker
 }
 
@@ -66,6 +72,14 @@ func WithPostgreUserRepository(db *sql.DB) UserConfiguration {
 	}
 }
 
+func WithKafkaUserEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.EventRepository) UserConfiguration {
+	return func(us *userService) error {
+		publisher := kafka.NewUserEventPublisher(producer, repo)
+		us.userPublisher = publisher
+		return nil
+	}
+}
+
 // CreateUser
 func (s *userService) CreateUser(ctx context.Context, email, password, firstName, lastName string) (*userAggre.User, error) {
 	logger.Info("Start UserService.CreateUser")
@@ -77,6 +91,21 @@ func (s *userService) CreateUser(ctx context.Context, email, password, firstName
 	}
 	createdUser, err := s.userRepository.SaveUser(ctx, newUser)
 	if err != nil {
+		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	err = s.userPublisher.Publish(ctx, models.UserRequest{
+		ID:        createdUser.GetID(),
+		Email:     createdUser.GetEmail(),
+		CreatedAt: createdUser.GetCreatedAt(),
+		Status:    models.USER_CREATED,
+	})
+	if err != nil {
+		_, dbErr := s.userRepository.DeleteByUUID(ctx, createdUser.GetID())
+		if dbErr != nil {
+			logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, status.Error(codes.Internal, err.Error())
 	}

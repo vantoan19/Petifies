@@ -12,7 +12,7 @@ WHERE locked_by = $1;
 
 -- name: LockStartedEvents :exec
 UPDATE user_events SET locked_by = $1, locked_at = $2
-WHERE outbox_state = "STARTED";
+WHERE outbox_state = 'STARTED';
 
 -- name: UpdateEvent :exec
 UPDATE user_events SET outbox_state = $2, locked_by = $3, locked_at = $4, error = $5, completed_at = $6

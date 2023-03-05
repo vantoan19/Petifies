@@ -100,7 +100,7 @@ func (q *Queries) GetUserEventByLockerID(ctx context.Context, lockedBy uuid.Null
 
 const lockStartedEvents = `-- name: LockStartedEvents :exec
 UPDATE user_events SET locked_by = $1, locked_at = $2
-WHERE outbox_state = "STARTED"
+WHERE outbox_state = 'STARTED'
 `
 
 type LockStartedEventsParams struct {

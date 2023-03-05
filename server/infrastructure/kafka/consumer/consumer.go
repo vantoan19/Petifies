@@ -18,11 +18,10 @@ type KafkaConsumer struct {
 type KafkaMessageHandler func(ctx context.Context, message *models.KafkaMessage) error
 
 type kafkaConsumerHandler struct {
-	handler  KafkaMessageHandler
-	msgModel models.KafkaModel
+	handler KafkaMessageHandler
 }
 
-func NewKafkaConsumer(kafkaConfig *config.KafkaConsumerConfig, handler KafkaMessageHandler, msgModel models.KafkaModel) (*KafkaConsumer, error) {
+func NewKafkaConsumer(kafkaConfig *config.KafkaConsumerConfig, handler KafkaMessageHandler) (*KafkaConsumer, error) {
 	consumerGroup, err := sarama.NewConsumerGroup(kafkaConfig.Brokers, kafkaConfig.ConsumerGroup, kafkaConfig.ConsumerConfig)
 	if err != nil {
 		return nil, err
@@ -31,8 +30,7 @@ func NewKafkaConsumer(kafkaConfig *config.KafkaConsumerConfig, handler KafkaMess
 	return &KafkaConsumer{
 		consumerGroup: consumerGroup,
 		handler: &kafkaConsumerHandler{
-			handler:  handler,
-			msgModel: msgModel,
+			handler: handler,
 		},
 		topic: kafkaConfig.Topic,
 	}, nil
@@ -65,16 +63,12 @@ func (h *kafkaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 	for {
 		select {
 		case msg := <-claim.Messages():
-			err := h.msgModel.Deserialize(msg.Value)
-			if err != nil {
-				return err
-			}
-			err = h.handler(ctx, &models.KafkaMessage{
+			err := h.handler(ctx, &models.KafkaMessage{
 				Topic:     msg.Topic,
 				Partition: msg.Partition,
 				Offset:    msg.Offset,
 				Key:       msg.Key,
-				Value:     h.msgModel,
+				Value:     msg.Value,
 			})
 			if err != nil {
 				return err

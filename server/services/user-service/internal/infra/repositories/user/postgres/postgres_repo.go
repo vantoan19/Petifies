@@ -9,11 +9,16 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	userAggre "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/db/mapper"
 	sqlc "github.com/vantoan19/Petifies/server/services/user-service/internal/infra/db/sqlc"
 )
+
+var logger = logging.New("UserService.UserRepository")
 
 var (
 	UserNotExistErr     = errors.New("user doesn't exist")
@@ -33,6 +38,8 @@ func New(db *sql.DB) (*UserRepository, error) {
 }
 
 func (pr *UserRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*userAggre.User, error) {
+	logger.Info("Start GetByUUID")
+
 	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -41,29 +48,34 @@ func (pr *UserRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*userAgg
 		userDb, err := q.GetUserByID(tCtx, id)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return UserNotExistErr
+				return status.Errorf(codes.NotFound, UserNotExistErr.Error())
 			}
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		sessions, err := q.GetSessionsForUser(tCtx, userDb.ID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		user, err = mapper.DbModelsToUserAggregate(&userDb, &sessions)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish GetByUUID: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+
+	logger.Info("Finish GetByUUID")
 	return user, nil
 }
 
 func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAggre.User, error) {
+	logger.Info("Start GetByEmail")
+
 	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -72,29 +84,34 @@ func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAg
 		userDb, err := q.GetUserByEmail(tCtx, email)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return UserNotExistErr
+				return status.Errorf(codes.NotFound, UserNotExistErr.Error())
 			}
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		sessions, err := q.GetSessionsForUser(tCtx, userDb.ID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		user, err = mapper.DbModelsToUserAggregate(&userDb, &sessions)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish GetByEmail: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+
+	logger.Info("Finish GetByEmail")
 	return user, nil
 }
 
 func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*userAggre.User, error) {
+	logger.Info("Start SaveUser")
+
 	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -112,32 +129,37 @@ func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*u
 			if pqErr, ok := err.(*pq.Error); ok {
 				switch pqErr.Code.Name() {
 				case "unique_violation":
-					return UserAlreadyExistErr
+					return status.Errorf(codes.AlreadyExists, UserAlreadyExistErr.Error())
 				}
 			}
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		sessions := user.GetSessions()
 		sessionCreateParams := mapper.EntitySessionsToCreateParams(sessions)
 		sessionsDb, err := q.BulkCreateSession(tCtx, *sessionCreateParams)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 		user_, err = mapper.DbModelsToUserAggregate(&userDb, &sessionsDb)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish SaveUser: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+
+	logger.Info("Finish SaveUser")
 	return user_, nil
 }
 
 func (pr *UserRepository) UpdateUser(ctx context.Context, user *userAggre.User) (*userAggre.User, error) {
+	logger.Info("Start UpdateUser")
+
 	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -153,29 +175,34 @@ func (pr *UserRepository) UpdateUser(ctx context.Context, user *userAggre.User) 
 			UpdatedAt:   time.Now(),
 		})
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		sessions := user.GetSessions()
 		sessionUpsertParams := mapper.EntitySessionsToUpsertParams(sessions)
 		sessionsDb, err := q.BulkUpsertSessions(tCtx, *sessionUpsertParams)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 		user_, err = mapper.DbModelsToUserAggregate(&userDb, &sessionsDb)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish UpdateUser: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+
+	logger.Info("Finish UpdateUser")
 	return user_, nil
 }
 
 func (pr *UserRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*userAggre.User, error) {
+	logger.Info("Start DeleteByUUID")
+
 	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -183,22 +210,27 @@ func (pr *UserRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*user
 	err := pr.execTx(tCtx, func(q *sqlc.Queries) error {
 		userDb, err := q.DeleteUserByID(tCtx, id)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		user, err = mapper.DbModelsToUserAggregate(&userDb, &[]sqlc.Session{})
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish DeleteByUUID: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+
+	logger.Info("Finish DeleteByUUID")
 	return user, nil
 }
 
 func (pr *UserRepository) DeleteByEmail(ctx context.Context, email string) (*userAggre.User, error) {
+	logger.Info("Start DeleteByEmail")
+
 	tCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -206,20 +238,22 @@ func (pr *UserRepository) DeleteByEmail(ctx context.Context, email string) (*use
 	err := pr.execTx(tCtx, func(q *sqlc.Queries) error {
 		userDb, err := q.DeleteUserByEmail(tCtx, email)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
 		}
 
 		user, err = mapper.DbModelsToUserAggregate(&userDb, &[]sqlc.Session{})
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 
 		return nil
 	})
 	if err != nil {
+		logger.ErrorData("Finish DeleteByEmail: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
+	logger.Info("Finish DeleteByEmail")
 	return user, nil
 }
 

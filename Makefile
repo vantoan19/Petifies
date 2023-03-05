@@ -10,6 +10,7 @@ USER_SERVICE_MAIN=./server/services/user-service/cmd/grpc
 MEDIA_SERVICE_MAIN=./server/services/media-service/cmd/grpc
 POST_SERVICE_MAIN=./server/services/post-service/cmd/grpc
 
+COMPOSE_KAFKA=-f common.yaml -f kafka.yaml -f init-kafka.yaml
 COMPOSE_FILES=-f common.yaml -f mobile-gateway.yaml -f user-service.yaml -f media-service.yaml -f post-service.yaml
 
 ## up: starts all containers in the background without forcing build
@@ -18,10 +19,10 @@ up: format
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: format gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service
-	@echo "Stopping docker images"
-	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} down
+up_build: down format gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service
 	@echo "Building and starting docker images..."
+	sleep 20
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_KAFKA} up --build -d
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build
 
 ci_up_build: gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service

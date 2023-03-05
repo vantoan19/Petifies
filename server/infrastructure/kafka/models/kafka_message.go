@@ -6,9 +6,9 @@ type KafkaModel interface {
 }
 
 type KafkaMessage struct {
-	Topic     string     `json:"topic"`
-	Partition int32      `json:"partition"`
-	Offset    int64      `json:"offset"`
-	Key       []byte     `json:"key"`
-	Value     KafkaModel `json:"value"`
+	Topic     string `json:"topic"`
+	Partition int32  `json:"partition"`
+	Offset    int64  `json:"offset"`
+	Key       []byte `json:"key"`
+	Value     []byte `json:"value"`
 }

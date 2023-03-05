@@ -51,15 +51,14 @@ func (d *dispatcher) Run(errsChan chan<- error, endSignal <-chan bool) {
 	go d.runPublisher(errsChan, endPublisher)
 
 	go func() {
-		d.logger.Info("Received end signal, stopping the event dispatcher")
 		// block until end signal arrives
 		<-endSignal
+		d.logger.Info("Received end signal, stopping the event dispatcher")
 		endUnlocker <- true
 		endCleaner <- true
 		endPublisher <- true
+		d.logger.Info("Finish EventDispatcher")
 	}()
-
-	d.logger.Info("Finish EventDispatcher")
 }
 
 func (d *dispatcher) runUnlocker(errsChan chan<- error, endSignal <-chan bool) {

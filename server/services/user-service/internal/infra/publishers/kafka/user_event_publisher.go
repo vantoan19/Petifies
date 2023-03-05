@@ -27,16 +27,26 @@ func NewUserEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.Ev
 }
 
 func (u *UserEventPublisher) Publish(ctx context.Context, event models.UserRequest) error {
+	value, err := event.Serialize()
+	if err != nil {
+		return nil
+	}
 	payload := models.KafkaMessage{
 		Topic:     cmd.Conf.UserRequestTopic,
 		Partition: 0,
 		Offset:    0,
 		Key:       []byte("user"),
-		Value:     &event,
+		Value:     value,
 	}
 	outboxEvent := outbox_repo.Event{
-		ID:      uuid.New(),
-		Payload: payload,
+		ID:          uuid.New(),
+		Payload:     payload,
+		OutboxState: outbox_repo.StartedState,
+		LockedBy:    nil,
+		LockedAt:    nil,
+		Error:       nil,
+		CompletedAt: nil,
+		CreatedAt:   time.Now(),
 	}
 
 	outboxEvent_, err := u.eventRepo.AddEvent(outboxEvent)

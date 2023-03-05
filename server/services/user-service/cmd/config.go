@@ -21,7 +21,8 @@ type Config struct {
 	AccessTokenDuration  time.Duration `yaml:"AccessTokenDuration,omitempty"`
 	RefreshTokenDuration time.Duration `yaml:"RefreshTokenDuration,omitempty"`
 
-	UserRequestTopic string `yaml:"UserRequestTopic"`
+	UserRequestTopic string   `yaml:"UserRequestTopic,omitempty"`
+	Brokers          []string `yaml:"Brokers,omitempty"`
 }
 
 var (
