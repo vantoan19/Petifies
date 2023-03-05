@@ -5,10 +5,56 @@
 package db
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type OutboxState string
+
+const (
+	OutboxStateSTARTED   OutboxState = "STARTED"
+	OutboxStateCOMPLETED OutboxState = "COMPLETED"
+)
+
+func (e *OutboxState) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = OutboxState(s)
+	case string:
+		*e = OutboxState(s)
+	default:
+		return fmt.Errorf("unsupported scan type for OutboxState: %T", src)
+	}
+	return nil
+}
+
+type NullOutboxState struct {
+	OutboxState OutboxState
+	Valid       bool // Valid is true if OutboxState is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullOutboxState) Scan(value interface{}) error {
+	if value == nil {
+		ns.OutboxState, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.OutboxState.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullOutboxState) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.OutboxState, nil
+}
 
 type Session struct {
 	ID           uuid.UUID `json:"id"`
@@ -29,4 +75,15 @@ type User struct {
 	IsActivated bool      `json:"is_activated"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type UserEvent struct {
+	ID          uuid.UUID       `json:"id"`
+	Payload     json.RawMessage `json:"payload"`
+	OutboxState OutboxState     `json:"outbox_state"`
+	LockedBy    uuid.NullUUID   `json:"locked_by"`
+	LockedAt    sql.NullTime    `json:"locked_at"`
+	Error       sql.NullString  `json:"error"`
+	CompletedAt sql.NullTime    `json:"completed_at"`
+	CreatedAt   time.Time       `json:"created_at"`
 }

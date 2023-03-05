@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -14,9 +15,10 @@ const (
 )
 
 type UserRequest struct {
-	ID     uuid.UUID  `json:"id"`
-	Email  string     `json:"email"`
-	Status UserStatus `json:"status"`
+	ID        uuid.UUID  `json:"id"`
+	Email     string     `json:"email"`
+	CreatedAt time.Time  `json:"created_at"`
+	Status    UserStatus `json:"status"`
 }
 
 func (u *UserRequest) Serialize() ([]byte, error) {

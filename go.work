@@ -14,4 +14,5 @@ use (
 	./server/services/media-service
 	./server/services/post-service
 	./server/infrastructure/kafka
+	./server/infrastructure/outbox
 )

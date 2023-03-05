@@ -4,3 +4,8 @@ PostgresUrl: "postgresql://postgres:password@user-postgres:5432/users?sslmode=di
 TokenSecretKey: "mysecret"
 AccessTokenDuration: "600s"
 RefreshTokenDuration: "15552000s"
+UserRequestTopic: "user-request"
+Brokers: 
+  - kafka-broker-1:9092
+  - kafka-broker-2:9092
+  - kafka-broker-3:9092

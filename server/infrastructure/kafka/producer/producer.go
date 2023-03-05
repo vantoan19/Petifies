@@ -4,14 +4,15 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/config"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
+	"github.com/vantoan19/Petifies/server/libs/logging-config"
 )
 
 type KafkaProducer struct {
 	producer sarama.SyncProducer
-	topic    string
+	logger   *logging.Logger
 }
 
-func NewKafkaProducer(kafkaConfig *config.KafkaConfig) (*KafkaProducer, error) {
+func NewKafkaProducer(kafkaConfig *config.KafkaProducerConfig, logger *logging.Logger) (*KafkaProducer, error) {
 	producer, err := sarama.NewSyncProducer(kafkaConfig.Brokers, kafkaConfig.ProducerConfig)
 	if err != nil {
 		return nil, err
@@ -19,31 +20,31 @@ func NewKafkaProducer(kafkaConfig *config.KafkaConfig) (*KafkaProducer, error) {
 
 	return &KafkaProducer{
 		producer: producer,
-		topic:    kafkaConfig.Topic,
+		logger:   logger,
 	}, nil
 }
 
-func (p *KafkaProducer) SendMessage(key []byte, value models.KafkaModel) (*models.KafkaMessage, error) {
-	bytes, err := value.Serialize()
+func (p *KafkaProducer) SendMessage(msg *models.KafkaMessage) (*models.KafkaMessage, error) {
+	p.logger.InfoData("Publishing Event", logging.Data{"topic": msg.Topic, "key": msg.Key})
+
+	pmsg := &sarama.ProducerMessage{
+		Topic: msg.Topic,
+		Key:   sarama.ByteEncoder(msg.Key),
+		Value: sarama.ByteEncoder(msg.Value),
+	}
+	partition, offset, err := p.producer.SendMessage(pmsg)
 	if err != nil {
+		p.logger.ErrorData("Error at publishing event", logging.Data{"topic": msg.Topic, "key": msg.Key, "error": err.Error()})
 		return nil, err
 	}
 
-	msg := &sarama.ProducerMessage{
-		Topic: p.topic,
-		Key:   sarama.ByteEncoder(key),
-		Value: sarama.ByteEncoder(bytes),
-	}
-	partition, offset, err := p.producer.SendMessage(msg)
-	if err != nil {
-		return nil, err
-	}
+	p.logger.InfoData("Published Event", logging.Data{"topic": msg.Topic, "key": msg.Key})
 	return &models.KafkaMessage{
-		Topic:     p.topic,
+		Topic:     msg.Topic,
 		Partition: partition,
 		Offset:    offset,
-		Key:       key,
-		Value:     value,
+		Key:       msg.Key,
+		Value:     msg.Value,
 	}, nil
 }
 

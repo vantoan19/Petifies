@@ -12,6 +12,7 @@ var initFuncs = []func() error{
 	initializeConfig,
 	initializePostgresDatabase,
 	runMigrations,
+	initUserProducer,
 }
 
 func Initialize() {
