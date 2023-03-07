@@ -108,10 +108,17 @@ func serveConsumer() {
 			}
 
 			consumerLogger.InfoData("Received a new User Event", logging.Data{"event": userEvent})
-			listener.UserCreated(ctx, userEvent)
+			_, err = listener.UserCreated(ctx, userEvent)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 	consumer.Consume()
 }
 

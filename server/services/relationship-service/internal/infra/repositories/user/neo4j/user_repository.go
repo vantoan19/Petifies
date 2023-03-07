@@ -41,6 +41,9 @@ func (ur *UserRepository) GetByUUID(_ context.Context, id uuid.UUID) (*useraggre
 			ID:    id,
 			Email: email.(string),
 		})
+		if err != nil {
+			return nil, err
+		}
 
 		// Get Following
 		result, err = tx.Run("MATCH (u:User {id: $id})-[r:FOLLOW]->(v:User) RETURN v.id", map[string]interface{}{
