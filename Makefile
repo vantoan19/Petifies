@@ -27,7 +27,8 @@ up_build: down format gen_cert gen_proto_server build_mobile_api_gateway build_u
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_KAFKA} up --build -d
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build
 
-ci_up_build: gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service
+ci_up_build: gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service build_relationship_service
+	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_KAFKA} up --build -d
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build -d
 
 ## down: stop docker compose
