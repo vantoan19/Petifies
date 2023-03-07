@@ -9,10 +9,10 @@ import (
 var UserProducer producer.KafkaProducer
 
 func initUserProducer() error {
-	UserProducer_, err := producer.NewKafkaProducer(config.NewKafkaProducerConfig(Conf.Brokers), logging.New("UserService.Producer"))
+	userProducer, err := producer.NewKafkaProducer(config.NewKafkaProducerConfig(Conf.Brokers), logging.New("UserService.Producer"))
 	if err != nil {
 		return err
 	}
-	UserProducer = *UserProducer_
+	UserProducer = *userProducer
 	return nil
 }

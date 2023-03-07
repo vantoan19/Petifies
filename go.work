@@ -13,6 +13,7 @@ use (
 	./server/services/grpc-clients
 	./server/services/media-service
 	./server/services/post-service
+	./server/services/relationship-service
 	./server/infrastructure/kafka
 	./server/infrastructure/outbox
 )

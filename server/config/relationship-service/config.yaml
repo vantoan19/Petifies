@@ -1,0 +1,11 @@
+GrpcPort: 8888
+Domain:
+Neo4jUrl: bolt://relationship-neo4j:7687
+Neo4jUser: neo4j
+Neo4jPassword: mypassword
+UserEventTopic: user-event
+UserEventConsumerGroup: relationship-user-consumer-group
+Brokers: 
+  - kafka-broker-1:9092
+  - kafka-broker-2:9092
+  - kafka-broker-3:9092
