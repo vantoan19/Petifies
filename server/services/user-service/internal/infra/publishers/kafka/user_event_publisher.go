@@ -26,7 +26,7 @@ func NewUserEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.Ev
 	}
 }
 
-func (u *UserEventPublisher) Publish(ctx context.Context, event models.UserRequest) error {
+func (u *UserEventPublisher) Publish(ctx context.Context, event models.UserEvent) error {
 	value, err := event.Serialize()
 	if err != nil {
 		return nil

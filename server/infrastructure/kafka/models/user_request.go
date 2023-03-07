@@ -14,17 +14,17 @@ const (
 	USER_DELETED UserStatus = "USER_DELETED"
 )
 
-type UserRequest struct {
+type UserEvent struct {
 	ID        uuid.UUID  `json:"id"`
 	Email     string     `json:"email"`
 	CreatedAt time.Time  `json:"created_at"`
 	Status    UserStatus `json:"status"`
 }
 
-func (u *UserRequest) Serialize() ([]byte, error) {
+func (u *UserEvent) Serialize() ([]byte, error) {
 	return json.Marshal(u)
 }
 
-func (u *UserRequest) Deserialize(data []byte) error {
+func (u *UserEvent) Deserialize(data []byte) error {
 	return json.Unmarshal(data, u)
 }

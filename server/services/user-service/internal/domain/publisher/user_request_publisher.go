@@ -7,5 +7,5 @@ import (
 )
 
 type UserRequestMessagePublisher interface {
-	Publish(ctx context.Context, event models.UserRequest) error
+	Publish(ctx context.Context, event models.UserEvent) error
 }

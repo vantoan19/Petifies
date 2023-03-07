@@ -19,8 +19,8 @@ import (
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/application/handlers/jwt"
 	userAggre "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/entities"
-	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/publisher"
 	userRepo "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/repository"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/publisher"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/publishers/kafka"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/repositories/user/postgres"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/utils"
@@ -94,7 +94,7 @@ func (s *userService) CreateUser(ctx context.Context, email, password, firstName
 		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	err = s.userPublisher.Publish(ctx, models.UserRequest{
+	err = s.userPublisher.Publish(ctx, models.UserEvent{
 		ID:        createdUser.GetID(),
 		Email:     createdUser.GetEmail(),
 		CreatedAt: createdUser.GetCreatedAt(),

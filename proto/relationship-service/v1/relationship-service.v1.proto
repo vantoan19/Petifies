@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option go_package = "github.com/vantoan19/Petifies/proto/public-gateway/v1";
+
+import "common/common.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+message AddRelationshipRequest {
+    string from_user_id = 1 [(validate.rules).string.uuid = true];
+    string to_user_id = 2 [(validate.rules).string.uuid = true];
+    string relationship_type = 3;
+}
+
+message AddRelationshipResponse {
+    string message = 1;
+}
+
+message RemoveRelationshipRequest {
+    string from_user_id = 1 [(validate.rules).string.uuid = true];
+    string to_user_id = 2 [(validate.rules).string.uuid = true]; 
+    string relationship_type = 3;
+}
+
+message RemoveRelationshipResponse {
+    string message = 1;
+}
+
+message ListFollowersRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message ListFollowersResponse {
+    repeated string follower_ids = 1;
+}
+
+message ListFollowingsRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true]; 
+}
+
+message ListFollowingsResponse {
+    repeated string following_ids = 1;
+}
+
+service RelationshipService {
+    rpc AddRelationship(AddRelationshipRequest) returns (AddRelationshipResponse) {}
+    rpc RemoveRelationship(RemoveRelationshipRequest) returns (RemoveRelationshipResponse) {}
+    rpc ListFollowers(ListFollowersRequest) returns (ListFollowersResponse) {}
+    rpc ListFollowings(ListFollowingsRequest) returns (ListFollowingsResponse) {}
+}

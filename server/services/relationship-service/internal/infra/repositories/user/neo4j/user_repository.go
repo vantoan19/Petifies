@@ -8,7 +8,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	useraggre "github.com/vantoan19/Petifies/server/services/relationship-service/internal/domain/aggregates/user"
 	"github.com/vantoan19/Petifies/server/services/relationship-service/internal/domain/aggregates/user/entities"
-	"github.com/vantoan19/Petifies/server/services/relationship-service/internal/domain/aggregates/user/valueobjects"
 )
 
 type UserRepository struct {
@@ -27,43 +26,59 @@ func (ur *UserRepository) GetByUUID(_ context.Context, id uuid.UUID) (*useraggre
 	defer session.Close()
 
 	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		result, err := tx.Run("MATCH (u:User {id: $id}) RETURN u", map[string]interface{}{
+		// Get user
+		result, err := tx.Run("MATCH (u:User {id: $id}) RETURN u.email", map[string]interface{}{
 			"id": id.String(),
 		})
 		if err != nil {
 			return nil, err
 		}
-
 		if !result.Next() {
 			return nil, fmt.Errorf("user not found")
 		}
-		email, ok := result.Record().Get("u.email")
-		if !ok {
-			return nil, fmt.Errorf("cannot retrieve email")
-		}
-
+		email, _ := result.Record().Get("u.email")
 		user, err := useraggre.NewUserAggregate(entities.User{
 			ID:    id,
 			Email: email.(string),
 		})
 
-		result, err = tx.Run("MATCH (u:User {id: $id})-[r]->(v:User) RETURN r.id, r.from_user_id, r.to_user_id, r.type, v.id, v.name", map[string]interface{}{
+		// Get Following
+		result, err = tx.Run("MATCH (u:User {id: $id})-[r:FOLLOW]->(v:User) RETURN v.id", map[string]interface{}{
 			"id": id.String(),
 		})
 		if err != nil {
 			return nil, err
 		}
-
 		for result.Next() {
-			relationship, err := parseRelationship(result.Record())
+			userID_, _ := result.Record().Get("v.id")
+			userID, err := uuid.Parse(userID_.(string))
 			if err != nil {
 				return nil, err
 			}
 
-			_, err = user.AddRelationship(*relationship)
+			err = user.Follow(userID)
 			if err != nil {
 				return nil, err
 			}
+		}
+		if result.Err() != nil {
+			return nil, result.Err()
+		}
+
+		// Get Followers
+		result, err = tx.Run("MATCH (u:User {id: $id})<-[r:FOLLOW]-(v:User) RETURN v.id", map[string]interface{}{
+			"id": id.String(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		for result.Next() {
+			userID_, _ := result.Record().Get("v.id")
+			userID, err := uuid.Parse(userID_.(string))
+			if err != nil {
+				return nil, err
+			}
+			user.AddFollower(userID)
 		}
 		if result.Err() != nil {
 			return nil, result.Err()
@@ -79,7 +94,7 @@ func (ur *UserRepository) GetByUUID(_ context.Context, id uuid.UUID) (*useraggre
 }
 
 // Save inserts a new UserAggregate into Neo4j
-func (ur *UserRepository) SaveUser(user *useraggre.UserAggregate) error {
+func (ur *UserRepository) SaveUser(_ context.Context, user *useraggre.UserAggregate) error {
 	session := ur.db.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
@@ -95,21 +110,17 @@ func (ur *UserRepository) SaveUser(user *useraggre.UserAggregate) error {
 		return err
 	}
 
-	// Create relationship edges
-	for _, relationships := range user.GetRelationships() {
-		for _, relationship := range relationships {
-			_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-				_, err := tx.Run("MATCH (u1:User {id: $from_user_id}), (u2:User {id: $to_user_id}) CREATE (u1)-[r:"+string(relationship.Type)+" {id: $id, type: $type, from_user_id: $from_user_id, to_user_id: $to_user_id}]->(u2)", map[string]interface{}{
-					"from_user_id": relationship.FromUserID,
-					"to_user_id":   relationship.ToUserID,
-					"id":           relationship.ID,
-					"type":         string(relationship.Type),
-				})
-				return nil, err
+	// Create following relationships
+	for _, followingID := range user.GetFollowings() {
+		_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			_, err := tx.Run("MATCH (u1:User {id: $user_id}), (u2:User {id: $following_id}) CREATE (u1)-[r:FOLLOW {from_user_id: $user_id, to_user_id: $following_id}]->(u2)", map[string]interface{}{
+				"user_id":      user.GetID().String(),
+				"following_id": followingID.String(),
 			})
-			if err != nil {
-				return err
-			}
+			return nil, err
+		})
+		if err != nil {
+			return err
 		}
 	}
 
@@ -117,7 +128,7 @@ func (ur *UserRepository) SaveUser(user *useraggre.UserAggregate) error {
 }
 
 // Update updates an existing UserAggregate in Neo4j
-func (ur *UserRepository) UpdateUser(user *useraggre.UserAggregate) error {
+func (ur *UserRepository) UpdateUser(_ context.Context, user *useraggre.UserAggregate) error {
 	session := ur.db.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
@@ -132,7 +143,7 @@ func (ur *UserRepository) UpdateUser(user *useraggre.UserAggregate) error {
 		return err
 	}
 
-	// Delete existing relationships
+	// Delete existing following relationships
 	_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 		_, err := tx.Run("MATCH (u:User {id: $id})-[r]->() DELETE r", map[string]interface{}{
 			"id": user.GetID().String(),
@@ -143,21 +154,17 @@ func (ur *UserRepository) UpdateUser(user *useraggre.UserAggregate) error {
 		return err
 	}
 
-	// Create relationship edges
-	for _, relationships := range user.GetRelationships() {
-		for _, relationship := range relationships {
-			_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-				_, err := tx.Run("MATCH (u1:User {id: $from_user_id}), (u2:User {id: $to_user_id}) CREATE (u1)-[r:"+string(relationship.Type)+" {id: $id, type: $type, from_user_id: $from_user_id, to_user_id: $to_user_id}]->(u2)", map[string]interface{}{
-					"from_user_id": relationship.FromUserID,
-					"to_user_id":   relationship.ToUserID,
-					"id":           relationship.ID,
-					"type":         string(relationship.Type),
-				})
-				return nil, err
+	// Create following relationships
+	for _, followingID := range user.GetFollowings() {
+		_, err = session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+			_, err := tx.Run("MATCH (u1:User {id: $user_id}), (u2:User {id: $following_id}) CREATE (u1)-[r:FOLLOW {from_user_id: $user_id, to_user_id: $following_id}]->(u2)", map[string]interface{}{
+				"user_id":      user.GetID().String(),
+				"following_id": followingID.String(),
 			})
-			if err != nil {
-				return err
-			}
+			return nil, err
+		})
+		if err != nil {
+			return err
 		}
 	}
 
@@ -165,7 +172,7 @@ func (ur *UserRepository) UpdateUser(user *useraggre.UserAggregate) error {
 }
 
 // Delete deletes an existing UserAggregate from Neo4j by ID
-func (ur *UserRepository) Delete(id uuid.UUID) error {
+func (ur *UserRepository) Delete(_ context.Context, id uuid.UUID) error {
 	session := ur.db.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
@@ -177,43 +184,4 @@ func (ur *UserRepository) Delete(id uuid.UUID) error {
 	})
 
 	return err
-}
-
-func parseRelationship(record *neo4j.Record) (*entities.Relationship, error) {
-	id, ok := record.Get("r.id")
-	if !ok {
-		return nil, fmt.Errorf("invalid relationship ID")
-	}
-	fromUserID, ok := record.Get("r.from_user_id")
-	if !ok {
-		return nil, fmt.Errorf("invalid relationship from user ID")
-	}
-	toUserID, ok := record.Get("r.to_user_id")
-	if !ok {
-		return nil, fmt.Errorf("invalid relationship to user ID")
-	}
-	relationshipType, ok := record.Get("r.type")
-	if !ok {
-		return nil, fmt.Errorf("invalid relationship type")
-	}
-
-	id_, err := uuid.Parse(id.(string))
-	if err != nil {
-		return nil, err
-	}
-	fromUserID_, err := uuid.Parse(fromUserID.(string))
-	if err != nil {
-		return nil, err
-	}
-	toUserID_, err := uuid.Parse(toUserID.(string))
-	if err != nil {
-		return nil, err
-	}
-
-	return &entities.Relationship{
-		ID:         id_,
-		FromUserID: fromUserID_,
-		ToUserID:   toUserID_,
-		Type:       valueobjects.RelationshipType(relationshipType.(string)),
-	}, nil
 }
