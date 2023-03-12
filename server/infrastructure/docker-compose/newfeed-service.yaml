@@ -14,6 +14,3 @@ services:
       - SERVER_MODE=development
     networks:
       - petifies
-
-  newfeed-cassandra:
-    image: cassandra:4.1

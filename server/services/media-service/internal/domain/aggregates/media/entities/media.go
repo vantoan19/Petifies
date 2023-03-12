@@ -2,25 +2,26 @@ package entities
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media/valueobjects"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	InvalidMediaIDErr          = errors.New("invalid media ID")
-	InvalidMediaTypeErr        = errors.New("invalid media type")
-	InvalidMediaMetadataErr    = errors.New("invalid media metadata")
-	InvalidFilenameErr         = errors.New("invalid file name")
-	InvalidAudioMetadataErr    = errors.New("invalid audio metadata")
-	InvalidImageMetadataErr    = errors.New("invalid image metadata")
-	InvalidVideoMetadataErr    = errors.New("invalid video metadata")
-	InvalidDocumentMetadataErr = errors.New("invalid document metadata")
-	DiffSizeErr                = errors.New("size metadata is different from data size")
+	InvalidMediaIDErr          = status.Errorf(codes.InvalidArgument, "invalid media ID")
+	InvalidMediaTypeErr        = status.Errorf(codes.InvalidArgument, "invalid media type")
+	InvalidMediaMetadataErr    = status.Errorf(codes.InvalidArgument, "invalid media metadata")
+	InvalidFilenameErr         = status.Errorf(codes.InvalidArgument, "invalid file name")
+	InvalidAudioMetadataErr    = status.Errorf(codes.InvalidArgument, "invalid audio metadata")
+	InvalidImageMetadataErr    = status.Errorf(codes.InvalidArgument, "invalid image metadata")
+	InvalidVideoMetadataErr    = status.Errorf(codes.InvalidArgument, "invalid video metadata")
+	InvalidDocumentMetadataErr = status.Errorf(codes.InvalidArgument, "invalid document metadata")
+	DiffSizeErr                = status.Errorf(codes.InvalidArgument, "size metadata is different from data size")
 )
 
 // Media represents an uploaded media file.

@@ -2,21 +2,23 @@ package commentaggre
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 )
 
 var (
-	ErrDuplicatedLove    = errors.New("a user cannot add love twice")
-	ErrNotChildComment   = errors.New("parent ID does not identical to comment ID")
-	ErrPostParent        = errors.New("subcomment cannot have post parent")
-	ErrCommentIDNotExist = errors.New("comment ID does not exist in the post")
-	ErrCommentIDExist    = errors.New("comment ID already exists in the post")
+	ErrDuplicatedLove    = status.Errorf(codes.AlreadyExists, "a user cannot add love twice")
+	ErrNotChildComment   = status.Errorf(codes.InvalidArgument, "parent ID does not identical to comment ID")
+	ErrPostParent        = status.Errorf(codes.InvalidArgument, "subcomment cannot have post parent")
+	ErrCommentIDNotExist = status.Errorf(codes.NotFound, "comment ID does not exist in the post")
+	ErrCommentIDExist    = status.Errorf(codes.AlreadyExists, "comment ID already exists in the post")
 )
 
 // Comment represents an aggregate for Comment, Loves and its SubComments
@@ -41,7 +43,7 @@ func New(content *models.CreateCommentReq) (*Comment, error) {
 	}
 
 	if errs := commentEntity.Validate(); errs.Exist() {
-		return nil, errors.New(errs[0].Error())
+		return nil, status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	return &Comment{
@@ -59,7 +61,7 @@ func (c *Comment) GetCommentEntity() entities.Comment {
 // SetComment sets the Comment entity associated with the aggregate
 func (c *Comment) SetCommentEntity(comment entities.Comment) error {
 	if errs := comment.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	c.comment = &comment
@@ -80,7 +82,7 @@ func (c *Comment) AddLoveByEntity(love entities.Love) error {
 		}
 	}
 	if errs := love.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	c.loves = append(c.loves, &love)
@@ -102,7 +104,7 @@ func (c *Comment) AddLoveByAuthorID(authorID uuid.UUID) error {
 		CreatedAt: time.Now(),
 	}
 	if errs := love.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	c.loves = append(c.loves, love)
@@ -139,7 +141,7 @@ func (c *Comment) AddSubcommentByEntity(subcomment entities.Comment) error {
 		return ErrPostParent
 	}
 	if errs := subcomment.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	c.subcomments = append(c.subcomments, subcomment.ID)

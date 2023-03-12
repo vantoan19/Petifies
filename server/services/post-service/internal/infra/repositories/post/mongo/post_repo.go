@@ -2,7 +2,6 @@ package mongo_post
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -11,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/cmd"
@@ -22,7 +23,7 @@ import (
 )
 
 var (
-	ErrPostNotExist = errors.New("post does not exist")
+	ErrPostNotExist = status.Errorf(codes.NotFound, "post does not exist")
 	wc              = writeconcern.New(writeconcern.WMajority())
 	rc              = readconcern.Snapshot()
 	transOpts       = options.Transaction().SetWriteConcern(wc).SetReadConcern(rc)
@@ -120,22 +121,22 @@ func (pr *PostRepository) GetByUUIDWithSession(ctx context.Context, id uuid.UUID
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrPostNotExist
 		}
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	var loves []models.Love
 	cursor, err := pr.loveCollection.Find(ctx, bson.D{{Key: "post_id", Value: id}})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	if err := cursor.All(ctx, &loves); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	var comments []models.Comment
 	cursor, err = pr.commentCollection.Find(ctx, bson.D{{Key: "parent_id", Value: id}})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	if err := cursor.All(ctx, &comments); err != nil {
 		return nil, err
@@ -152,7 +153,7 @@ func (pr *PostRepository) SavePostWithSession(ctx context.Context, post *postagg
 	postEntity := post.GetPostEntity()
 	_, err := pr.postCollection.InsertOne(ctx, mapper.EntityPostToDbPost(&postEntity))
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	loves := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
@@ -161,7 +162,7 @@ func (pr *PostRepository) SavePostWithSession(ctx context.Context, post *postagg
 	if len(loves) > 0 {
 		_, err = pr.loveCollection.BulkWrite(ctx, loves)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
 
@@ -176,17 +177,17 @@ func (pr *PostRepository) UpdatePostWithSession(ctx context.Context, post *posta
 	postEntity := post.GetPostEntity()
 	_, err := pr.postCollection.ReplaceOne(ctx, bson.D{{Key: "id", Value: postEntity.ID}}, mapper.EntityPostToDbPost(&postEntity))
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	// Get all loves
 	var allLoves []models.Love
 	cursor, err := pr.loveCollection.Find(ctx, bson.D{{Key: "post_id", Value: post.GetPostID()}})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	if err := cursor.All(ctx, &allLoves); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	// Mark loves which currently exist in the aggregate
@@ -206,7 +207,7 @@ func (pr *PostRepository) UpdatePostWithSession(ctx context.Context, post *posta
 	if len(operations) > 0 {
 		_, err = pr.loveCollection.BulkWrite(ctx, operations)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
 
@@ -225,7 +226,7 @@ func (pr *PostRepository) DeleteByUUIDWithSession(ctx context.Context, id uuid.U
 
 	_, err = pr.postCollection.DeleteOne(ctx, bson.D{{Key: "id", Value: post.GetPostEntity().ID}})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	loves := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
@@ -234,7 +235,7 @@ func (pr *PostRepository) DeleteByUUIDWithSession(ctx context.Context, id uuid.U
 	if len(loves) > 0 {
 		_, err = pr.loveCollection.BulkWrite(ctx, loves)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
 
@@ -253,18 +254,18 @@ func (pr *PostRepository) execSession(ctx context.Context, fn func(ssCtx mongo.S
 	session, err := pr.client.StartSession()
 	defer session.EndSession(ctx)
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 	err = session.StartTransaction(transOpts)
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 
 	if err = fn(mongo.NewSessionContext(ctx, session)); err != nil {
 		if abErr := session.AbortTransaction(ctx); abErr != nil {
-			return fmt.Errorf("session err: %v, abort err: %v", err, abErr)
+			return status.Errorf(codes.Internal, fmt.Sprintf("session err: %v, abort err: %v", err, abErr))
 		}
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 	return session.CommitTransaction(ctx)
 }

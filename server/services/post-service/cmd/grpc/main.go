@@ -12,11 +12,13 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	postProtoV1 "github.com/vantoan19/Petifies/proto/post-service/v1"
+	outbox_dispatcher "github.com/vantoan19/Petifies/server/infrastructure/outbox/dispatcher"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	cmd "github.com/vantoan19/Petifies/server/services/post-service/cmd"
 	commentservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/comment"
 	postservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/post"
+	eventMongoRepo "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/post_event/mongo"
 	v1 "github.com/vantoan19/Petifies/server/services/post-service/internal/presentation/endpoints/grpc/v1"
 	serversV1 "github.com/vantoan19/Petifies/server/services/post-service/internal/presentation/transport/grpc/v1"
 )
@@ -66,10 +68,15 @@ func serveGRPC(grpcServer *grpc.Server) {
 func registerServices(grpcServer *grpc.Server) {
 	logger.Info("Start registerServices")
 
+	eventRepo, err := eventMongoRepo.New(cmd.MongoClient)
+	if err != nil {
+		panic(err)
+	}
 	// Register user service
 	postSvc, err := postservice.NewPostService(
 		postservice.WithMongoPostRepository(cmd.MongoClient),
 		postservice.WithMongoCommentRepository(cmd.MongoClient),
+		postservice.WithKafkaPostEventPublisher(&cmd.PostProducer, eventRepo),
 	)
 	if err != nil {
 		panic(err)
@@ -92,6 +99,34 @@ func registerServices(grpcServer *grpc.Server) {
 	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
+func servePostEventDispatcher(endSignal <-chan bool) {
+	settings := outbox_dispatcher.DispatcherSettings{
+		PublishInterval: 15 * time.Second,
+		UnlockInterval:  5 * time.Minute,
+		CleanInterval:   24 * time.Hour,
+		PublishSettings: outbox_dispatcher.PublishSettings{},
+		CleanSettings: outbox_dispatcher.CleanSettings{
+			EventLifetime: 18 * time.Hour,
+		},
+	}
+	eventRepo, err := eventMongoRepo.New(cmd.MongoClient)
+	errsChan := make(chan error)
+	if err != nil {
+		panic(err)
+	}
+	dispatcher := outbox_dispatcher.NewDispatcher(eventRepo, cmd.PostProducer, settings, *logging.New("PostService.Dispatcher"))
+	dispatcher.Run(errsChan, endSignal)
+
+	go func() {
+		for {
+			err = <-errsChan
+			fmt.Printf("Received err from dispatcher: %s", err.Error())
+		}
+	}()
+
+	<-endSignal
+}
+
 func actualMain() {
 	logger.Info("User Service starting up")
 	cmd.Initialize()
@@ -99,8 +134,10 @@ func actualMain() {
 	if err != nil {
 		panic(err)
 	}
+	endSignal := make(chan bool)
 
 	go serveGRPC(s)
+	go servePostEventDispatcher(endSignal)
 
 	// wait for a terminating signal from the OS
 	signalChan := make(chan os.Signal, 1)

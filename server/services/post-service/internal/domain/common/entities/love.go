@@ -1,17 +1,19 @@
 package entities
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 )
 
 var (
-	ErrEmptyPostID                   = errors.New("post ID cannot be empty")
-	ErrEmptyPostIDAndCommentID       = errors.New("at least one of post ID or comment ID is not null")
-	ErrBothPostIDAndCommentIDNotNull = errors.New("both post ID and comment ID cannot be not null at the same time")
+	ErrEmptyPostID                   = status.Errorf(codes.InvalidArgument, "post ID cannot be empty")
+	ErrEmptyPostIDAndCommentID       = status.Errorf(codes.InvalidArgument, "at least one of post ID or comment ID is not null")
+	ErrBothPostIDAndCommentIDNotNull = status.Errorf(codes.InvalidArgument, "both post ID and comment ID cannot be not null at the same time")
 )
 
 type Love struct {

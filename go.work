@@ -8,12 +8,14 @@ use (
 	./server/libs/grpcutils
 	./server/libs/logging-config
 	./server/libs/validateutils
+	./server/libs/paginate-utils
 	./server/services/mobile-api-gateway
 	./server/services/user-service
 	./server/services/grpc-clients
 	./server/services/media-service
 	./server/services/post-service
 	./server/services/relationship-service
+	./server/services/newfeed-service
 	./server/infrastructure/kafka
 	./server/infrastructure/outbox
 )

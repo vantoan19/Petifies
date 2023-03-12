@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/media-service/cmd"
 	mediaaggre "github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media/repository"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/infra/repositories/filesystem"
 	"github.com/vantoan19/Petifies/server/services/media-service/pkg/models"
 )
+
+var logger = logging.New("MediaService.Service")
 
 type MediaConfiguration func(ms *mediaService) error
 
@@ -51,15 +54,20 @@ func WithInDiskMediaRepository() MediaConfiguration {
 }
 
 func (m *mediaService) UploadFile(ctx context.Context, md *models.FileMetadata, data *bytes.Buffer) (string, error) {
+	logger.Info("Start UploadFile")
+
 	media, err := mediaaggre.New(md, data)
 	if err != nil {
+		logger.ErrorData("Finish UploadFile: FAILED", logging.Data{"error": err.Error()})
 		return "", err
 	}
 
 	uri, err := m.mediaRepo.Save(ctx, media)
 	if err != nil {
+		logger.ErrorData("Finish UploadFile: FAILED", logging.Data{"error": err.Error()})
 		return "", err
 	}
 
+	logger.Info("Finish UploadFile: SUCCESSFUL")
 	return uri, nil
 }

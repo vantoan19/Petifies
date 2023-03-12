@@ -8,6 +8,7 @@ import (
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
 	outbox_repo "github.com/vantoan19/Petifies/server/infrastructure/outbox/repository"
+	"github.com/vantoan19/Petifies/server/infrastructure/outbox/utils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/user-service/cmd"
 )
@@ -54,39 +55,6 @@ func (u *UserEventPublisher) Publish(ctx context.Context, event models.UserEvent
 		return err
 	}
 
-	// Lock event and publish immediately
-	lockerID := uuid.New()
-	now := time.Now()
-	outboxEvent_.LockedBy = &lockerID
-	outboxEvent_.LockedAt = &now
-	err = u.eventRepo.UpdateEvent(*outboxEvent_)
-	if err != nil {
-		logger.WarningData("Executing Publish: error at setting lock, publishing event later by outbox", logging.Data{"error": err.Error()})
-		return nil
-	}
-
-	_, err = u.producer.SendMessage(&payload)
-	if err != nil {
-		outboxEvent_.LockedBy = nil
-		outboxEvent_.LockedAt = nil
-		errMsg := err.Error()
-		outboxEvent_.Error = &errMsg
-		dbErr := u.eventRepo.UpdateEvent(*outboxEvent_)
-		if dbErr != nil {
-			logger.WarningData("Executing Publish: error at updating event, publishing event later by outbox", logging.Data{"error": dbErr.Error()})
-			return nil
-		}
-		logger.WarningData("Executing Publish: error at publishing msg, publishing event later by outbox", logging.Data{"error": err.Error()})
-	} else {
-		outboxEvent_.LockedBy = nil
-		outboxEvent_.LockedAt = nil
-		outboxEvent_.OutboxState = outbox_repo.CompletedState
-		outboxEvent_.CompletedAt = &now
-		dbErr := u.eventRepo.UpdateEvent(*outboxEvent_)
-		if dbErr != nil {
-			logger.WarningData("Executing Publish: error at updating event", logging.Data{"error": dbErr.Error()})
-		}
-	}
-
+	utils.SendOutboxMessageImmediately(*outboxEvent_, payload, u.eventRepo, *u.producer, *logger)
 	return nil
 }

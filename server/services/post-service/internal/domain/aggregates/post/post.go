@@ -2,10 +2,12 @@ package postaggre
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	comment "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
@@ -13,11 +15,11 @@ import (
 )
 
 var (
-	ErrDuplicatedLove    = errors.New("a user cannot add love twice")
-	ErrNotChildComment   = errors.New("parent ID does not identical to comment ID")
-	ErrNotPostParent     = errors.New("subcomment cannot have post parent")
-	ErrCommentIDNotExist = errors.New("comment ID does not exist in the post")
-	ErrCommentIDExist    = errors.New("comment ID already exists in the post")
+	ErrDuplicatedLove    = status.Errorf(codes.AlreadyExists, "a user cannot add love twice")
+	ErrNotChildComment   = status.Errorf(codes.InvalidArgument, "parent ID does not identical to comment ID")
+	ErrNotPostParent     = status.Errorf(codes.InvalidArgument, "subcomment cannot have post parent")
+	ErrCommentIDNotExist = status.Errorf(codes.NotFound, "comment ID does not exist in the post")
+	ErrCommentIDExist    = status.Errorf(codes.AlreadyExists, "comment ID already exists in the post")
 )
 
 type Post struct {
@@ -47,7 +49,7 @@ func NewPost(content *models.CreatePostReq) (*Post, error) {
 		UpdatedAt:   time.Now(),
 	}
 	if errs := postEntity.Validate(); errs.Exist() {
-		return nil, errors.New(errs[0].Error())
+		return nil, status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	return &Post{
@@ -59,7 +61,7 @@ func NewPost(content *models.CreatePostReq) (*Post, error) {
 
 func (p *Post) SetPostEntity(post entities.Post) error {
 	if errs := post.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	p.post = &post
@@ -92,7 +94,7 @@ func (p *Post) AddCommentByEntity(comment entities.Comment) error {
 		return ErrNotPostParent
 	}
 	if errs := comment.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	p.comments = append(p.comments, comment.ID)
@@ -154,7 +156,7 @@ func (p *Post) AddLoveByEntity(love entities.Love) error {
 		}
 	}
 	if errs := love.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	p.loves = append(p.loves, &love)
@@ -175,7 +177,7 @@ func (p *Post) AddLoveByAuthorID(authorID uuid.UUID) error {
 		CreatedAt: time.Now(),
 	}
 	if errs := love.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 
 	p.loves = append(p.loves, love)
@@ -236,7 +238,7 @@ func (p *Post) RemoveAllVideos() {
 
 func (p *Post) AddNewImage(image valueobjects.ImageContent) error {
 	if errs := image.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 	p.post.Images = append(p.post.Images, image)
 	return nil
@@ -244,7 +246,7 @@ func (p *Post) AddNewImage(image valueobjects.ImageContent) error {
 
 func (p *Post) AddNewVideo(video valueobjects.VideoContent) error {
 	if errs := video.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 	p.post.Videos = append(p.post.Videos, video)
 	return nil

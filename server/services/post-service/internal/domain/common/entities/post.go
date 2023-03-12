@@ -1,18 +1,20 @@
 package entities
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 )
 
 var (
-	ErrEmptyID       = errors.New("id is empty")
-	ErrEmptyAuthorID = errors.New("author id is empty")
+	ErrEmptyID       = status.Errorf(codes.InvalidArgument, "id is empty")
+	ErrEmptyAuthorID = status.Errorf(codes.InvalidArgument, "author id is empty")
 )
 
 type Post struct {
@@ -71,7 +73,7 @@ func (p *Post) UpdateTextContent(content valueobjects.TextContent) {
 // AddImageContent adds an image content to the post.
 func (p *Post) AddImageContent(content valueobjects.ImageContent) error {
 	if errs := content.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 	p.Images = append(p.Images, content)
 	return nil
@@ -80,7 +82,7 @@ func (p *Post) AddImageContent(content valueobjects.ImageContent) error {
 // AddVideoContent adds a video content to the post.
 func (p *Post) AddVideoContent(content valueobjects.VideoContent) error {
 	if errs := content.Validate(); errs.Exist() {
-		return errors.New(errs[0].Error())
+		return status.Errorf(codes.InvalidArgument, errs[0].Error())
 	}
 	p.Videos = append(p.Videos, content)
 	return nil
@@ -94,7 +96,7 @@ func (p *Post) RemoveImageContentByURL(url string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("image content with URL %q not found", url)
+	return status.Errorf(codes.NotFound, fmt.Sprintf("image content with URL %q not found", url))
 }
 
 // RemoveVideoContentByURL removes a video content from the post by URL.
@@ -105,5 +107,5 @@ func (p *Post) RemoveVideoContentByURL(url string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("video content with URL %q not found", url)
+	return status.Errorf(codes.NotFound, fmt.Sprintf("video content with URL %q not found", url))
 }
