@@ -6,25 +6,10 @@ services:
       context: ../../../
       dockerfile: ./server/services/user-service/Dockerfile
     restart: always
-    depends_on:
-      - user-postgres
     volumes:
       - ../../../build/server/userService:/app/userService
     environment:
       - SERVER_MODE=development
     networks:
       - petifies
-
-  user-postgres:
-    image: 'postgres:15'
-    restart: always
-    ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: users
-    volumes:
-      - ../db-data/user-postgres/:/var/lib/postgresql/data/
-    networks:
-      - petifies
+      

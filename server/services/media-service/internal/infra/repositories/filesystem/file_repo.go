@@ -2,15 +2,17 @@ package filesystem
 
 import (
 	"context"
-	"errors"
 	"os"
 	"path/filepath"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	mediaaggre "github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media"
 )
 
 var (
-	FileNotExistErr = errors.New("file does not exist")
+	FileNotExistErr = status.Errorf(codes.Internal, "file does not exist")
 )
 
 type MediaRepository struct {
@@ -19,7 +21,7 @@ type MediaRepository struct {
 
 func New(rootDir string) (*MediaRepository, error) {
 	if err := os.MkdirAll(rootDir, 0755); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &MediaRepository{
@@ -30,20 +32,20 @@ func New(rootDir string) (*MediaRepository, error) {
 func (m *MediaRepository) Save(ctx context.Context, media *mediaaggre.Media) (string, error) {
 	directory := filepath.Join(m.rootDir, media.GetMetadata().GetUploaderID().String())
 	if err := os.MkdirAll(directory, 0755); err != nil {
-		return "", err
+		return "", status.Errorf(codes.Internal, err.Error())
 	}
 
 	filePath := filepath.Join(directory, media.GetFilename())
 
 	file, err := os.Create(filePath)
 	if err != nil {
-		return "", err
+		return "", status.Errorf(codes.Internal, err.Error())
 	}
 	defer file.Close()
 
 	_, err = media.GetData().WriteTo(file)
 	if err != nil {
-		return "", nil
+		return "", status.Errorf(codes.Internal, err.Error())
 	}
 
 	return filePath, nil
@@ -56,7 +58,7 @@ func (m *MediaRepository) Remove(ctx context.Context, media *mediaaggre.Media) e
 		if os.IsNotExist(err) {
 			return FileNotExistErr
 		}
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 
 	return nil

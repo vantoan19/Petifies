@@ -6,23 +6,29 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	kafkamodels "github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
+	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
+	outbox_repo "github.com/vantoan19/Petifies/server/infrastructure/outbox/repository"
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	commentaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
 	postaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/post"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
+	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/publishers/kafka"
 	mongo_comment "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/comment/mongo"
 	mongo_post "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/post/mongo"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var logger = logging.New("PostService.PostSvc")
 
 type postService struct {
-	postRepo    postaggre.PostRepository
-	commentRepo commentaggre.CommentRepository
+	postRepo           postaggre.PostRepository
+	commentRepo        commentaggre.CommentRepository
+	postEventPublisher *kafka.PostEventPublisher
 }
 
 type PostConfiguration func(ps *postService) error
@@ -60,6 +66,14 @@ func WithMongoCommentRepository(client *mongo.Client) PostConfiguration {
 	}
 }
 
+func WithKafkaPostEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.EventRepository) PostConfiguration {
+	return func(ps *postService) error {
+		publisher := kafka.NewPostEventPublisher(producer, repo)
+		ps.postEventPublisher = publisher
+		return nil
+	}
+}
+
 func (ps *postService) CreatePost(ctx context.Context, post *models.CreatePostReq) (*postaggre.Post, error) {
 	logger.Info("Start CreatePost")
 
@@ -71,6 +85,21 @@ func (ps *postService) CreatePost(ctx context.Context, post *models.CreatePostRe
 	createdPost, err := ps.postRepo.SavePost(ctx, *newPost)
 	if err != nil {
 		logger.ErrorData("Finish CreatePost: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+	err = ps.postEventPublisher.Publish(ctx, kafkamodels.PostEvent{
+		ID:        createdPost.GetPostID(),
+		AuthorID:  createdPost.GetAuthorID(),
+		CreatedAt: createdPost.GetCreatedAt(),
+		Status:    kafkamodels.POST_CREATED,
+	})
+	if err != nil {
+		_, dbErr := ps.postRepo.DeleteByUUID(ctx, createdPost.GetPostID())
+		if dbErr != nil {
+			logger.ErrorData("Finished CreatePost: FAILED", logging.Data{"error": err.Error()})
+			return nil, err
+		}
+		logger.ErrorData("Finished CreatePost: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 

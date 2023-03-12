@@ -34,13 +34,13 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 	req, err := stream.Recv()
 	if err != nil {
 		logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 
 	uploaderId, err := uuid.Parse(req.GetMetadata().UploaderId)
 	if err != nil {
 		logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-		return err
+		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
 	md := models.FileMetadata{
@@ -66,7 +66,7 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 		}
 		if err != nil {
 			logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-			return err
+			return status.Errorf(codes.Internal, err.Error())
 		}
 
 		chunk := req.GetChunkData()
@@ -82,7 +82,7 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 			_, err = data.Write(chunk)
 			if err != nil {
 				logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-				return err
+				return status.Errorf(codes.Internal, err.Error())
 			}
 		} else {
 			willBeDiscarded = req.GetWillBeDiscarded()
@@ -109,7 +109,7 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 	err = stream.SendAndClose(resp)
 	if err != nil {
 		logger.ErrorData("Finished UploadFile: Failed", logging.Data{"error": err.Error()})
-		return err
+		return status.Errorf(codes.Internal, err.Error())
 	}
 
 	logger.Info("Finished UploadFile: Success")

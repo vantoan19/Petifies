@@ -1,17 +1,19 @@
 package entities
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 )
 
 var (
-	ErrEmptyComment           = errors.New("comment content cannot be empty")
-	ErrBothImageAndVideoExist = errors.New("a comment cannot hold both image and video content")
+	ErrEmptyComment           = status.Errorf(codes.InvalidArgument, "comment content cannot be empty")
+	ErrBothImageAndVideoExist = status.Errorf(codes.InvalidArgument, "a comment cannot hold both image and video content")
 )
 
 type Comment struct {

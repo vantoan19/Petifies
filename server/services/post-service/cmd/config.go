@@ -15,6 +15,9 @@ type Config struct {
 	GrpcPort     int    `yaml:"GrpcPort,omitempty"`
 	MongoUrl     string `yaml:"MongoUrl,omitempty"`
 	DatabaseName string `yaml:"DatabaseName,omitempty"`
+
+	Brokers        []string `yaml:"Brokers,omitempty"`
+	PostEventTopic string   `yaml:"PostEventTopic,omitempty"`
 }
 
 var (

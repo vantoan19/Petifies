@@ -90,8 +90,8 @@ func registerServices(grpcServer *grpc.Server) {
 
 func serveEventDispatcher(endSignal <-chan bool) {
 	settings := outbox_dispatcher.DispatcherSettings{
-		PublishInterval: 5 * time.Second,
-		UnlockInterval:  2 * time.Minute,
+		PublishInterval: 15 * time.Second,
+		UnlockInterval:  5 * time.Minute,
 		CleanInterval:   24 * time.Hour,
 		PublishSettings: outbox_dispatcher.PublishSettings{},
 		CleanSettings: outbox_dispatcher.CleanSettings{

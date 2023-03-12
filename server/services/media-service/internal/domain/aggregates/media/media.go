@@ -2,7 +2,6 @@ package mediaaggre
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,7 +25,7 @@ func New(md *models.FileMetadata, data *bytes.Buffer) (*Media, error) {
 		CreatedAt: time.Now(),
 	}
 	if errs := m.Validate(); errs.Exist() {
-		return nil, fmt.Errorf("invalid media: %s", errs.Error())
+		return nil, errs[0]
 	}
 
 	return &Media{
@@ -37,7 +36,7 @@ func New(md *models.FileMetadata, data *bytes.Buffer) (*Media, error) {
 // NewMedia creates a new media aggregate.
 func NewFromEntity(media *entities.Media) (*Media, error) {
 	if errs := media.Validate(); errs.Exist() {
-		return nil, fmt.Errorf("invalid media: %s", errs.Error())
+		return nil, errs[0]
 	}
 	return &Media{
 		media: media,
@@ -50,7 +49,7 @@ func (ma *Media) UpdateMetadata(metadata valueobjects.MediaMetadata) error {
 	updatedMedia.Metadata = metadata
 
 	if err := updatedMedia.Validate(); err != nil {
-		return fmt.Errorf("invalid updated media: %w", err)
+		return err
 	}
 
 	ma.media = &updatedMedia

@@ -1,9 +1,9 @@
 package valueobjects
 
 import (
-	"errors"
-
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ImageContent struct {
@@ -12,7 +12,7 @@ type ImageContent struct {
 }
 
 var (
-	EmptyURLErr = errors.New("image URL cannot be empty")
+	EmptyURLErr = status.Errorf(codes.InvalidArgument, "image URL cannot be empty")
 )
 
 func NewImageContent(url string, description string) ImageContent {

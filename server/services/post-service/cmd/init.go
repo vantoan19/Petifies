@@ -10,6 +10,7 @@ var initFuncs = []func() error{
 	initializeConfig,
 	initializeMongoDatabase,
 	runMigrations,
+	initPostProducer,
 }
 
 func Initialize() {

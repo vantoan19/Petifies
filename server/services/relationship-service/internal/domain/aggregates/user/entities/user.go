@@ -1,16 +1,17 @@
 package entities
 
 import (
-	"errors"
 	"regexp"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrEmptyId      = errors.New("user ID cannot be empty")
-	ErrEmptyEmail   = errors.New("user email cannot be empty")
-	ErrInvalidEmail = errors.New("invalid email format")
+	ErrEmptyId      = status.Errorf(codes.InvalidArgument, "user ID cannot be empty")
+	ErrEmptyEmail   = status.Errorf(codes.InvalidArgument, "user email cannot be empty")
+	ErrInvalidEmail = status.Errorf(codes.InvalidArgument, "invalid email format")
 )
 
 // User represents a user node in the graph

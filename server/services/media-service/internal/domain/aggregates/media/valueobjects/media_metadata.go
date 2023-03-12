@@ -1,19 +1,21 @@
 package valueobjects
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/server/libs/common-utils"
 )
 
 var (
-	InvalidUploaderIDErr = errors.New("invalid uploader ID")
-	InvalidFileSizeErr   = errors.New("invalid file size")
-	InvalidWidthErr      = errors.New("invalid width")
-	InvalidHeightErr     = errors.New("invalid height")
-	InvalidDurationErr   = errors.New("invalid duration")
+	InvalidUploaderIDErr = status.Errorf(codes.InvalidArgument, "invalid uploader ID")
+	InvalidFileSizeErr   = status.Errorf(codes.InvalidArgument, "invalid file size")
+	InvalidWidthErr      = status.Errorf(codes.InvalidArgument, "invalid width")
+	InvalidHeightErr     = status.Errorf(codes.InvalidArgument, "invalid height")
+	InvalidDurationErr   = status.Errorf(codes.InvalidArgument, "invalid duration")
 )
 
 // MediaMetadata contains metadata fields about the uploaded media file.
