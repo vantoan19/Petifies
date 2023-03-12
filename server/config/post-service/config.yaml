@@ -1,0 +1,9 @@
+GrpcPort: 8888
+Domain:
+MongoUrl: "mongodb://post-mongo-1:27017,post-mongo-2:27017,post-mongo-3:27017/?replicaSet=my-mongo-set"
+DatabaseName: "postServiceDatabase"
+PostEventTopic: "post-event"
+Brokers: 
+  - kafka-broker-1:9092
+  - kafka-broker-2:9092
+  - kafka-broker-3:9092

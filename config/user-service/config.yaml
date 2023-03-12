@@ -1,6 +1,0 @@
-GrpcPort: 8888
-Domain:
-PostgresUrl: "postgresql://postgres:password@user-postgres:5432/users?sslmode=disable"
-TokenSecretKey: "mysecret"
-AccessTokenDuration: "600s"
-RefreshTokenDuration: "15552000s"

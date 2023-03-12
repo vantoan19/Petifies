@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  newfeed-service:
+    build: 
+      context: ../../../
+      dockerfile: ./server/services/newfeed-service/Dockerfile
+    restart: always
+    volumes:
+      - ../../../build/server/newfeedService:/app/newfeedService
+    ports:
+      - "83:8888"
+    environment:
+      - SERVER_MODE=development
+    networks:
+      - petifies

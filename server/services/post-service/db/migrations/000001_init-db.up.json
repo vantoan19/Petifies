@@ -1,0 +1,67 @@
+[
+    {
+        "createUser": "admin",
+        "pwd": "{{.DB_PASSWORD}}",
+        "roles": [
+            {
+                "role": "readWrite",
+                "db": "postServiceDatabase"
+            }
+        ]
+    },
+    {
+        "createIndexes": "posts",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true
+            } 
+        ]
+    },
+    {
+        "createIndexes": "comments",
+        "indexes": [
+            {
+                "key": {
+                    "parent_id": 1,
+                    "created_at": 1
+                },
+                "name": "parent_id_sort_by_created_at",
+                "background": true  
+            },
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true
+            }
+        ]
+    },
+    {
+        "createIndexes": "loves",
+        "indexes": [
+            {
+                "key": {
+                    "post_id": 1,
+                    "comment_id": 1
+                },
+                "name": "post_id_comment_id",
+                "background": true
+            },
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true
+            }
+        ]
+    }
+]

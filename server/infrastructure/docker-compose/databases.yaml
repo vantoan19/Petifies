@@ -1,0 +1,95 @@
+version: '3.9'
+
+services:
+  user-postgres:
+    image: 'postgres:15'
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ../db-data/user-postgres/:/var/lib/postgresql/data/
+    networks:
+      - petifies
+
+  relationship-neo4j:
+    image: neo4j:5.5
+    restart: always
+    environment:
+      - NEO4J_AUTH=neo4j/mypassword
+    volumes:
+      - ../db-data/neo4j/:/data/
+    ports:                            
+      - "7474:7474"                            
+      - "7687:7687"
+    networks:
+      - petifies
+
+  post-mongo-1:
+    image: mongo:6.0
+    restart: always
+    volumes: 
+      - ../db-data/post-mongo-1:/data/db
+    command: mongod --bind_ip_all --replSet my-mongo-set
+    depends_on: 
+      - post-mongo-2 
+      - post-mongo-3
+    networks:
+      - petifies
+
+  post-mongo-2:
+    image: mongo:6.0
+    restart: always
+    # volumes: 
+    #   - ../db-data/post-mongo-2:/data/db
+    command: mongod --bind_ip_all --replSet my-mongo-set
+    networks:
+      - petifies
+
+  post-mongo-3:
+    image: mongo:6.0
+    restart: always
+    # volumes: 
+    #   - ../db-data/post-mongo-3:/data/db
+    command: mongod --bind_ip_all --replSet my-mongo-set
+    networks:
+      - petifies
+
+  mongoinit:
+    image: mongo:6.0
+    restart: "no"
+    depends_on:
+      - post-mongo-1
+      - post-mongo-2
+      - post-mongo-3
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/rs-init.sh"]
+    networks:
+      - petifies
+
+  newfeed-cassandra:
+    image: cassandra:4.1
+    restart: always
+    ports: 
+      - "9042:9042"
+    volumes:
+      - ../db-data/newfeed-cassandra/:/var/lib/cassandra
+    networks:
+      - petifies
+
+  cassandra-init:
+    image: cassandra:4.1
+    restart: "no"
+    depends_on:
+      - newfeed-cassandra
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/init-cassa.sh"]
+    networks:
+      - petifies
+
+  

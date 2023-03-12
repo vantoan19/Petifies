@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -98,7 +97,7 @@ func extractAuthMetadata(ctx context.Context) (string, error) {
 func getGrpcService(ctx context.Context) (string, error) {
 	method, ok := grpc.Method(ctx)
 	if !ok {
-		return "", errors.New("cannot retrieve the method from the context")
+		return "", status.Errorf(codes.Internal, "cannot retrieve the method from the context")
 	}
 
 	service := strings.Split(method, "/")[1]

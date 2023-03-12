@@ -7,3 +7,7 @@ access_token
 *pb.go
 *pb.validate.go
 **/db-data
+/.vscode
+.DS_Store
+**/upload-storage-data
+**/volumes

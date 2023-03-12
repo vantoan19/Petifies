@@ -2,8 +2,10 @@ package common
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"os"
+	"time"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/google/uuid"
@@ -102,6 +104,7 @@ func CreateClientForwardEncodeResponseFunc[T interface{}]() grpctransport.Encode
 }
 
 // ============================
+
 func ToSlice[T interface{}](c chan T) []T {
 	s := make([]T, 0)
 	for i := range c {
@@ -130,4 +133,64 @@ func Map2[T, U any](data []T, f func(T) U) []U {
 	}
 
 	return res
+}
+
+func NullStringToString(s sql.NullString) *string {
+	if s.Valid {
+		return &s.String
+	}
+	return nil
+}
+
+func NullUUIDToUUID(u uuid.NullUUID) *uuid.UUID {
+	if u.Valid {
+		return &u.UUID
+	}
+	return nil
+}
+
+func NullTimeToTime(t sql.NullTime) *time.Time {
+	if t.Valid {
+		return &t.Time
+	}
+	return nil
+}
+
+func UUIDToNullUUID(u *uuid.UUID) uuid.NullUUID {
+	if u == nil {
+		return uuid.NullUUID{
+			UUID:  uuid.Nil,
+			Valid: false,
+		}
+	}
+	return uuid.NullUUID{
+		UUID:  *u,
+		Valid: true,
+	}
+}
+
+func TimeToNullTime(t *time.Time) sql.NullTime {
+	if t == nil {
+		return sql.NullTime{
+			Time:  time.Time{},
+			Valid: false,
+		}
+	}
+	return sql.NullTime{
+		Time:  *t,
+		Valid: true,
+	}
+}
+
+func StringToNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	return sql.NullString{
+		String: *s,
+		Valid:  true,
+	}
 }

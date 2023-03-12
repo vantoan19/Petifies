@@ -11,12 +11,17 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
+	"github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
+	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
+	outbox_repo "github.com/vantoan19/Petifies/server/infrastructure/outbox/repository"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/user-service/cmd"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/application/handlers/jwt"
 	userAggre "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/entities"
 	userRepo "github.com/vantoan19/Petifies/server/services/user-service/internal/domain/aggregates/user/repository"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/domain/publisher"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/publishers/kafka"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/repositories/user/postgres"
 	"github.com/vantoan19/Petifies/server/services/user-service/internal/utils"
 )
@@ -27,6 +32,7 @@ type UserConfiguration func(us *userService) error
 
 type userService struct {
 	userRepository userRepo.UserRepository
+	userPublisher  publisher.UserRequestMessagePublisher
 	tokenMaker     jwt.TokenMaker
 }
 
@@ -66,6 +72,14 @@ func WithPostgreUserRepository(db *sql.DB) UserConfiguration {
 	}
 }
 
+func WithKafkaUserEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.EventRepository) UserConfiguration {
+	return func(us *userService) error {
+		publisher := kafka.NewUserEventPublisher(producer, repo)
+		us.userPublisher = publisher
+		return nil
+	}
+}
+
 // CreateUser
 func (s *userService) CreateUser(ctx context.Context, email, password, firstName, lastName string) (*userAggre.User, error) {
 	logger.Info("Start UserService.CreateUser")
@@ -77,6 +91,21 @@ func (s *userService) CreateUser(ctx context.Context, email, password, firstName
 	}
 	createdUser, err := s.userRepository.SaveUser(ctx, newUser)
 	if err != nil {
+		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	err = s.userPublisher.Publish(ctx, models.UserEvent{
+		ID:        createdUser.GetID(),
+		Email:     createdUser.GetEmail(),
+		CreatedAt: createdUser.GetCreatedAt(),
+		Status:    models.USER_CREATED,
+	})
+	if err != nil {
+		_, dbErr := s.userRepository.DeleteByUUID(ctx, createdUser.GetID())
+		if dbErr != nil {
+			logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 		logger.ErrorData("Finished UserService.CreateUser: FAILED", logging.Data{"error": err.Error()})
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -110,7 +139,7 @@ func (s *userService) Login(ctx context.Context, email, password string) (uuid.U
 		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
 	}
 	p, _ := peer.FromContext(ctx)
-	session := &entities.Session{
+	session := entities.Session{
 		ID:           refreshClaim.ID,
 		UserID:       refreshClaim.UserID,
 		RefreshToken: refreshToken,
@@ -134,8 +163,8 @@ func (s *userService) Login(ctx context.Context, email, password string) (uuid.U
 		return uuid.UUID{}, "", time.Time{}, "", time.Time{}, nil, status.Error(codes.Internal, err.Error())
 	}
 
-	addedSession := updatedUser.GetSessionById(session.ID)
-	if addedSession == nil || addedSession.RefreshToken != refreshToken {
+	addedSession, err := updatedUser.GetSessionById(session.ID)
+	if err != nil || addedSession.RefreshToken != refreshToken {
 		logger.ErrorData("Finished UserService.Login: FAILED", logging.Data{
 			"error": "failed to add new session to the db",
 		})
@@ -176,12 +205,12 @@ func (s *userService) VerifyToken(ctx context.Context, token string) (string, er
 		})
 		return "", status.Error(codes.NotFound, err.Error())
 	}
-	session := userAg.GetSessionById(claims.SessionID)
-	if session == nil {
+	session, err := userAg.GetSessionById(claims.SessionID)
+	if err != nil {
 		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{
 			"error": "session not found",
 		})
-		return "", status.Error(codes.NotFound, "session not found")
+		return "", status.Error(codes.NotFound, err.Error())
 	}
 	if session.IsDisabled {
 		logger.ErrorData("Finished UserService.VerifyToken: FAILED", logging.Data{
@@ -217,12 +246,12 @@ func (s *userService) RefreshToken(ctx context.Context, token string) (string, t
 		return "", time.Time{}, status.Error(codes.Internal, err.Error())
 	}
 
-	session := user.GetSessionById(claims.ID)
-	if session == nil {
+	session, err := user.GetSessionById(claims.ID)
+	if err != nil {
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{
 			"error": "session doesn't exist",
 		})
-		return "", time.Time{}, status.Error(codes.NotFound, "session doesn't exist")
+		return "", time.Time{}, status.Error(codes.NotFound, err.Error())
 	}
 	if session.IsDisabled {
 		logger.ErrorData("Finished UserService.RefreshToken: FAILED", logging.Data{

@@ -12,10 +12,12 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
+	outbox_dispatcher "github.com/vantoan19/Petifies/server/infrastructure/outbox/dispatcher"
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	cmd "github.com/vantoan19/Petifies/server/services/user-service/cmd"
 	services "github.com/vantoan19/Petifies/server/services/user-service/internal/application/services"
+	"github.com/vantoan19/Petifies/server/services/user-service/internal/infra/repositories/user_event/postgres"
 	endpointsV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/presentation/endpoints/grpc/v1"
 	serversV1 "github.com/vantoan19/Petifies/server/services/user-service/internal/presentation/transport/grpc/v1"
 )
@@ -65,9 +67,14 @@ func serveGRPC(grpcServer *grpc.Server) {
 func registerServices(grpcServer *grpc.Server) {
 	logger.Info("Start registerServices")
 
+	eventRepo, err := postgres.New(cmd.DB)
+	if err != nil {
+		panic(err)
+	}
 	// Register user service
 	userSvc, err := services.NewUserService(
 		services.WithPostgreUserRepository(cmd.DB),
+		services.WithKafkaUserEventPublisher(&cmd.UserProducer, eventRepo),
 	)
 	if err != nil {
 		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
@@ -81,6 +88,34 @@ func registerServices(grpcServer *grpc.Server) {
 	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
+func serveEventDispatcher(endSignal <-chan bool) {
+	settings := outbox_dispatcher.DispatcherSettings{
+		PublishInterval: 15 * time.Second,
+		UnlockInterval:  5 * time.Minute,
+		CleanInterval:   24 * time.Hour,
+		PublishSettings: outbox_dispatcher.PublishSettings{},
+		CleanSettings: outbox_dispatcher.CleanSettings{
+			EventLifetime: 18 * time.Hour,
+		},
+	}
+	eventRepo, err := postgres.New(cmd.DB)
+	errsChan := make(chan error)
+	if err != nil {
+		panic(err)
+	}
+	dispatcher := outbox_dispatcher.NewDispatcher(eventRepo, cmd.UserProducer, settings, *logging.New("UserService.Dispatcher"))
+	dispatcher.Run(errsChan, endSignal)
+
+	go func() {
+		for {
+			err = <-errsChan
+			fmt.Printf("Received err from dispatcher: %s", err.Error())
+		}
+	}()
+
+	<-endSignal
+}
+
 func actualMain() {
 	logger.Info("User Service starting up")
 	cmd.Initialize()
@@ -88,13 +123,16 @@ func actualMain() {
 	if err != nil {
 		panic(err)
 	}
+	endSignal := make(chan bool)
 
 	go serveGRPC(s)
+	go serveEventDispatcher(endSignal)
 
 	// wait for a terminating signal from the OS
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	sig := <-signalChan
+	endSignal <- true
 
 	logger.InfoData("Received signal, shutting down the service", logging.Data{"sig": sig})
 	s.GracefulStop()

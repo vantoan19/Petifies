@@ -4,17 +4,23 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	commonProto "github.com/vantoan19/Petifies/proto/common"
 	userProtoV1 "github.com/vantoan19/Petifies/proto/user-service/v1"
 	"github.com/vantoan19/Petifies/server/services/user-service/pkg/models"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+)
+
+var (
+	MustBeProtoReqErr  = status.Error(codes.InvalidArgument, "must be proto request")
+	MustBeProtoRespErr = status.Error(codes.InvalidArgument, "must be proto response")
 )
 
 func DecodeCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*commonProto.CreateUserRequest)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &models.CreateUserReq{
@@ -28,7 +34,7 @@ func DecodeCreateUserRequest(_ context.Context, request interface{}) (interface{
 func DecodeCreateUserResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*commonProto.User)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	id, err := uuid.Parse(resp.Id)
@@ -50,7 +56,7 @@ func DecodeCreateUserResponse(_ context.Context, response interface{}) (interfac
 func DecodeLoginRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*commonProto.LoginRequest)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &models.LoginReq{
@@ -62,7 +68,7 @@ func DecodeLoginRequest(_ context.Context, request interface{}) (interface{}, er
 func DecodeLoginResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*commonProto.LoginResponse)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	sessionID, err := uuid.Parse(resp.GetSessionId())
@@ -95,7 +101,7 @@ func DecodeLoginResponse(_ context.Context, response interface{}) (interface{}, 
 func DecodeVerifyTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*userProtoV1.VerifyTokenRequest)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &models.VerifyTokenReq{
@@ -106,7 +112,7 @@ func DecodeVerifyTokenRequest(_ context.Context, request interface{}) (interface
 func DecodeVerifyTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*userProtoV1.VerifyTokenResponse)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &models.VerifyTokenResp{
@@ -117,7 +123,7 @@ func DecodeVerifyTokenResponse(_ context.Context, response interface{}) (interfa
 func DecodeRefreshTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*commonProto.RefreshTokenRequest)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	return &models.RefreshTokenReq{
@@ -128,7 +134,7 @@ func DecodeRefreshTokenRequest(_ context.Context, request interface{}) (interfac
 func DecodeRefreshTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*commonProto.RefreshTokenResponse)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto response")
+		return nil, MustBeEndpointRespErr
 	}
 
 	return &models.RefreshTokenResp{
@@ -140,7 +146,7 @@ func DecodeRefreshTokenResponse(_ context.Context, response interface{}) (interf
 func DecodeGetUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*userProtoV1.GetUserRequest)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto request")
+		return nil, MustBeEndpointReqErr
 	}
 
 	id, err := uuid.Parse(req.UserId)
@@ -156,7 +162,7 @@ func DecodeGetUserRequest(_ context.Context, request interface{}) (interface{}, 
 func DecodeGetUserResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*commonProto.User)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "must be proto response")
+		return nil, MustBeProtoRespErr
 	}
 
 	id, err := uuid.Parse(resp.Id)

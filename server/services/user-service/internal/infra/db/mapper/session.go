@@ -9,8 +9,8 @@ import (
 	sqlc "github.com/vantoan19/Petifies/server/services/user-service/internal/infra/db/sqlc"
 )
 
-func DbSessionToEntity(s *sqlc.Session) *entities.Session {
-	return &entities.Session{
+func DbSessionToEntity(s *sqlc.Session) entities.Session {
+	return entities.Session{
 		ID:           s.ID,
 		UserID:       s.UserID,
 		RefreshToken: s.RefreshToken,
@@ -21,7 +21,7 @@ func DbSessionToEntity(s *sqlc.Session) *entities.Session {
 	}
 }
 
-func EntitySessionToDb(s *entities.Session) *sqlc.Session {
+func EntitySessionToDb(s entities.Session) *sqlc.Session {
 	return &sqlc.Session{
 		ID:           s.ID,
 		UserID:       s.UserID,
@@ -33,24 +33,24 @@ func EntitySessionToDb(s *entities.Session) *sqlc.Session {
 	}
 }
 
-func EntitySessionsToUpsertParams(sessions []*entities.Session) *sqlc.BulkUpsertSessionsParams {
+func EntitySessionsToUpsertParams(sessions []entities.Session) *sqlc.BulkUpsertSessionsParams {
 	return &sqlc.BulkUpsertSessionsParams{
-		ID:           common.Map2(sessions, func(s *entities.Session) uuid.UUID { return s.ID }),
-		UserID:       common.Map2(sessions, func(s *entities.Session) uuid.UUID { return s.UserID }),
-		RefreshToken: common.Map2(sessions, func(s *entities.Session) string { return s.RefreshToken }),
-		ExpriresAt:   common.Map2(sessions, func(s *entities.Session) time.Time { return s.ExpiresAt }),
-		ClientIp:     common.Map2(sessions, func(s *entities.Session) string { return s.ClientIP }),
-		IsDisabled:   common.Map2(sessions, func(s *entities.Session) bool { return s.IsDisabled }),
+		ID:           common.Map2(sessions, func(s entities.Session) uuid.UUID { return s.ID }),
+		UserID:       common.Map2(sessions, func(s entities.Session) uuid.UUID { return s.UserID }),
+		RefreshToken: common.Map2(sessions, func(s entities.Session) string { return s.RefreshToken }),
+		ExpriresAt:   common.Map2(sessions, func(s entities.Session) time.Time { return s.ExpiresAt }),
+		ClientIp:     common.Map2(sessions, func(s entities.Session) string { return s.ClientIP }),
+		IsDisabled:   common.Map2(sessions, func(s entities.Session) bool { return s.IsDisabled }),
 	}
 }
 
-func EntitySessionsToCreateParams(sessions []*entities.Session) *sqlc.BulkCreateSessionParams {
+func EntitySessionsToCreateParams(sessions []entities.Session) *sqlc.BulkCreateSessionParams {
 	return &sqlc.BulkCreateSessionParams{
-		ID:           common.Map2(sessions, func(s *entities.Session) uuid.UUID { return s.ID }),
-		UserID:       common.Map2(sessions, func(s *entities.Session) uuid.UUID { return s.UserID }),
-		RefreshToken: common.Map2(sessions, func(s *entities.Session) string { return s.RefreshToken }),
-		ExpriresAt:   common.Map2(sessions, func(s *entities.Session) time.Time { return s.ExpiresAt }),
-		ClientIp:     common.Map2(sessions, func(s *entities.Session) string { return s.ClientIP }),
-		IsDisabled:   common.Map2(sessions, func(s *entities.Session) bool { return s.IsDisabled }),
+		ID:           common.Map2(sessions, func(s entities.Session) uuid.UUID { return s.ID }),
+		UserID:       common.Map2(sessions, func(s entities.Session) uuid.UUID { return s.UserID }),
+		RefreshToken: common.Map2(sessions, func(s entities.Session) string { return s.RefreshToken }),
+		ExpriresAt:   common.Map2(sessions, func(s entities.Session) time.Time { return s.ExpiresAt }),
+		ClientIp:     common.Map2(sessions, func(s entities.Session) string { return s.ClientIP }),
+		IsDisabled:   common.Map2(sessions, func(s entities.Session) bool { return s.IsDisabled }),
 	}
 }

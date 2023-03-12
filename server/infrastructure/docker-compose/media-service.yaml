@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  media-service:
+    build: 
+      context: ../../../
+      dockerfile: ./server/services/media-service/Dockerfile
+    restart: always
+    volumes:
+      - ../../../build/server/mediaService:/app/mediaService
+      - ../upload-storage-data:/storage
+    ports:
+      - "81:8888"
+    environment:
+      - SERVER_MODE=development
+    networks:
+      - petifies
