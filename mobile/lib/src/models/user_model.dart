@@ -4,33 +4,33 @@ import 'dart:convert';
 class UserModel {
   final String id;
   final String email;
+  final String? userAvatar;
   final String firstName;
   final String lastName;
-  final bool isAuthenticated;
   final bool isActivated;
   UserModel({
     required this.id,
     required this.email,
+    this.userAvatar = null,
     required this.firstName,
     required this.lastName,
-    required this.isAuthenticated,
     required this.isActivated,
   });
 
   UserModel copyWith({
     String? id,
     String? email,
+    String? userAvatar,
     String? firstName,
     String? lastName,
-    bool? isAuthenticated,
     bool? isActivated,
   }) {
     return UserModel(
       id: id ?? this.id,
       email: email ?? this.email,
+      userAvatar: userAvatar ?? this.userAvatar,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isActivated: isActivated ?? this.isActivated,
     );
   }
@@ -39,9 +39,9 @@ class UserModel {
     return <String, dynamic>{
       'id': id,
       'email': email,
+      'userAvatar': userAvatar,
       'firstName': firstName,
       'lastName': lastName,
-      'isAuthenticated': isAuthenticated,
       'isActivated': isActivated,
     };
   }
@@ -50,9 +50,10 @@ class UserModel {
     return UserModel(
       id: map['id'] as String,
       email: map['email'] as String,
+      userAvatar:
+          map['userAvatar'] != null ? map['userAvatar'] as String : null,
       firstName: map['firstName'] as String,
       lastName: map['lastName'] as String,
-      isAuthenticated: map['isAuthenticated'] as bool,
       isActivated: map['isActivated'] as bool,
     );
   }
@@ -64,7 +65,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, isAuthenticated: $isAuthenticated, isActivated: $isActivated)';
+    return 'UserModel(id: $id, email: $email, userAvatar: $userAvatar, firstName: $firstName, lastName: $lastName, isActivated: $isActivated)';
   }
 
   @override
@@ -73,9 +74,9 @@ class UserModel {
 
     return other.id == id &&
         other.email == email &&
+        other.userAvatar == userAvatar &&
         other.firstName == firstName &&
         other.lastName == lastName &&
-        other.isAuthenticated == isAuthenticated &&
         other.isActivated == isActivated;
   }
 
@@ -83,9 +84,9 @@ class UserModel {
   int get hashCode {
     return id.hashCode ^
         email.hashCode ^
+        userAvatar.hashCode ^
         firstName.hashCode ^
         lastName.hashCode ^
-        isAuthenticated.hashCode ^
         isActivated.hashCode;
   }
 }

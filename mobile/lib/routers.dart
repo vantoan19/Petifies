@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/src/features/auth/screens/introduction_screens.dart';
 import 'package:mobile/src/features/auth/screens/signin_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_form_screen.dart';
+import 'package:mobile/src/features/auth/screens/signup_screen.dart';
 import 'package:mobile/src/features/auth/screens/splash_screen.dart';
 import 'package:mobile/src/features/feed/screens/home_screen.dart';
 
@@ -15,7 +16,7 @@ Route onGenerateRoute(RouteSettings settings) {
     case "/signin":
       return MaterialPageRoute(builder: (context) => const SignInScreen());
     case "/signup":
-      return MaterialPageRoute(builder: (context) => const SignInScreen());
+      return MaterialPageRoute(builder: (context) => const SignUpScreen());
     case "/signup/form":
       return MaterialPageRoute(builder: (context) => const SignUpFormScreen());
     case "/home-page":

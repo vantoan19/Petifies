@@ -45,7 +45,6 @@ class UserRepository implements IUserRepository {
           email: response.email,
           firstName: response.firstName,
           lastName: response.lastName,
-          isAuthenticated: false,
           isActivated: false);
 
       return right(user);
@@ -66,7 +65,6 @@ class UserRepository implements IUserRepository {
           email: response.user.email,
           firstName: response.user.firstName,
           lastName: response.user.lastName,
-          isAuthenticated: response.user.isActivated,
           isActivated: response.user.isActivated);
       final tokens = Tokens(
         sessionId: response.sessionId,
@@ -94,7 +92,6 @@ class UserRepository implements IUserRepository {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        isAuthenticated: true,
         isActivated: user.isActivated,
       );
       return right(myUser);
