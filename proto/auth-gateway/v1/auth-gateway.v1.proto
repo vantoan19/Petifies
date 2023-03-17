@@ -8,6 +8,47 @@ import "google/protobuf/timestamp.proto";
 
 message GetMyInfoRequest {}
 
+message UserCreatePostRequest {
+    string content = 3;
+    repeated Image images = 4;
+    repeated Video videos = 5;
+}
+
+message UserCreateCommentRequest {
+    string post_id = 2 [(validate.rules).string.uuid = true];
+    string parent_id = 4 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 5;
+    string content = 6;
+    Image image = 7;
+    Video video = 8;
+}
+
+message UserEditCommentRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string content = 2;
+    Image image = 3;
+    Video video = 4;
+}
+
+message UserEditPostRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string content = 2;
+    repeated Image images = 3;
+    repeated Video videos = 4;
+}
+
+message UserReactLoveRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_target_post = 2;
+}
+
+
 service AuthGateway {
     rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
+    rpc UserCreatePost(UserCreatePostRequest) returns (Post) {}
+    rpc UserCreateComment(UserCreateCommentRequest) returns (Comment) {}
+    rpc UserEditPost(UserEditPostRequest) returns (Post) {}
+    rpc UserEditComment(UserEditCommentRequest) returns (Comment) {}
+    rpc UserUploadFile(stream UploadFileRequest) returns (UploadFileResponse) {}
+    rpc RemoveFileByURI(RemoveFileByURIRequest) returns (RemoveFileByURIResponse) {}
 }

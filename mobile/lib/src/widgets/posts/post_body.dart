@@ -7,8 +7,8 @@ import 'package:video_player/video_player.dart';
 
 class PostBody extends StatelessWidget {
   final String? textContent;
-  final List<ImageModel>? images;
-  final List<VideoModel>? videos;
+  final List<NetworkImageModel>? images;
+  final List<NetworkVideoModel>? videos;
 
   const PostBody(
       {super.key,
@@ -18,60 +18,75 @@ class PostBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (textContent != null)
-          Text(
-            textContent!,
-            style: TextStyle(
-              fontSize: 11,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 18, 0, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Text Content
+          if (textContent != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 12, 18),
+              child: Text(
+                textContent!,
+                style: TextStyle(
+                  fontSize: 16,
+                ),
+              ),
             ),
-          ),
-        if (images != null || videos != null)
-          CarouselSlider(
-            options: CarouselOptions(
-              aspectRatio: 4 / 6,
-              height: 400,
-              enableInfiniteScroll: false,
-            ),
-            items: [
-              if (images != null)
-                ...images!
-                    .map(
-                      (image) => Builder(
-                        builder: (BuildContext context) {
-                          return Container(
-                            width: MediaQuery.of(context).size.width,
-                            margin: EdgeInsets.symmetric(horizontal: 5.0),
-                            child: AspectRatio(
-                              aspectRatio: 4 / 6,
-                              child: Image.network(image.uri),
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                    .toList(),
-              if (videos != null)
-                ...videos!.map(
-                  (video) => Builder(
-                    builder: (BuildContext context) {
-                      return Container(
-                        width: MediaQuery.of(context).size.width,
-                        margin: EdgeInsets.symmetric(horizontal: 5.0),
-                        child: VideoWidget(
-                          videoPlayerController:
-                              VideoPlayerController.network(video.uri),
-                          isAutoplaying: true,
-                          isLooping: true,
+          // Image & Video content
+          if (images != null || videos != null)
+            CarouselSlider(
+              options: CarouselOptions(
+                  aspectRatio: 4 / 6,
+                  height: MediaQuery.of(context).size.width,
+                  enableInfiniteScroll: false,
+                  enlargeCenterPage: true,
+                  disableCenter: true,
+                  viewportFraction: 1.0),
+              items: [
+                // Images
+                if (images != null)
+                  ...images!
+                      .map(
+                        (image) => Builder(
+                          builder: (BuildContext context) {
+                            return Container(
+                              width: MediaQuery.of(context).size.width,
+                              child: AspectRatio(
+                                aspectRatio: 4 / 6,
+                                child: Image.network(
+                                  image.uri,
+                                  fit: BoxFit.fitWidth,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                )
-            ],
-          )
-      ],
+                      )
+                      .toList(),
+                // Videos
+                if (videos != null)
+                  ...videos!.map(
+                    (video) => Builder(
+                      builder: (BuildContext context) {
+                        return Container(
+                          width: MediaQuery.of(context).size.width,
+                          margin: EdgeInsets.symmetric(horizontal: 5.0),
+                          child: VideoWidget(
+                            videoPlayerController:
+                                VideoPlayerController.network(video.uri),
+                            isAutoplaying: true,
+                            isLooping: true,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+              ],
+            )
+        ],
+      ),
     );
   }
 }

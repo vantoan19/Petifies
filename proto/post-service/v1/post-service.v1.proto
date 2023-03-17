@@ -54,6 +54,12 @@ message ListPostsResponse {
     repeated Post posts = 1;
 }
 
+message LoveReactRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    string author_id = 2 [(validate.rules).string.uuid = true];
+    bool is_target_post = 3;
+}
+
 service PostService {
     rpc CreatePost(CreatePostRequest) returns (Post) {}
     rpc CreateComment(CreateCommentRequest) returns (Comment) {}

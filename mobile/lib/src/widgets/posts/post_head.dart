@@ -17,47 +17,69 @@ class PostHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: CircleAvatar(
-            backgroundImage: (userAvatar != null)
-                ? NetworkImage(userAvatar!)
-                : AssetImage(Constants.defaultAvatarPng) as ImageProvider,
-            radius: 25,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Avatar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+            child: (userAvatar != null)
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(userAvatar!),
+                    radius: 25,
+                    backgroundColor: Colors.transparent,
+                  )
+                : CircleAvatar(
+                    backgroundImage: AssetImage(Constants.defaultAvatarPng),
+                    radius: 25,
+                    backgroundColor: Colors.transparent,
+                  ),
           ),
-        ),
-        Column(
-          children: [
-            Row(
-              children: [
-                Text(
-                  userName,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          // Name & activity
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                child: Row(
+                  children: [
+                    // Name
+                    Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Text(" "),
+                    // Activity
+                    Text(
+                      activity,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    )
+                  ],
                 ),
-                const Text(" "),
-                Text(
-                  activity,
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                )
-              ],
-            ),
-            Text(
-              postTime,
-              style: TextStyle(
-                color: Colors.grey,
               ),
-            )
-          ],
-        ),
-        IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz))
-      ],
+              // Time
+              Text(
+                postTime,
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w300,
+                ),
+              )
+            ],
+          ),
+          // More button
+          IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz))
+        ],
+      ),
     );
   }
 }

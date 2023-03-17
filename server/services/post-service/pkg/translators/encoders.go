@@ -77,7 +77,7 @@ func EncodeLoveReactRequest(_ context.Context, request interface{}) (interface{}
 		return nil, MustBeEndpointReqErr
 	}
 
-	return &commonProto.LoveReactRequest{
+	return &postProtoV1.LoveReactRequest{
 		TargetId:     req.TargetID.String(),
 		AuthorId:     req.AuthorID.String(),
 		IsTargetPost: req.IsTargetPost,

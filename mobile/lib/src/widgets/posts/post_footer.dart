@@ -14,36 +14,47 @@ class PostFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Row(
-          children: [
-            Row(
-              children: [
-                IconButton(
-                    onPressed: () {}, icon: Icon(FontAwesomeIcons.heart)),
-                Text(
-                  loveCount,
-                  style: TextStyle(
-                    fontSize: 12,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 8, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Row(
+                children: [
+                  IconButton(
+                      onPressed: () {}, icon: Icon(FontAwesomeIcons.heart)),
+                  Text(
+                    loveCount,
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                IconButton(onPressed: () {}, icon: Icon(Icons.comment)),
-                Text(
-                  commentCount,
-                  style: TextStyle(
-                    fontSize: 12,
+                ],
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: Icon(Icons.comment),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+                  Text(
+                    commentCount,
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          IconButton(onPressed: () {}, icon: Icon(Icons.send))
+        ],
+      ),
     );
   }
 }

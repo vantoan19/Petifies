@@ -77,7 +77,7 @@ func (s *gRPCPostServer) CreateComment(ctx context.Context, req *postProtoV1.Cre
 	return resp.(*commonProto.Comment), nil
 }
 
-func (s *gRPCPostServer) LoveReact(ctx context.Context, req *commonProto.LoveReactRequest) (*commonProto.Love, error) {
+func (s *gRPCPostServer) LoveReact(ctx context.Context, req *postProtoV1.LoveReactRequest) (*commonProto.Love, error) {
 	_, resp, err := s.loveReact.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err

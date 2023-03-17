@@ -94,7 +94,7 @@ func DecodeCommentResponse(_ context.Context, response interface{}) (interface{}
 }
 
 func DecodeLoveReactRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(*commonProto.LoveReactRequest)
+	req, ok := request.(*postProtoV1.LoveReactRequest)
 	if !ok {
 		return nil, MustBeEndpointReqErr
 	}

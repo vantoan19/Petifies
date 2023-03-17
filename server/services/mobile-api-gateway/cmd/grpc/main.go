@@ -16,7 +16,8 @@ import (
 	"github.com/vantoan19/Petifies/server/libs/grpcutils"
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/cmd"
-	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services"
+	postService "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/post"
+	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
 	endpointsV1 "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/endpoints/grpc/v1"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/interceptors/auth"
 	grpcServers "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/presentation/transport/grpc/v1"
@@ -80,10 +81,12 @@ func registerServices(grpcServer *grpc.Server) {
 		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})
 		panic(err)
 	}
+	postSvc, err := postService.NewPostService(cmd.PostServiceConn)
 
 	userEndpoints := endpointsV1.NewUserEndpoints(userSvc)
+	postEndpoints := endpointsV1.NewPostEndpoints(postSvc)
 	publicProtoV1.RegisterPublicGatewayServer(grpcServer, grpcServers.NewPublicServer(userEndpoints))
-	authProtoV1.RegisterAuthGatewayServer(grpcServer, grpcServers.NewAuthServer(userEndpoints))
+	authProtoV1.RegisterAuthGatewayServer(grpcServer, grpcServers.NewAuthServer(cmd.MediaServiceConn, userEndpoints, postEndpoints))
 
 	logger.Info("Finished registerServices: SUCCESSFUL")
 }

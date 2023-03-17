@@ -14,7 +14,9 @@ type Config struct {
 	TLSKeyPath  string `yaml:"TLSKeyPath,omitempty"`
 	TLSCertPath string `yaml:"TLSCertPath,omitempty"`
 
-	UserServiceHost string `yaml:"UserServiceHost"`
+	UserServiceHost  string `yaml:"UserServiceHost"`
+	PostServiceHost  string `yaml:"PostServiceHost"`
+	MediaServiceHost string `yaml:"MediaServiceHost"`
 }
 
 var (

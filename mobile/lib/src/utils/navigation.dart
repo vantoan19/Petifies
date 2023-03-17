@@ -21,6 +21,10 @@ class NavigatorUtil {
     Navigator.of(context).pushNamed('/home-page');
   }
 
+  static void toCreatePost(context) {
+    Navigator.of(context).pushNamed('/create-post');
+  }
+
   static void goBack(context) {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();

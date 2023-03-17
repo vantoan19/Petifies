@@ -44,7 +44,7 @@ func registerServices(grpcServer *grpc.Server) {
 
 	// Register user service
 	mediaSvc, err := services.NewMediaService(
-		services.WithInDiskMediaRepository(),
+		services.WithGoogleStorageMediaRepository(),
 	)
 	if err != nil {
 		logger.ErrorData("Finished registerServices: FAILED", logging.Data{"error": err.Error()})

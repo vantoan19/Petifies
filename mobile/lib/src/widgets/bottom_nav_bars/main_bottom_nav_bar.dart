@@ -1,8 +1,16 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 class MainButtomNavBar extends StatelessWidget {
-  const MainButtomNavBar({super.key});
+  final int curPage;
+  final Function(int) onTapFunc;
+
+  const MainButtomNavBar({
+    Key? key,
+    required this.curPage,
+    required this.onTapFunc,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +32,8 @@ class MainButtomNavBar extends StatelessWidget {
         selectedFontSize: 10,
         selectedItemColor: Themes.blueColor,
         type: BottomNavigationBarType.fixed,
+        currentIndex: curPage,
+        onTap: onTapFunc,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

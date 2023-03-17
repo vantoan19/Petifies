@@ -2,28 +2,39 @@ package v1
 
 import (
 	"bytes"
+	"context"
 	"io"
 
+	"github.com/go-kit/kit/endpoint"
+	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/vantoan19/Petifies/proto/common"
 	mediaProtoV1 "github.com/vantoan19/Petifies/proto/media-service/v1"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"github.com/vantoan19/Petifies/server/services/media-service/cmd"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/application/services"
 	"github.com/vantoan19/Petifies/server/services/media-service/pkg/models"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/vantoan19/Petifies/server/services/media-service/pkg/translator"
 )
 
 var logger = logging.New("MediaService.MediaServer")
 
 type mediaServer struct {
-	mediaService services.MediaService
+	mediaService    services.MediaService
+	removeFileByUri grpctransport.Handler
 }
 
 func NewMediaServer(mediaService services.MediaService) mediaProtoV1.MediaServiceServer {
 	return &mediaServer{
 		mediaService: mediaService,
+		removeFileByUri: grpctransport.NewServer(
+			makeRemoveFileByURIEndpoint(mediaService),
+			translator.DecodeRemoveFileByURIRequest,
+			translator.EncodeRemoveFileByURIResponse,
+		),
 	}
 }
 
@@ -86,6 +97,7 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 			}
 		} else {
 			willBeDiscarded = req.GetWillBeDiscarded()
+			break
 		}
 	}
 
@@ -114,4 +126,23 @@ func (m *mediaServer) UploadFile(stream mediaProtoV1.MediaService_UploadFileServ
 
 	logger.Info("Finished UploadFile: Success")
 	return nil
+}
+
+func makeRemoveFileByURIEndpoint(s services.MediaService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.RemoveFileByURIReq)
+		err = s.RemoveFileByURI(ctx, req.URI)
+		if err != nil {
+			return nil, err
+		}
+		return &models.RemoveFileByURIResp{}, nil
+	}
+}
+
+func (s *mediaServer) RemoveFileByURI(ctx context.Context, req *common.RemoveFileByURIRequest) (*common.RemoveFileByURIResponse, error) {
+	_, resp, err := s.removeFileByUri.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*common.RemoveFileByURIResponse), nil
 }

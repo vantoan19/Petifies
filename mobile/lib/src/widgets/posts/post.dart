@@ -30,24 +30,27 @@ class Post extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        PostHead(
-          userAvatar: postData.owner.userAvatar,
-          userName: postData.owner.firstName + " " + postData.owner.lastName,
-          activity: postData.postActivity,
-          postTime: postData.postTime,
-        ),
-        PostBody(
-          textContent: postData.textContent,
-          images: postData.images,
-          videos: postData.videos,
-        ),
-        PostFooter(
-          loveCount: _stringifyCount(postData.loveCount),
-          commentCount: _stringifyCount(postData.commentCount),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          PostHead(
+            userAvatar: postData.owner.userAvatar,
+            userName: postData.owner.firstName + " " + postData.owner.lastName,
+            activity: postData.postActivity,
+            postTime: postData.postTime.toString(),
+          ),
+          PostBody(
+            textContent: postData.textContent,
+            images: postData.images,
+            videos: postData.videos,
+          ),
+          PostFooter(
+            loveCount: _stringifyCount(postData.loveCount),
+            commentCount: _stringifyCount(postData.commentCount),
+          ),
+        ],
+      ),
     );
   }
 }

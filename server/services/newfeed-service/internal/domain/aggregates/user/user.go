@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	petifyfeedaggre "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/domain/aggregates/petify-feed"
 	postfeedaggre "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/domain/aggregates/post-feed"
 	storyfeedaggre "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/domain/aggregates/story-feed"
 	"github.com/vantoan19/Petifies/server/services/newfeed-service/internal/domain/aggregates/user/entities"
@@ -19,10 +18,9 @@ var (
 )
 
 type UserAggre struct {
-	user          *entities.User
-	postFeeds     []uuid.UUID
-	storyFeeds    []uuid.UUID
-	petifiesFeeds []uuid.UUID
+	user       *entities.User
+	postFeeds  []uuid.UUID
+	storyFeeds []uuid.UUID
 }
 
 func NewUserAggregate(id uuid.UUID, email string) (*UserAggre, error) {
@@ -35,10 +33,9 @@ func NewUserAggregate(id uuid.UUID, email string) (*UserAggre, error) {
 	}
 
 	return &UserAggre{
-		user:          user,
-		postFeeds:     make([]uuid.UUID, 0),
-		storyFeeds:    make([]uuid.UUID, 0),
-		petifiesFeeds: make([]uuid.UUID, 0),
+		user:       user,
+		postFeeds:  make([]uuid.UUID, 0),
+		storyFeeds: make([]uuid.UUID, 0),
 	}, nil
 }
 
@@ -64,18 +61,6 @@ func (u *UserAggre) AddStoryFeed(story storyfeedaggre.StoryFeedAggre, repo story
 	}
 
 	return repo.Save(context.Background(), story)
-}
-
-func (u *UserAggre) AddPetifyFeed(petify petifyfeedaggre.PetifyFeedAggre, repo petifyfeedaggre.PetifyFeedRepository) (*petifyfeedaggre.PetifyFeedAggre, error) {
-	exists, err := repo.ExistsPetifyFeed(context.Background(), petify.GetUserID(), petify.GetPetifyID())
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		return nil, ErrStoryFeedAlreadyExists
-	}
-
-	return repo.Save(context.Background(), petify)
 }
 
 // ========== Aggregate Root Getters ============

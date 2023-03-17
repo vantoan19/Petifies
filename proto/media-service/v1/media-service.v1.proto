@@ -6,4 +6,5 @@ import "common/common.proto";
 
 service MediaService {
     rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse ) {}
+    rpc RemoveFileByURI(RemoveFileByURIRequest) returns (RemoveFileByURIResponse) {}
 }

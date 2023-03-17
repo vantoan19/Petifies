@@ -12,9 +12,12 @@ type Config struct {
 	ServerMode string `yaml:"ServerMode,omitempty"`
 
 	WebDomain      string `yaml:"WebDomain,omitempty"`
+	CDNDomain      string `yaml:"CDNDomain"`
 	GrpcPort       int    `yaml:"GrpcPort,omitempty"`
 	StorageRootDir string `yaml:"StorageRootDir,omitempty"`
 	MaxFileSize    int    `yaml:"MaxFileSize,omitempty"`
+	BucketName     string `yaml:"BucketName"`
+	CredentialFile string `yaml:"CredentialFile"`
 }
 
 var (

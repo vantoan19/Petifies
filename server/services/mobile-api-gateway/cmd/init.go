@@ -7,6 +7,8 @@ var logger = logging.New("MobileGateWay.Cmd")
 var initFuncs = []func() error{
 	initializeConfig,
 	initUserServiceClient,
+	initPostServiceClient,
+	initMediaServiceClient,
 }
 
 func Initialize() {

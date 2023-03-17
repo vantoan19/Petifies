@@ -1,75 +1,54 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
-class VideoModel {
+class NetworkVideoModel {
   final String uri;
-  final int width;
-  final int height;
-  final int durationInSec;
-  VideoModel({
+  final String description;
+  NetworkVideoModel({
     required this.uri,
-    required this.width,
-    required this.height,
-    required this.durationInSec,
+    this.description = "",
   });
 
-  VideoModel copyWith({
+  NetworkVideoModel copyWith({
     String? uri,
-    int? width,
-    int? height,
-    int? durationInSec,
+    String? description,
   }) {
-    return VideoModel(
+    return NetworkVideoModel(
       uri: uri ?? this.uri,
-      width: width ?? this.width,
-      height: height ?? this.height,
-      durationInSec: durationInSec ?? this.durationInSec,
+      description: description ?? this.description,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'uri': uri,
-      'width': width,
-      'height': height,
-      'durationInSec': durationInSec,
+      'description': description,
     };
   }
 
-  factory VideoModel.fromMap(Map<String, dynamic> map) {
-    return VideoModel(
+  factory NetworkVideoModel.fromMap(Map<String, dynamic> map) {
+    return NetworkVideoModel(
       uri: map['uri'] as String,
-      width: map['width'] as int,
-      height: map['height'] as int,
-      durationInSec: map['durationInSec'] as int,
+      description: map['description'] as String,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory VideoModel.fromJson(String source) =>
-      VideoModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory NetworkVideoModel.fromJson(String source) =>
+      NetworkVideoModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() {
-    return 'VideoModel(uri: $uri, width: $width, height: $height, durationInSec: $durationInSec)';
-  }
+  String toString() =>
+      'NetworkVideoModel(uri: $uri, description: $description)';
 
   @override
-  bool operator ==(covariant VideoModel other) {
+  bool operator ==(covariant NetworkVideoModel other) {
     if (identical(this, other)) return true;
 
-    return other.uri == uri &&
-        other.width == width &&
-        other.height == height &&
-        other.durationInSec == durationInSec;
+    return other.uri == uri && other.description == description;
   }
 
   @override
-  int get hashCode {
-    return uri.hashCode ^
-        width.hashCode ^
-        height.hashCode ^
-        durationInSec.hashCode;
-  }
+  int get hashCode => uri.hashCode ^ description.hashCode;
 }

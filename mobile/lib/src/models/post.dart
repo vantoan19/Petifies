@@ -5,14 +5,15 @@ import 'package:collection/collection.dart';
 import 'package:mobile/src/models/image.dart';
 import 'package:mobile/src/models/user_model.dart';
 import 'package:mobile/src/models/video.dart';
+import 'package:mobile/src/proto/google/protobuf/timestamp.pb.dart';
 
 class PostModel {
   final UserModel owner;
   final String postActivity;
-  final String postTime;
+  final Timestamp postTime;
   final String? textContent;
-  final List<ImageModel>? images;
-  final List<VideoModel>? videos;
+  final List<NetworkImageModel>? images;
+  final List<NetworkVideoModel>? videos;
   final int loveCount;
   final int commentCount;
   PostModel({
@@ -29,10 +30,10 @@ class PostModel {
   PostModel copyWith({
     UserModel? owner,
     String? postActivity,
-    String? postTime,
+    Timestamp? postTime,
     String? textContent,
-    List<ImageModel>? images,
-    List<VideoModel>? videos,
+    List<NetworkImageModel>? images,
+    List<NetworkVideoModel>? videos,
     int? loveCount,
     int? commentCount,
   }) {
@@ -65,20 +66,20 @@ class PostModel {
     return PostModel(
       owner: UserModel.fromMap(map['owner'] as Map<String, dynamic>),
       postActivity: map['postActivity'] as String,
-      postTime: map['postTime'] as String,
+      postTime: map['postTime'],
       textContent:
           map['textContent'] != null ? map['textContent'] as String : null,
       images: map['images'] != null
-          ? List<ImageModel>.from(
-              (map['images'] as List<int>).map<ImageModel?>(
-                (x) => ImageModel.fromMap(x as Map<String, dynamic>),
+          ? List<NetworkImageModel>.from(
+              (map['images'] as List<int>).map<NetworkImageModel?>(
+                (x) => NetworkImageModel.fromMap(x as Map<String, dynamic>),
               ),
             )
           : null,
       videos: map['videos'] != null
-          ? List<VideoModel>.from(
-              (map['videos'] as List<int>).map<VideoModel?>(
-                (x) => VideoModel.fromMap(x as Map<String, dynamic>),
+          ? List<NetworkVideoModel>.from(
+              (map['videos'] as List<int>).map<NetworkVideoModel?>(
+                (x) => NetworkVideoModel.fromMap(x as Map<String, dynamic>),
               ),
             )
           : null,

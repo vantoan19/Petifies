@@ -6,7 +6,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
-	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services"
+	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
 )
 
 type UserEndpoints struct {

@@ -8,5 +8,5 @@ import (
 
 type MediaRepository interface {
 	Save(ctx context.Context, media *aggregates.Media) (string, error)
-	Remove(ctx context.Context, media *aggregates.Media) error
+	RemoveByUri(ctx context.Context, uri string) error
 }

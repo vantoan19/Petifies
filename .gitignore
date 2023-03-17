@@ -11,3 +11,4 @@ access_token
 .DS_Store
 **/upload-storage-data
 **/volumes
+service_account.json

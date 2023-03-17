@@ -8,6 +8,7 @@ import (
 	"github.com/vantoan19/Petifies/server/services/media-service/cmd"
 	mediaaggre "github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/domain/aggregates/media/repository"
+	"github.com/vantoan19/Petifies/server/services/media-service/internal/infra/repositories/cdn/google"
 	"github.com/vantoan19/Petifies/server/services/media-service/internal/infra/repositories/filesystem"
 	"github.com/vantoan19/Petifies/server/services/media-service/pkg/models"
 )
@@ -22,6 +23,7 @@ type mediaService struct {
 
 type MediaService interface {
 	UploadFile(ctx context.Context, md *models.FileMetadata, data *bytes.Buffer) (string, error)
+	RemoveFileByURI(ctx context.Context, uri string) error
 }
 
 func NewMediaService(cfgs ...MediaConfiguration) (MediaService, error) {
@@ -53,6 +55,18 @@ func WithInDiskMediaRepository() MediaConfiguration {
 	}
 }
 
+func WithGoogleStorageMediaRepository() MediaConfiguration {
+	return func(ms *mediaService) error {
+		repo, err := google.New()
+		if err != nil {
+			return err
+		}
+
+		ms.mediaRepo = repo
+		return nil
+	}
+}
+
 func (m *mediaService) UploadFile(ctx context.Context, md *models.FileMetadata, data *bytes.Buffer) (string, error) {
 	logger.Info("Start UploadFile")
 
@@ -70,4 +84,17 @@ func (m *mediaService) UploadFile(ctx context.Context, md *models.FileMetadata, 
 
 	logger.Info("Finish UploadFile: SUCCESSFUL")
 	return uri, nil
+}
+
+func (m *mediaService) RemoveFileByURI(ctx context.Context, uri string) error {
+	logger.Info("Start RemoveFileByURI")
+
+	err := m.mediaRepo.RemoveByUri(ctx, uri)
+	if err != nil {
+		logger.ErrorData("Finish RemoveFileByURI: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finish RemoveFileByURI: SUCCESSFUL")
+	return nil
 }

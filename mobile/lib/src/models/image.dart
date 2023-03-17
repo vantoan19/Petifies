@@ -1,59 +1,54 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
-class ImageModel {
+class NetworkImageModel {
   final String uri;
-  final int width;
-  final int height;
-  ImageModel({
+  final String description;
+  NetworkImageModel({
     required this.uri,
-    required this.width,
-    required this.height,
+    this.description = "",
   });
 
-  ImageModel copyWith({
+  NetworkImageModel copyWith({
     String? uri,
-    int? width,
-    int? height,
+    String? description,
   }) {
-    return ImageModel(
+    return NetworkImageModel(
       uri: uri ?? this.uri,
-      width: width ?? this.width,
-      height: height ?? this.height,
+      description: description ?? this.description,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'uri': uri,
-      'width': width,
-      'height': height,
+      'description': description,
     };
   }
 
-  factory ImageModel.fromMap(Map<String, dynamic> map) {
-    return ImageModel(
+  factory NetworkImageModel.fromMap(Map<String, dynamic> map) {
+    return NetworkImageModel(
       uri: map['uri'] as String,
-      width: map['width'] as int,
-      height: map['height'] as int,
+      description: map['description'] as String,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory ImageModel.fromJson(String source) =>
-      ImageModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory NetworkImageModel.fromJson(String source) =>
+      NetworkImageModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'ImageModel(uri: $uri, width: $width, height: $height)';
+  String toString() =>
+      'NetworkImageModel(uri: $uri, description: $description)';
 
   @override
-  bool operator ==(covariant ImageModel other) {
+  bool operator ==(covariant NetworkImageModel other) {
     if (identical(this, other)) return true;
 
-    return other.uri == uri && other.width == width && other.height == height;
+    return other.uri == uri && other.description == description;
   }
 
   @override
-  int get hashCode => uri.hashCode ^ width.hashCode ^ height.hashCode;
+  int get hashCode => uri.hashCode ^ description.hashCode;
 }

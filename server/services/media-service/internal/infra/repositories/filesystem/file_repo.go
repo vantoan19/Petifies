@@ -51,8 +51,8 @@ func (m *MediaRepository) Save(ctx context.Context, media *mediaaggre.Media) (st
 	return filePath, nil
 }
 
-func (m *MediaRepository) Remove(ctx context.Context, media *mediaaggre.Media) error {
-	filepath := filepath.Join(m.rootDir, media.GetMetadata().GetUploaderID().String(), media.GetFilename())
+func (m *MediaRepository) RemoveByUri(ctx context.Context, uri string) error {
+	filepath := filepath.Join(m.rootDir, uri)
 
 	if err := os.Remove(filepath); err != nil {
 		if os.IsNotExist(err) {

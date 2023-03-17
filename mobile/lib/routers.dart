@@ -4,7 +4,8 @@ import 'package:mobile/src/features/auth/screens/signin_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_form_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_screen.dart';
 import 'package:mobile/src/features/auth/screens/splash_screen.dart';
-import 'package:mobile/src/features/feed/screens/home_screen.dart';
+import 'package:mobile/src/features/home/screens/home_screen.dart';
+import 'package:mobile/src/features/post/screens/create_post_screen.dart';
 
 Route onGenerateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -21,6 +22,8 @@ Route onGenerateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => const SignUpFormScreen());
     case "/home-page":
       return MaterialPageRoute(builder: (context) => const HomeScreeen());
+    case "/create-post":
+      return MaterialPageRoute(builder: (context) => CreatePostScreen());
     default:
       return MaterialPageRoute(builder: (context) => const SignInScreen());
   }
