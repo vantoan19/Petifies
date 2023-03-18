@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:mobile/src/constants/constants.dart';
@@ -5,7 +6,11 @@ import 'package:mobile/src/theme/themes.dart';
 import 'package:mobile/src/utils/navigation.dart';
 
 class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CreatePostAppBar({super.key});
+  final VoidCallback addPostAction;
+  const CreatePostAppBar({
+    Key? key,
+    required this.addPostAction,
+  }) : super(key: key);
 
   @override
   Size get preferredSize => const Size.fromHeight(70);
@@ -28,7 +33,7 @@ class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           iconSize: 30,
-          onPressed: () {},
+          onPressed: addPostAction,
           icon: Icon(
             Icons.add,
             color: Themes.blueColor,

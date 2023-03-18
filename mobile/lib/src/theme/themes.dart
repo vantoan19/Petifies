@@ -8,6 +8,7 @@ class Themes {
   static const greyColor = Color.fromRGBO(90, 90, 90, 1); // secondary color
   static const lightGreyColor = Color.fromRGBO(175, 175, 175, 1);
   static const lightGreyColorTransparent = Color.fromRGBO(175, 175, 175, 0.1);
+  static const darkGreyColorTransparent = Color.fromRGBO(90, 90, 90, 0.3);
   static const drawerColor = Color.fromRGBO(18, 18, 18, 1);
   static const whiteColor = Colors.white;
   static const blueColor = Color.fromRGBO(60, 185, 255, 1);

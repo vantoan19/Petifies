@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/constants/constants.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 class MyProfileScreen extends StatelessWidget {

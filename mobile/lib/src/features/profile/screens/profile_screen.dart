@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/features/profile/screens/my_profile_screen.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 
 class ProfileScreen extends StatelessWidget {
   final Function(PreferredSizeWidget?, Widget) navigateCallback;

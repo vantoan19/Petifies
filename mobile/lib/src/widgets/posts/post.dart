@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile/src/models/post.dart';
 import 'package:mobile/src/widgets/posts/post_body.dart';
 import 'package:mobile/src/widgets/posts/post_footer.dart';
@@ -28,6 +29,32 @@ class Post extends StatelessWidget {
     }
   }
 
+  String _getPosttime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.compareTo(Duration(seconds: 10)) < 0) {
+      return "just now";
+    } else if (diff.compareTo(Duration(minutes: 1)) < 0) {
+      return diff.inSeconds.toString() + "s";
+    } else if (diff.compareTo(Duration(hours: 1)) < 0) {
+      return diff.inMinutes.toString() + "m";
+    } else if (diff.compareTo(Duration(days: 1)) < 0) {
+      return diff.inHours.toString() + "h";
+    } else if (diff.compareTo(Duration(days: 30)) < 0) {
+      return diff.inDays.toString() + "d";
+    }
+    final DateFormat formatter = DateFormat("dd-MM-yyyy");
+    return formatter.format(time);
+  }
+
+  String _getActivity(String postActivity) {
+    switch (postActivity) {
+      case "post":
+        return "shared a new post";
+      default:
+        return "shared a new post";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -37,8 +64,8 @@ class Post extends StatelessWidget {
           PostHead(
             userAvatar: postData.owner.userAvatar,
             userName: postData.owner.firstName + " " + postData.owner.lastName,
-            activity: postData.postActivity,
-            postTime: postData.postTime.toString(),
+            activity: _getActivity(postData.postActivity),
+            postTime: _getPosttime(postData.createdAt),
           ),
           PostBody(
             textContent: postData.textContent,

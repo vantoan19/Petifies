@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/auth/repositories/user_repository.dart';
 import 'package:mobile/src/models/user_model.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 
 final userCreateControllerProvider =
     AsyncNotifierProvider.autoDispose<UserCreateController, UserModel?>(

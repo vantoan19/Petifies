@@ -34,6 +34,7 @@ class PostRepository implements IPostRepository {
     required String textContent,
     required List<NetworkImageModel> images,
     required List<NetworkVideoModel> videos,
+    String visibility = "public",
   }) async {
     try {
       Post resp = await _postService.userCreatePost(
@@ -45,7 +46,7 @@ class PostRepository implements IPostRepository {
       PostModel post = PostModel(
         owner: author,
         postActivity: "post",
-        postTime: resp.createdAt,
+        createdAt: resp.createdAt.toDateTime(),
         loveCount: 0,
         commentCount: 0,
       );

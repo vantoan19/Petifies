@@ -40,7 +40,7 @@ class PostFooter extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () {},
-                    icon: Icon(Icons.comment),
+                    icon: Icon(Icons.comment_outlined),
                   ),
                   Text(
                     commentCount,
@@ -52,7 +52,7 @@ class PostFooter extends StatelessWidget {
               ),
             ],
           ),
-          IconButton(onPressed: () {}, icon: Icon(Icons.send))
+          IconButton(onPressed: () {}, icon: Icon(Icons.send_outlined))
         ],
       ),
     );

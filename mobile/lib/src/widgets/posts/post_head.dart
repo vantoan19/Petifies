@@ -39,42 +39,47 @@ class PostHead extends StatelessWidget {
                   ),
           ),
           // Name & activity
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
-                child: Row(
-                  children: [
-                    // Name
-                    Text(
-                      userName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                    child: Row(
+                      children: [
+                        // Name
+                        Text(
+                          userName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(" "),
+                        // Activity
+                        Text(
+                          activity,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        )
+                      ],
                     ),
-                    const Text(" "),
-                    // Activity
-                    Text(
-                      activity,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    )
-                  ],
-                ),
+                  ),
+                  // Time
+                  Text(
+                    postTime,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  )
+                ],
               ),
-              // Time
-              Text(
-                postTime,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w300,
-                ),
-              )
-            ],
+            ),
           ),
           // More button
           IconButton(onPressed: () {}, icon: Icon(Icons.more_horiz))

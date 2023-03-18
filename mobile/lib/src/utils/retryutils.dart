@@ -1,5 +1,5 @@
 import 'package:grpc/grpc.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/providers/service_providers.dart';
 import 'package:mobile/src/providers/storages_provider.dart';
 import 'package:retry/retry.dart';

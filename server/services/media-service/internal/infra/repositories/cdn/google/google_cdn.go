@@ -34,7 +34,6 @@ func (m *MediaRepository) Save(ctx context.Context, media *mediaaggre.Media) (st
 	ctx_, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	sw := m.storageClient.Bucket(cmd.Conf.BucketName).Object(media.GetID().String() + "-" + media.GetFilename()).NewWriter(ctx_)
-	sw.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
 
 	if _, err := media.GetData().WriteTo(sw); err != nil {
 		return "", status.Errorf(codes.Internal, err.Error())

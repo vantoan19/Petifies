@@ -26,11 +26,13 @@ class _VideoWidgetState extends State<VideoWidget> {
   void initState() {
     super.initState();
     _chewieController = ChewieController(
-        videoPlayerController: widget.videoPlayerController,
-        aspectRatio: 4 / 6,
-        autoPlay: widget.isAutoplaying,
-        looping: widget.isLooping,
-        autoInitialize: true);
+      videoPlayerController: widget.videoPlayerController,
+      autoPlay: widget.isAutoplaying,
+      looping: widget.isLooping,
+      allowFullScreen: false,
+      allowPlaybackSpeedChanging: false,
+      autoInitialize: true,
+    );
   }
 
   @override

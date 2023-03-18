@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -87,6 +88,7 @@ func (s *gRPCAuthServer) GetMyInfo(ctx context.Context, req *authProtoV1.GetMyIn
 }
 
 func (s *gRPCAuthServer) UserCreatePost(ctx context.Context, req *authProtoV1.UserCreatePostRequest) (*commonProto.Post, error) {
+	time.Sleep(time.Second * 2)
 	_, resp, err := s.userCreatePost.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err

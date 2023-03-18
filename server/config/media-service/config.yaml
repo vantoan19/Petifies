@@ -1,6 +1,6 @@
 GrpcPort: 8888
 Domain:
-CDNDomain: "https://storage.cloud.google.com"
+CDNDomain: "https://storage.googleapis.com"
 TLSKeyPath: "/app/cert/tls.key"
 TLSCertPath: "/app/cert/tls.crt" 
 UserServiceHost: "user-service:8888"

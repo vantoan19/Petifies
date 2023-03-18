@@ -10,7 +10,7 @@ import 'package:mobile/src/proto/google/protobuf/timestamp.pb.dart';
 class PostModel {
   final UserModel owner;
   final String postActivity;
-  final Timestamp postTime;
+  final DateTime createdAt;
   final String? textContent;
   final List<NetworkImageModel>? images;
   final List<NetworkVideoModel>? videos;
@@ -19,7 +19,7 @@ class PostModel {
   PostModel({
     required this.owner,
     required this.postActivity,
-    required this.postTime,
+    required this.createdAt,
     this.textContent = null,
     this.images = null,
     this.videos = null,
@@ -30,7 +30,7 @@ class PostModel {
   PostModel copyWith({
     UserModel? owner,
     String? postActivity,
-    Timestamp? postTime,
+    DateTime? createdAt,
     String? textContent,
     List<NetworkImageModel>? images,
     List<NetworkVideoModel>? videos,
@@ -40,7 +40,7 @@ class PostModel {
     return PostModel(
       owner: owner ?? this.owner,
       postActivity: postActivity ?? this.postActivity,
-      postTime: postTime ?? this.postTime,
+      createdAt: createdAt ?? this.createdAt,
       textContent: textContent ?? this.textContent,
       images: images ?? this.images,
       videos: videos ?? this.videos,
@@ -53,7 +53,7 @@ class PostModel {
     return <String, dynamic>{
       'owner': owner.toMap(),
       'postActivity': postActivity,
-      'postTime': postTime,
+      'createdAt': createdAt,
       'textContent': textContent,
       'images': images?.map((x) => x.toMap()).toList(),
       'videos': videos?.map((x) => x.toMap()).toList(),
@@ -66,7 +66,7 @@ class PostModel {
     return PostModel(
       owner: UserModel.fromMap(map['owner'] as Map<String, dynamic>),
       postActivity: map['postActivity'] as String,
-      postTime: map['postTime'],
+      createdAt: map['createdAt'],
       textContent:
           map['textContent'] != null ? map['textContent'] as String : null,
       images: map['images'] != null
@@ -95,7 +95,7 @@ class PostModel {
 
   @override
   String toString() {
-    return 'PostModel(owner: $owner, postActivity: $postActivity, postTime: $postTime, textContent: $textContent, images: $images, videos: $videos, loveCount: $loveCount, commentCount: $commentCount)';
+    return 'PostModel(owner: $owner, postActivity: $postActivity, createdAt: $createdAt, textContent: $textContent, images: $images, videos: $videos, loveCount: $loveCount, commentCount: $commentCount)';
   }
 
   @override
@@ -105,7 +105,7 @@ class PostModel {
 
     return other.owner == owner &&
         other.postActivity == postActivity &&
-        other.postTime == postTime &&
+        other.createdAt == createdAt &&
         other.textContent == textContent &&
         listEquals(other.images, images) &&
         listEquals(other.videos, videos) &&
@@ -117,7 +117,7 @@ class PostModel {
   int get hashCode {
     return owner.hashCode ^
         postActivity.hashCode ^
-        postTime.hashCode ^
+        createdAt.hashCode ^
         textContent.hashCode ^
         images.hashCode ^
         videos.hashCode ^

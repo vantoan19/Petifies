@@ -5,7 +5,7 @@ import 'package:mobile/main.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/constants/languages.dart';
 import 'package:mobile/src/features/auth/controllers/auth_controllers.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/providers/storages_provider.dart';
 import 'package:mobile/src/utils/navigation.dart';
 import 'package:mobile/src/widgets/appbars/auth_appbar.dart';
