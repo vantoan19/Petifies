@@ -76,6 +76,7 @@ func registerServices(grpcServer *grpc.Server) {
 	postSvc, err := postservice.NewPostService(
 		postservice.WithMongoPostRepository(cmd.MongoClient),
 		postservice.WithMongoCommentRepository(cmd.MongoClient),
+		postservice.WithMongoLoveRepository(cmd.MongoClient),
 		postservice.WithKafkaPostEventPublisher(&cmd.PostProducer, eventRepo),
 	)
 	if err != nil {
@@ -84,6 +85,7 @@ func registerServices(grpcServer *grpc.Server) {
 	commentSvc, err := commentservice.NewCommentService(
 		commentservice.WithMongoCommentRepository(cmd.MongoClient),
 		commentservice.WithMongoPostRepository(cmd.MongoClient),
+		commentservice.WithMongoLoveRepository(cmd.MongoClient),
 	)
 	if err != nil {
 		panic(err)

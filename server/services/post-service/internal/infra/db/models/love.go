@@ -7,9 +7,9 @@ import (
 )
 
 type Love struct {
-	ID        uuid.UUID `bson:"id"`
-	PostID    uuid.UUID `bson:"post_id"`
-	CommentID uuid.UUID `bson:"comment_id"`
-	AuthorID  uuid.UUID `bson:"author_id"`
-	CreatedAt time.Time `bson:"created_at"`
+	ID           uuid.UUID `bson:"id"`
+	TargetID     uuid.UUID `bson:"target_id"`
+	IsPostTarget bool      `bson:"is_post_target"`
+	AuthorID     uuid.UUID `bson:"author_id"`
+	CreatedAt    time.Time `bson:"created_at"`
 }

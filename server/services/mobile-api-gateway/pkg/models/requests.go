@@ -7,6 +7,8 @@ import (
 
 type UserCreatePostReq struct {
 	TextContent string
+	Visibility  string
+	Activity    string
 	Images      []models.Image
 	Videos      []models.Video
 }
@@ -21,10 +23,12 @@ type UserCreateCommentReq struct {
 }
 
 type UserEditPostReq struct {
-	PostID  uuid.UUID
-	Content string
-	Images  []models.Image
-	Videos  []models.Video
+	PostID     uuid.UUID
+	Content    string
+	Visibility string
+	Activity   string
+	Images     []models.Image
+	Videos     []models.Video
 }
 
 type UserEditCommentReq struct {

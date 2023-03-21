@@ -92,4 +92,12 @@ services:
     networks:
       - petifies
 
+  central-cache:
+    image: redis:7
+    restart: "always"
+    volumes: 
+      - ../db-data/central-cache:/data
+    networks:
+      - petifies
+
   

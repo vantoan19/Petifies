@@ -3,11 +3,11 @@ package cassandra
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
-	paginateutils "github.com/vantoan19/Petifies/server/libs/paginate-utils"
 	postfeedaggre "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/domain/aggregates/post-feed"
 	"github.com/vantoan19/Petifies/server/services/newfeed-service/internal/infra/repositories/db/mapper"
 	"github.com/vantoan19/Petifies/server/services/newfeed-service/internal/infra/repositories/db/models"
@@ -27,16 +27,15 @@ func NewCassandraPostRepository(session *gocql.Session) (*PostRepository, error)
 	}, nil
 }
 
-func (pr *PostRepository) GetByUserID(ctx context.Context, userID uuid.UUID, pageToken paginateutils.PageToken) ([]*postfeedaggre.PostFeedAggre, error) {
+func (pr *PostRepository) GetByUserID(ctx context.Context, userID uuid.UUID, pageSize int, beforeTime time.Time) ([]*postfeedaggre.PostFeedAggre, error) {
 	logger.Info("Start GetByUserID")
 
 	var result []*postfeedaggre.PostFeedAggre
 	query := `SELECT user_id, author_id, post_id, created_at 
               FROM postfeeds_by_user_id 
-              WHERE user_id=?
-              OFFSET ? 
+              WHERE user_id=? AND created_at<?
               LIMIT ?`
-	iter := pr.session.Query(query, userID.String(), pageToken.Offset, pageToken.PageSize).Iter()
+	iter := pr.session.Query(query, userID.String(), beforeTime, pageSize).Iter()
 	var postFeedModel models.PostFeed
 	for iter.Scan(&postFeedModel.UserID, &postFeedModel.AuthorID, &postFeedModel.PostID, &postFeedModel.CreatedAt) {
 		postfeed, err := mapper.DbPostFeedToPostFeedAggregate(&postFeedModel)

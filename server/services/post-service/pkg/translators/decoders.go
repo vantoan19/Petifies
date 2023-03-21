@@ -33,6 +33,8 @@ func DecodeCreatePostRequest(_ context.Context, request interface{}) (interface{
 
 	return &models.CreatePostReq{
 		AuthorID:    authorId,
+		Visibility:  req.Visibility,
+		Activity:    req.Actitivty,
 		TextContent: req.GetContent(),
 		Images:      utils.Map2(req.GetImages(), func(i *commonProto.Image) models.Image { return models.Image{URL: i.Uri, Description: i.Description} }),
 		Videos:      utils.Map2(req.GetVideos(), func(v *commonProto.Video) models.Video { return models.Video{URL: v.Uri, Description: v.Description} }),
@@ -136,10 +138,12 @@ func DecodeEditPostRequest(_ context.Context, request interface{}) (interface{},
 	}
 
 	return &models.EditPostReq{
-		ID:      postID,
-		Content: req.GetContent(),
-		Images:  utils.Map2(req.GetImages(), func(i *commonProto.Image) models.Image { return models.Image{URL: i.Uri, Description: i.Description} }),
-		Videos:  utils.Map2(req.GetVideos(), func(v *commonProto.Video) models.Video { return models.Video{URL: v.Uri, Description: v.Description} }),
+		ID:         postID,
+		Visibility: req.Visibility,
+		Activity:   req.Activity,
+		Content:    req.GetContent(),
+		Images:     utils.Map2(req.GetImages(), func(i *commonProto.Image) models.Image { return models.Image{URL: i.Uri, Description: i.Description} }),
+		Videos:     utils.Map2(req.GetVideos(), func(v *commonProto.Video) models.Video { return models.Video{URL: v.Uri, Description: v.Description} }),
 	}, nil
 }
 
@@ -250,6 +254,94 @@ func DecodeListPostsResponse(_ context.Context, response interface{}) (interface
 	}, nil
 }
 
+func DecodeGetLoveCountRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.GetLoveCountRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	targetID, err := uuid.Parse(req.TargetId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetLoveCountReq{
+		TargetID:     targetID,
+		IsPostParent: req.IsPostTarget,
+	}, nil
+}
+
+func DecodeGetLoveCountResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*postProtoV1.GetLoveCountReponse)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &models.GetLoveCountResp{
+		Count: int(resp.Count),
+	}, nil
+}
+
+func DecodeGetCommentCountRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.GetCommentCountRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	parentID, err := uuid.Parse(req.ParentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetCommentCountReq{
+		ParentID:     parentID,
+		IsPostParent: req.IsPostParent,
+	}, nil
+}
+
+func DecodeGetCommentCountResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*postProtoV1.GetCommentCountReponse)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &models.GetCommentCountResp{
+		Count: int(resp.Count),
+	}, nil
+}
+
+func DecodeGetPostRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.GetPostRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	postID, err := uuid.Parse(req.PostId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetPostReq{
+		PostID: postID,
+	}, nil
+}
+
+func DecodeGetCommentRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.GetCommentRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	commentID, err := uuid.Parse(req.CommentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetCommentReq{
+		CommentID: commentID,
+	}, nil
+}
+
 func decodePostProtoModel(post *commonProto.Post) (*models.Post, error) {
 	id, err := uuid.Parse(post.GetId())
 	if err != nil {
@@ -259,24 +351,19 @@ func decodePostProtoModel(post *commonProto.Post) (*models.Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	loves := make([]models.Love, 0)
-	for _, l := range post.GetLoves() {
-		loveModel, err := decodeLoveProtoModel(l)
-		if err != nil {
-			return nil, err
-		}
-		loves = append(loves, *loveModel)
-	}
 
 	return &models.Post{
-		ID:        id,
-		AuthorID:  authorID,
-		Content:   post.GetContent(),
-		Images:    utils.Map2(post.GetImages(), func(i *commonProto.Image) models.Image { return models.Image{URL: i.Uri, Description: i.Description} }),
-		Videos:    utils.Map2(post.GetVideos(), func(v *commonProto.Video) models.Video { return models.Video{URL: v.Uri, Description: v.Description} }),
-		Loves:     loves,
-		CreatedAt: post.GetCreatedAt().AsTime(),
-		UpdatedAt: post.GetUpdatedAt().AsTime(),
+		ID:           id,
+		AuthorID:     authorID,
+		Content:      post.GetContent(),
+		Images:       utils.Map2(post.GetImages(), func(i *commonProto.Image) models.Image { return models.Image{URL: i.Uri, Description: i.Description} }),
+		Videos:       utils.Map2(post.GetVideos(), func(v *commonProto.Video) models.Video { return models.Video{URL: v.Uri, Description: v.Description} }),
+		LoveCount:    int(post.GetLoveCount()),
+		CommentCount: int(post.GetCommentCount()),
+		Visibility:   post.GetVisibility(),
+		Activity:     post.GetActivity(),
+		CreatedAt:    post.GetCreatedAt().AsTime(),
+		UpdatedAt:    post.GetUpdatedAt().AsTime(),
 	}, nil
 }
 
@@ -297,14 +384,6 @@ func decodeCommentProtoModel(comment *commonProto.Comment) (*models.Comment, err
 	if err != nil {
 		return nil, err
 	}
-	loves := make([]models.Love, 0)
-	for _, l := range comment.GetLoves() {
-		loveModel, err := decodeLoveProtoModel(l)
-		if err != nil {
-			return nil, err
-		}
-		loves = append(loves, *loveModel)
-	}
 
 	return &models.Comment{
 		ID:           id,
@@ -321,7 +400,7 @@ func decodeCommentProtoModel(comment *commonProto.Comment) (*models.Comment, err
 			URL:         comment.GetVideo().Uri,
 			Description: comment.GetVideo().Description,
 		},
-		Loves:           loves,
+		LoveCount:       int(comment.GetLoveCount()),
 		SubcommentCount: int(comment.GetSubcommentCount()),
 		CreatedAt:       comment.CreatedAt.AsTime(),
 		UpdatedAt:       comment.UpdatedAt.AsTime(),
@@ -333,29 +412,19 @@ func decodeLoveProtoModel(love *commonProto.Love) (*models.Love, error) {
 	if err != nil {
 		return nil, err
 	}
-	postId := uuid.Nil
-	if love.PostId != "" {
-		postId, err = uuid.Parse(love.PostId)
-		if err != nil {
-			return nil, err
-		}
-	}
-	commentId := uuid.Nil
-	if love.CommentId != "" {
-		commentId, err = uuid.Parse(love.CommentId)
-		if err != nil {
-			return nil, err
-		}
+	targetID, err := uuid.Parse(love.TargetId)
+	if err != nil {
+		return nil, err
 	}
 	authorId, err := uuid.Parse(love.AuthorId)
 	if err != nil {
 		return nil, err
 	}
 	return &models.Love{
-		ID:        loveId,
-		PostID:    postId,
-		CommentID: commentId,
-		AuthorID:  authorId,
-		CreatedAt: love.CreatedAt.AsTime(),
+		ID:           loveId,
+		TargetID:     targetID,
+		IsPostTarget: love.IsPostTarget,
+		AuthorID:     authorId,
+		CreatedAt:    love.CreatedAt.AsTime(),
 	}, nil
 }

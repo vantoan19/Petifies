@@ -20,6 +20,8 @@ type Post struct {
 	ID          uuid.UUID `bson:"id"`
 	AuthorID    uuid.UUID `bson:"author_id"`
 	TextContent string    `bson:"text_content"`
+	Visibility  string    `bson:"visibility"`
+	Activity    string    `bson:"activity"`
 	Images      []Image   `bson:"images"`
 	Videos      []Video   `bson:"videos"`
 	CreatedAt   time.Time `bson:"created_at"`

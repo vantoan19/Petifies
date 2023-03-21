@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	comment "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
+	loveaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/love"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
@@ -16,6 +17,7 @@ import (
 
 var (
 	ErrDuplicatedLove    = status.Errorf(codes.AlreadyExists, "a user cannot add love twice")
+	ErrLoveNotExists     = status.Errorf(codes.NotFound, "love reaction does not exist")
 	ErrNotChildComment   = status.Errorf(codes.InvalidArgument, "parent ID does not identical to comment ID")
 	ErrNotPostParent     = status.Errorf(codes.InvalidArgument, "subcomment cannot have post parent")
 	ErrCommentIDNotExist = status.Errorf(codes.NotFound, "comment ID does not exist in the post")
@@ -24,7 +26,7 @@ var (
 
 type Post struct {
 	post     *entities.Post // root
-	loves    []*entities.Love
+	loves    []uuid.UUID
 	comments []uuid.UUID
 }
 
@@ -42,6 +44,8 @@ func NewPost(content *models.CreatePostReq) (*Post, error) {
 	postEntity := entities.Post{
 		ID:          uuid.New(),
 		AuthorID:    content.AuthorID,
+		Visibility:  valueobjects.Visibility(content.Visibility),
+		Activity:    content.Activity,
 		TextContent: valueobjects.NewTextContent(content.TextContent),
 		Images:      imageValues,
 		Videos:      videoValues,
@@ -55,7 +59,7 @@ func NewPost(content *models.CreatePostReq) (*Post, error) {
 	return &Post{
 		post:     &postEntity,
 		comments: make([]uuid.UUID, 0),
-		loves:    make([]*entities.Love, 0),
+		loves:    make([]uuid.UUID, 0),
 	}, nil
 }
 
@@ -86,20 +90,21 @@ func (p *Post) AddVideo(video valueobjects.VideoContent) error {
 
 // AddSubcommentByEntity adds a UUID of a subcomment to the Comment
 // This method is used for DTO
-func (p *Post) AddCommentByEntity(comment entities.Comment) error {
-	if comment.ParentID != p.post.ID {
-		return ErrNotChildComment
-	}
-	if !comment.IsPostParent {
-		return ErrNotPostParent
-	}
-	if errs := comment.Validate(); errs.Exist() {
-		return status.Errorf(codes.InvalidArgument, errs[0].Error())
-	}
 
-	p.comments = append(p.comments, comment.ID)
-	return nil
-}
+// func (p *Post) AddCommentByEntity(comment entities.Comment) error {
+// 	if comment.ParentID != p.post.ID {
+// 		return ErrNotChildComment
+// 	}
+// 	if !comment.IsPostParent {
+// 		return ErrNotPostParent
+// 	}
+// 	if errs := comment.Validate(); errs.Exist() {
+// 		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+// 	}
+
+// 	p.comments = append(p.comments, comment.ID)
+// 	return nil
+// }
 
 // AddComment adds a new comment to the post
 // and Save the comment in the repo
@@ -148,50 +153,70 @@ func (p *Post) RemoveCommentAndDelete(commentID uuid.UUID, repo comment.CommentR
 	return nil
 }
 
-// AddLike adds a new like to the post
-func (p *Post) AddLoveByEntity(love entities.Love) error {
-	for _, love_ := range p.loves {
-		if love_.AuthorID == love.AuthorID {
-			return ErrDuplicatedLove
+// AddLoveByEntity adds a new like to the post
+
+// func (p *Post) AddLoveByEntity(love entities.Love) error {
+// 	for _, love_ := range p.loves {
+// 		if love_.AuthorID == love.AuthorID {
+// 			return ErrDuplicatedLove
+// 		}
+// 	}
+// 	if errs := love.Validate(); errs.Exist() {
+// 		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+// 	}
+
+// 	p.loves = append(p.loves, &love)
+// 	return nil
+// }
+
+// AddLoveByAuthorIDAndSave adds a new love to the post
+// and save the love to the db
+func (p *Post) AddLoveByAuthorIDAndSave(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
+	if l, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, p.post.ID); l != nil || err != nil {
+		if err != nil {
+			return err
 		}
+		return ErrDuplicatedLove
 	}
-	if errs := love.Validate(); errs.Exist() {
-		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+	loveAggre, err := loveaggre.NewLove(&models.Love{
+		ID:           uuid.New(),
+		TargetID:     p.post.ID,
+		IsPostTarget: true,
+		AuthorID:     authorID,
+		CreatedAt:    time.Now(),
+	})
+	if err != nil {
+		return err
 	}
 
-	p.loves = append(p.loves, &love)
+	savedLove, err := repo.SaveLove(context.Background(), *loveAggre)
+	if err != nil {
+		return err
+	}
+
+	p.loves = append(p.loves, savedLove.GetID())
 	return nil
 }
 
-// AddLike adds a new like to the post
-func (p *Post) AddLoveByAuthorID(authorID uuid.UUID) error {
-	for _, love := range p.loves {
-		if love.AuthorID == authorID {
-			return ErrDuplicatedLove
-		}
+// RemoveLoveByAuthorIDAndDelete removes a Love from the Post
+// and delete the love int the db
+func (p *Post) RemoveLoveByAuthorIDAndDelete(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
+	love, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, p.post.ID)
+	if err != nil {
+		return err
 	}
-	love := &entities.Love{
-		ID:        uuid.New(),
-		PostID:    p.post.ID,
-		AuthorID:  authorID,
-		CreatedAt: time.Now(),
-	}
-	if errs := love.Validate(); errs.Exist() {
-		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+	if love == nil {
+		return ErrLoveNotExists
 	}
 
-	p.loves = append(p.loves, love)
-	return nil
-}
-
-// RemoveLove removes a Love from the Post
-func (p *Post) RemoveLove(authorID uuid.UUID) {
 	for i, l := range p.loves {
-		if l.AuthorID == authorID {
+		if l == love.GetID() {
 			p.loves = append(p.loves[:i], p.loves[i+1:]...)
 			break
 		}
 	}
+
+	return nil
 }
 
 // ========== Aggregate Root Getters ===========
@@ -206,6 +231,14 @@ func (p *Post) GetPostTextContent() valueobjects.TextContent {
 
 func (p *Post) GetAuthorID() uuid.UUID {
 	return p.post.AuthorID
+}
+
+func (p *Post) GetVisibility() valueobjects.Visibility {
+	return p.post.Visibility
+}
+
+func (p *Post) GetActivity() string {
+	return p.post.Activity
 }
 
 func (p *Post) GetImages() []valueobjects.ImageContent {
@@ -254,23 +287,8 @@ func (p *Post) AddNewVideo(video valueobjects.VideoContent) error {
 
 // =============== Aggregate Entities Getters ================
 
-func (p *Post) GetLoves() []entities.Love {
-	loves := make([]entities.Love, 0)
-	for _, love := range p.loves {
-		loves = append(loves, *love)
-	}
-
-	return loves
-}
-
-func (p *Post) GetLovesByAuthorID(authorId uuid.UUID) entities.Love {
-	for _, love := range p.loves {
-		if love.AuthorID == authorId {
-			return *love
-		}
-	}
-
-	return entities.Love{}
+func (p *Post) GetLovesID() []uuid.UUID {
+	return p.loves
 }
 
 func (p *Post) GetComments() []uuid.UUID {

@@ -5,11 +5,14 @@ option go_package = "github.com/vantoan19/Petifies/proto/auth-gateway/v1";
 import "common/common.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 message GetMyInfoRequest {}
 
 message UserCreatePostRequest {
-    string content = 3;
+    string content = 1;
+    string visibility = 2;
+    string activity = 3;
     repeated Image images = 4;
     repeated Video videos = 5;
 }
@@ -33,8 +36,10 @@ message UserEditCommentRequest {
 message UserEditPostRequest {
     string id = 1 [(validate.rules).string.uuid = true];
     string content = 2;
-    repeated Image images = 3;
-    repeated Video videos = 4;
+    string visibility = 3;
+    string activity = 4;
+    repeated Image images = 5;
+    repeated Video videos = 6;
 }
 
 message UserReactLoveRequest {
@@ -42,13 +47,75 @@ message UserReactLoveRequest {
     bool is_target_post = 2;
 }
 
+message PostWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser author = 2;
+    string content = 3;
+    repeated Image images = 4;
+    repeated Video videos = 5;
+    // repeated Love loves = 6;
+    // repeated string comment_ids = 7;
+    int32 love_count = 6;
+    int32 comment_count = 7;
+    string visibility = 8;
+    string activity = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
+}
+
+message CommentWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string post_id = 2 [(validate.rules).string.uuid = true];
+    BasicUser author = 3;
+    string parent_id = 4 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 5;
+    string content = 6;
+    Image image = 7;
+    Video video = 8;
+    int32 love_count = 9;
+    int32 subcomment_count = 10;
+    google.protobuf.Timestamp created_at = 11 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 12 [(validate.rules).timestamp.required = true];
+}
+
+message ListNewFeedsRequest {
+    oneof request {
+        int32 next_posts_request = 2;
+        int32 next_stories_request = 3;
+    }
+}
+
+message ListNewFeedsResponse {
+    repeated PostWithUserInfo posts = 1;
+}
+
+message StreamLoveCountRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_target = 2;
+}
+
+message StreamLoveCountResponse {
+    google.protobuf.Int32Value love_count = 1;
+}
+
+message StreamCommentCountRequest {
+    string parent_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 2;
+}
+
+message StreamCommentCountResponse {
+    google.protobuf.Int32Value comment_count = 1;
+}
 
 service AuthGateway {
     rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
-    rpc UserCreatePost(UserCreatePostRequest) returns (Post) {}
-    rpc UserCreateComment(UserCreateCommentRequest) returns (Comment) {}
-    rpc UserEditPost(UserEditPostRequest) returns (Post) {}
-    rpc UserEditComment(UserEditCommentRequest) returns (Comment) {}
+    rpc UserCreatePost(UserCreatePostRequest) returns (PostWithUserInfo) {}
+    rpc UserCreateComment(UserCreateCommentRequest) returns (CommentWithUserInfo) {}
+    rpc UserEditPost(UserEditPostRequest) returns (PostWithUserInfo) {}
+    rpc UserEditComment(UserEditCommentRequest) returns (CommentWithUserInfo) {}
     rpc UserUploadFile(stream UploadFileRequest) returns (UploadFileResponse) {}
     rpc RemoveFileByURI(RemoveFileByURIRequest) returns (RemoveFileByURIResponse) {}
+    rpc ListNewFeeds(stream ListNewFeedsRequest) returns (stream ListNewFeedsResponse) {}
+    rpc StreamLoveCount(StreamLoveCountRequest) returns (stream StreamLoveCountResponse) {}
+    rpc StreamCommentCount(StreamCommentCountRequest) returns (stream StreamCommentCountResponse) {}
 }

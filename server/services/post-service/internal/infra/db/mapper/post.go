@@ -21,6 +21,8 @@ func DbPostToEntityPost(p *models.Post) *entities.Post {
 	return &entities.Post{
 		ID:          p.ID,
 		AuthorID:    p.AuthorID,
+		Visibility:  valueobjects.Visibility(p.Visibility),
+		Activity:    p.Activity,
 		TextContent: valueobjects.NewTextContent(p.TextContent),
 		Images:      images,
 		Videos:      videos,
@@ -49,6 +51,8 @@ func EntityPostToDbPost(p *entities.Post) *models.Post {
 	return &models.Post{
 		ID:          p.ID,
 		AuthorID:    p.AuthorID,
+		Visibility:  string(p.Visibility),
+		Activity:    p.Activity,
 		TextContent: p.TextContent.Content(),
 		Images:      images,
 		Videos:      videos,
@@ -57,22 +61,11 @@ func EntityPostToDbPost(p *entities.Post) *models.Post {
 	}
 }
 
-func DbModelsToPostAggregate(p *models.Post, ls *[]models.Love, cs *[]models.Comment) (*postaggre.Post, error) {
+func DbModelsToPostAggregate(p *models.Post) (*postaggre.Post, error) {
 	post := &postaggre.Post{}
 
 	if err := post.SetPostEntity(*DbPostToEntityPost(p)); err != nil {
 		return nil, err
-	}
-
-	for _, l := range *ls {
-		if err := post.AddLoveByEntity(*DbLoveToEntityLove(&l)); err != nil {
-			return nil, err
-		}
-	}
-	for _, c := range *cs {
-		if err := post.AddCommentByEntity(*DbCommentToEntityComment(&c)); err != nil {
-			return nil, err
-		}
 	}
 
 	return post, nil

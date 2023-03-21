@@ -13,10 +13,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/cmd"
 	commentaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
-	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/mapper"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/models"
 )
@@ -59,6 +57,23 @@ func (cr *CommentRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*comm
 	}
 
 	return comment, nil
+}
+
+func (cr *CommentRepository) CountCommentByParentID(ctx context.Context, parentID uuid.UUID) (int, error) {
+	var result int
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		count, err := cr.CountCommentByParentIDWithSession(ssCtx, parentID)
+		if err != nil {
+			return err
+		}
+		result = int(count)
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return result, nil
 }
 
 func (cr *CommentRepository) SaveComment(ctx context.Context, comment commentaggre.Comment) (*commentaggre.Comment, error) {
@@ -122,29 +137,15 @@ func (cr *CommentRepository) GetByUUIDWithSession(ctx context.Context, id uuid.U
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	var loves []models.Love
-	cursor, err := cr.loveCollection.Find(ctx, bson.D{{Key: "comment_id", Value: id}})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if err := cursor.All(ctx, &loves); err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	var comments []models.Comment
-	cursor, err = cr.commentCollection.Find(ctx, bson.D{{Key: "parent_id", Value: id}})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if err := cursor.All(ctx, &comments); err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	result, err := mapper.DbModelsToCommentAggregate(&comment, &loves, &comments)
+	result, err := mapper.DbModelsToCommentAggregate(&comment)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (cr *CommentRepository) CountCommentByParentIDWithSession(ctx context.Context, parentID uuid.UUID) (int64, error) {
+	return cr.commentCollection.CountDocuments(ctx, bson.D{{Key: "parent_id", Value: parentID}})
 }
 
 func (cr *CommentRepository) SavePostWithSession(ctx context.Context, comment *commentaggre.Comment) (*commentaggre.Comment, error) {
@@ -152,16 +153,6 @@ func (cr *CommentRepository) SavePostWithSession(ctx context.Context, comment *c
 	_, err := cr.commentCollection.InsertOne(ctx, mapper.EntityCommentToDbComment(&commentEntity))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewInsertOneModel().SetDocument(mapper.EntityLoveToDbLove(&l))
-	})
-	if len(loves) > 0 {
-		_, err = cr.loveCollection.BulkWrite(ctx, loves)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID)
@@ -176,16 +167,6 @@ func (cr *CommentRepository) UpdatePostWithSession(ctx context.Context, comment 
 	_, err := cr.commentCollection.ReplaceOne(ctx, bson.D{{Key: "id", Value: commentEntity.ID}}, mapper.EntityCommentToDbComment(&commentEntity))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}).SetUpsert(true).SetReplacement(mapper.EntityLoveToDbLove(&l))
-	})
-	if len(loves) > 0 {
-		_, err = cr.loveCollection.BulkWrite(ctx, loves)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	comment_, err := cr.GetByUUIDWithSession(ctx, comment.GetCommentEntity().ID)
@@ -204,16 +185,6 @@ func (cr *CommentRepository) DeleteByUUIDWithSession(ctx context.Context, id uui
 	_, err = cr.commentCollection.DeleteOne(ctx, bson.D{{Key: "id", Value: comment.GetCommentEntity().ID}})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	loves := utils.Map2(comment.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}})
-	})
-	if len(loves) > 0 {
-		_, err = cr.loveCollection.BulkWrite(ctx, loves)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	for _, subcommentID := range comment.GetSubcommentsID() {
@@ -240,6 +211,9 @@ func (cr *CommentRepository) execSession(ctx context.Context, fn func(ssCtx mong
 	if err = fn(mongo.NewSessionContext(ctx, session)); err != nil {
 		if abErr := session.AbortTransaction(ctx); abErr != nil {
 			return status.Errorf(codes.Internal, fmt.Sprintf("session err: %v, abort err: %v", err, abErr))
+		}
+		if err == ErrCommentNoExist {
+			return err
 		}
 		return status.Errorf(codes.Internal, err.Error())
 	}

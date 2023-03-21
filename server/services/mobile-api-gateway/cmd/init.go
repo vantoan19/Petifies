@@ -6,9 +6,15 @@ var logger = logging.New("MobileGateWay.Cmd")
 
 var initFuncs = []func() error{
 	initializeConfig,
+	initializeRedisCache,
 	initUserServiceClient,
 	initPostServiceClient,
 	initMediaServiceClient,
+	initRelationshipServiceClient,
+	initNewfeedServiceClient,
+	initUserService,
+	initRelationshipService,
+	initPostService,
 }
 
 func Initialize() {

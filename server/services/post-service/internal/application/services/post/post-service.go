@@ -2,11 +2,12 @@ package postservice
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	kafkamodels "github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
@@ -14,11 +15,12 @@ import (
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	commentaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/comment"
+	loveaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/love"
 	postaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/post"
-	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/publishers/kafka"
 	mongo_comment "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/comment/mongo"
+	mongo_love "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/love/mongo"
 	mongo_post "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/post/mongo"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 )
@@ -28,6 +30,7 @@ var logger = logging.New("PostService.PostSvc")
 type postService struct {
 	postRepo           postaggre.PostRepository
 	commentRepo        commentaggre.CommentRepository
+	loveRepo           loveaggre.LoveRepository
 	postEventPublisher *kafka.PostEventPublisher
 }
 
@@ -35,9 +38,12 @@ type PostConfiguration func(ps *postService) error
 
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.CreatePostReq) (*postaggre.Post, error)
-	LoveReactPost(ctx context.Context, req *models.LoveReactReq) (*entities.Love, error)
+	LoveReactPost(ctx context.Context, req *models.LoveReactReq) (*loveaggre.Love, error)
 	EditPost(ctx context.Context, post *models.EditPostReq) (*postaggre.Post, error)
 	ListPosts(ctx context.Context, req *models.ListPostsReq) ([]*postaggre.Post, error)
+	GetLoveCount(ctx context.Context, postID uuid.UUID) (int, error)
+	GetCommentCount(ctx context.Context, postID uuid.UUID) (int, error)
+	GetPost(ctx context.Context, postID uuid.UUID) (*postaggre.Post, error)
 }
 
 func NewPostService(cfgs ...PostConfiguration) (PostService, error) {
@@ -62,6 +68,14 @@ func WithMongoCommentRepository(client *mongo.Client) PostConfiguration {
 	return func(ps *postService) error {
 		repo := mongo_comment.New(client)
 		ps.commentRepo = repo
+		return nil
+	}
+}
+
+func WithMongoLoveRepository(client *mongo.Client) PostConfiguration {
+	return func(ps *postService) error {
+		repo := mongo_love.New(client)
+		ps.loveRepo = repo
 		return nil
 	}
 }
@@ -107,7 +121,7 @@ func (ps *postService) CreatePost(ctx context.Context, post *models.CreatePostRe
 	return createdPost, nil
 }
 
-func (ps *postService) LoveReactPost(ctx context.Context, req *models.LoveReactReq) (*entities.Love, error) {
+func (ps *postService) LoveReactPost(ctx context.Context, req *models.LoveReactReq) (*loveaggre.Love, error) {
 	logger.Info("Start LoveReactPost")
 
 	post, err := ps.postRepo.GetByUUID(ctx, req.TargetID)
@@ -115,25 +129,24 @@ func (ps *postService) LoveReactPost(ctx context.Context, req *models.LoveReactR
 		logger.ErrorData("Finish LoveReactPost: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	err = post.AddLoveByAuthorID(req.AuthorID)
+	err = post.AddLoveByAuthorIDAndSave(req.AuthorID, ps.loveRepo)
 	if err != nil {
 		logger.ErrorData("Finish LoveReactPost: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
-	updatedPost, err := ps.postRepo.UpdatePost(ctx, *post)
+	love, err := ps.loveRepo.GetByTargetIDAndAuthorID(ctx, req.AuthorID, req.TargetID)
 	if err != nil {
 		logger.ErrorData("Finish LoveReactPost: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	love := updatedPost.GetLovesByAuthorID(req.AuthorID)
-	if love.AuthorID == uuid.Nil {
+	if love == nil {
 		logger.ErrorData("Finish LoveReactPost: Failed", logging.Data{"error": err.Error()})
-		return nil, errors.New("failed to react post")
+		return nil, status.Errorf(codes.Internal, "failed to react post")
 	}
 
 	logger.Info("Finish LoveReactPost: Successful")
-	return &love, nil
+	return love, nil
 }
 
 func (ps *postService) EditPost(ctx context.Context, req *models.EditPostReq) (*postaggre.Post, error) {
@@ -186,6 +199,9 @@ func (ps *postService) ListPosts(ctx context.Context, req *models.ListPostsReq) 
 		go func(id uuid.UUID) {
 			defer wg.Done()
 			post, err := ps.postRepo.GetByUUID(ctx, id)
+			if err == mongo_post.ErrPostNotExist {
+				return
+			}
 			if err != nil {
 				errsChan <- err
 				return
@@ -206,4 +222,42 @@ func (ps *postService) ListPosts(ctx context.Context, req *models.ListPostsReq) 
 
 	logger.Info("Finish ListPosts: Successful")
 	return results, nil
+}
+
+func (ps *postService) GetLoveCount(ctx context.Context, postID uuid.UUID) (int, error) {
+	logger.Info("Start GetLoveCount")
+
+	count, err := ps.loveRepo.CountLoveByTargetID(ctx, postID)
+	if err != nil {
+		logger.ErrorData("Finish GetLoveCount: Failed", logging.Data{"error": err.Error()})
+		return 0, err
+	}
+
+	logger.Info("Finish LoveReactComment: Successful")
+	return count, nil
+}
+
+func (ps *postService) GetCommentCount(ctx context.Context, postID uuid.UUID) (int, error) {
+	logger.Info("Start GetCommentCount")
+
+	count, err := ps.commentRepo.CountCommentByParentID(ctx, postID)
+	if err != nil {
+		logger.ErrorData("Finish GetCommentCount: Failed", logging.Data{"error": err.Error()})
+		return 0, err
+	}
+
+	logger.Info("Finish GetCommentCount: Successful")
+	return count, nil
+}
+
+func (ps *postService) GetPost(ctx context.Context, postID uuid.UUID) (*postaggre.Post, error) {
+	logger.Info("Start GetPost")
+
+	post, err := ps.postRepo.GetByUUID(ctx, postID)
+	if err != nil {
+		logger.ErrorData("Finish GetPost: Failed", logging.Data{"error": err.Error()})
+	}
+
+	logger.Info("Finish GetPost: Successful")
+	return post, nil
 }

@@ -19,8 +19,10 @@ func EncodeCreatePostRequest(_ context.Context, request interface{}) (interface{
 	}
 
 	return &postProtoV1.CreatePostRequest{
-		AuthorId: req.AuthorID.String(),
-		Content:  req.TextContent,
+		AuthorId:   req.AuthorID.String(),
+		Visibility: req.Visibility,
+		Actitivty:  req.Activity,
+		Content:    req.TextContent,
 		Images: utils.Map2(req.Images, func(i models.Image) *commonProto.Image {
 			return &commonProto.Image{Uri: i.URL, Description: i.Description}
 		}),
@@ -100,8 +102,10 @@ func EncodeEditPostRequest(_ context.Context, request interface{}) (interface{},
 	}
 
 	return &postProtoV1.EditPostRequest{
-		Id:      req.ID.String(),
-		Content: req.Content,
+		Id:         req.ID.String(),
+		Content:    req.Content,
+		Visibility: req.Visibility,
+		Activity:   req.Activity,
 		Images: utils.Map2(req.Images, func(i models.Image) *commonProto.Image {
 			return &commonProto.Image{
 				Uri:         i.URL,
@@ -181,6 +185,74 @@ func EncodeListPostsResponse(_ context.Context, response interface{}) (interface
 	}, nil
 }
 
+func EncodeGetLoveCountRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.GetLoveCountReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.GetLoveCountRequest{
+		TargetId:     req.TargetID.String(),
+		IsPostTarget: req.IsPostParent,
+	}, nil
+}
+
+func EncodeGetLoveCountResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.GetLoveCountResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &postProtoV1.GetLoveCountReponse{
+		Count: int32(resp.Count),
+	}, nil
+}
+
+func EncodeGetCommentCountRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.GetCommentCountReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.GetCommentCountRequest{
+		ParentId:     req.ParentID.String(),
+		IsPostParent: req.IsPostParent,
+	}, nil
+}
+
+func EncodeGetCommentCountResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.GetCommentCountResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &postProtoV1.GetCommentCountReponse{
+		Count: int32(resp.Count),
+	}, nil
+}
+
+func EncodeGetPostRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.GetPostReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.GetPostRequest{
+		PostId: req.PostID.String(),
+	}, nil
+}
+
+func EncodeGetCommentRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.GetCommentReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.GetCommentRequest{
+		CommentId: req.CommentID.String(),
+	}, nil
+}
+
 func encodePostModel(post *models.Post) *commonProto.Post {
 	return &commonProto.Post{
 		Id:       post.ID.String(),
@@ -198,17 +270,12 @@ func encodePostModel(post *models.Post) *commonProto.Post {
 				Description: v.Description,
 			}
 		}),
-		Loves: utils.Map2(post.Loves, func(l models.Love) *commonProto.Love {
-			return &commonProto.Love{
-				Id:        l.ID.String(),
-				PostId:    l.PostID.String(),
-				CommentId: l.CommentID.String(),
-				AuthorId:  l.AuthorID.String(),
-				CreatedAt: timestamppb.New(l.CreatedAt),
-			}
-		}),
-		CreatedAt: timestamppb.New(post.CreatedAt),
-		UpdatedAt: timestamppb.New(post.UpdatedAt),
+		LoveCount:    int32(post.LoveCount),
+		CommentCount: int32(post.CommentCount),
+		Visibility:   post.Visibility,
+		Activity:     post.Activity,
+		CreatedAt:    timestamppb.New(post.CreatedAt),
+		UpdatedAt:    timestamppb.New(post.UpdatedAt),
 	}
 }
 
@@ -228,15 +295,7 @@ func encodeCommentModel(comment *models.Comment) *commonProto.Comment {
 			Uri:         comment.Video.URL,
 			Description: comment.Video.Description,
 		},
-		Loves: utils.Map2(comment.Loves, func(l models.Love) *commonProto.Love {
-			return &commonProto.Love{
-				Id:        l.ID.String(),
-				PostId:    l.PostID.String(),
-				CommentId: l.CommentID.String(),
-				AuthorId:  l.AuthorID.String(),
-				CreatedAt: timestamppb.New(l.CreatedAt),
-			}
-		}),
+		LoveCount:       int32(comment.LoveCount),
 		SubcommentCount: int32(comment.SubcommentCount),
 		CreatedAt:       timestamppb.New(comment.CreatedAt),
 		UpdatedAt:       timestamppb.New(comment.UpdatedAt),
@@ -245,10 +304,10 @@ func encodeCommentModel(comment *models.Comment) *commonProto.Comment {
 
 func encodeLoveModel(love *models.Love) *commonProto.Love {
 	return &commonProto.Love{
-		Id:        love.ID.String(),
-		PostId:    love.PostID.String(),
-		CommentId: love.CommentID.String(),
-		AuthorId:  love.AuthorID.String(),
-		CreatedAt: timestamppb.New(love.CreatedAt),
+		Id:           love.ID.String(),
+		TargetId:     love.TargetID.String(),
+		IsPostTarget: love.IsPostTarget,
+		AuthorId:     love.AuthorID.String(),
+		CreatedAt:    timestamppb.New(love.CreatedAt),
 	}
 }

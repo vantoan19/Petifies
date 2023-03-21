@@ -47,6 +47,13 @@ class PostRepository implements IPostRepository {
         owner: author,
         postActivity: "post",
         createdAt: resp.createdAt.toDateTime(),
+        textContent: resp.content,
+        images: resp.images
+            .map((image) => NetworkImageModel(uri: image.uri))
+            .toList(),
+        videos: resp.videos
+            .map((video) => NetworkVideoModel(uri: video.uri))
+            .toList(),
         loveCount: 0,
         commentCount: 0,
       );

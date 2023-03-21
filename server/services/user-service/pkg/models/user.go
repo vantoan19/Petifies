@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
-	ID          uuid.UUID
-	Email       string
-	FirstName   string
-	LastName    string
-	IsActivated bool
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	IsActivated bool      `json:"is_activated"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

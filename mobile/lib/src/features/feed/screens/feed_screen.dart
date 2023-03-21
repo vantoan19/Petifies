@@ -3,7 +3,6 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/exceptions/failure.dart';
 import 'package:mobile/src/models/image.dart';
 import 'package:mobile/src/models/post.dart';

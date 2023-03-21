@@ -28,6 +28,15 @@ func (p *PageToken) Encode() (string, error) {
 	return encodedToken, nil
 }
 
+func (p *PageToken) GetEncodedNextPageToken() (string, error) {
+	nextPageToken := PageToken{
+		PageSize: p.PageSize,
+		Offset:   p.Offset + int64(p.PageSize),
+	}
+
+	return nextPageToken.Encode()
+}
+
 func ValidateAndGetPageToken(tokenString string, pageSize int32) (*PageToken, error) {
 	logger.Info("Start ValidateAndGetPageToken")
 

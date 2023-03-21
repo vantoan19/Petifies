@@ -29,6 +29,8 @@ func DecodeUserCreatePostRequest(_ context.Context, request interface{}) (interf
 
 	return &models.UserCreatePostReq{
 		TextContent: req.Content,
+		Visibility:  req.Visibility,
+		Activity:    req.Activity,
 		Images: utils.Map2(req.Images, func(i *commonProto.Image) postModels.Image {
 			return postModels.Image{URL: i.Uri, Description: i.Description}
 		}),
@@ -75,8 +77,10 @@ func DecodeUserEditPostRequest(_ context.Context, request interface{}) (interfac
 	}
 
 	return &models.UserEditPostReq{
-		PostID:  postID,
-		Content: req.Content,
+		PostID:     postID,
+		Content:    req.Content,
+		Visibility: req.Visibility,
+		Activity:   req.Activity,
 		Images: utils.Map2(req.Images, func(i *commonProto.Image) postModels.Image {
 			return postModels.Image{URL: i.Uri, Description: i.Description}
 		}),

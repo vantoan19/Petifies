@@ -17,13 +17,17 @@ import (
 var logger = logging.New("PostClient")
 
 type postClient struct {
-	createPost    endpoint.Endpoint
-	createComment endpoint.Endpoint
-	loveReact     endpoint.Endpoint
-	editPost      endpoint.Endpoint
-	editComment   endpoint.Endpoint
-	listComments  endpoint.Endpoint
-	listPosts     endpoint.Endpoint
+	createPost      endpoint.Endpoint
+	createComment   endpoint.Endpoint
+	loveReact       endpoint.Endpoint
+	editPost        endpoint.Endpoint
+	editComment     endpoint.Endpoint
+	listComments    endpoint.Endpoint
+	listPosts       endpoint.Endpoint
+	getLoveCount    endpoint.Endpoint
+	getCommentCount endpoint.Endpoint
+	getPost         endpoint.Endpoint
+	getComment      endpoint.Endpoint
 }
 
 type PostClient interface {
@@ -34,6 +38,10 @@ type PostClient interface {
 	EditComment(ctx context.Context, req *models.EditCommentReq) (*models.Comment, error)
 	ListPosts(ctx context.Context, req *models.ListPostsReq) (*models.ListPostsResp, error)
 	ListComments(ctx context.Context, req *models.ListCommentsReq) (*models.ListCommentsResp, error)
+	GetLoveCount(ctx context.Context, req *models.GetLoveCountReq) (*models.GetLoveCountResp, error)
+	GetCommentCount(ctx context.Context, req *models.GetCommentCountReq) (*models.GetCommentCountResp, error)
+	GetPost(ctx context.Context, req *models.GetPostReq) (*models.Post, error)
+	GetComment(ctx context.Context, req *models.GetCommentReq) (*models.Comment, error)
 }
 
 func New(conn *grpc.ClientConn) PostClient {
@@ -93,6 +101,38 @@ func New(conn *grpc.ClientConn) PostClient {
 			translators.EncodeListCommentsRequest,
 			translators.DecodeListCommentsResponse,
 			postProtoV1.ListCommentsResponse{},
+		).Endpoint(),
+		getLoveCount: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"GetLoveCount",
+			translators.EncodeGetLoveCountRequest,
+			translators.DecodeGetLoveCountResponse,
+			postProtoV1.GetLoveCountReponse{},
+		).Endpoint(),
+		getCommentCount: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"GetCommentCount",
+			translators.EncodeGetCommentCountRequest,
+			translators.DecodeGetCommentCountResponse,
+			postProtoV1.GetCommentCountReponse{},
+		).Endpoint(),
+		getPost: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"GetPost",
+			translators.EncodeGetPostRequest,
+			translators.DecodePostResponse,
+			commonProto.Post{},
+		).Endpoint(),
+		getComment: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"GetComment",
+			translators.EncodeGetCommentRequest,
+			translators.DecodeCommentResponse,
+			commonProto.Comment{},
 		).Endpoint(),
 	}
 }
@@ -186,4 +226,56 @@ func (pc *postClient) ListComments(ctx context.Context, req *models.ListComments
 
 	logger.Info("Finish ListComments: Successful")
 	return resp.(*models.ListCommentsResp), nil
+}
+
+func (pc *postClient) GetLoveCount(ctx context.Context, req *models.GetLoveCountReq) (*models.GetLoveCountResp, error) {
+	logger.Info("Start GetLoveCount")
+
+	resp, err := pc.getLoveCount(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish GetLoveCount: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish GetLoveCount: Successful")
+	return resp.(*models.GetLoveCountResp), nil
+}
+
+func (pc *postClient) GetCommentCount(ctx context.Context, req *models.GetCommentCountReq) (*models.GetCommentCountResp, error) {
+	logger.Info("Start GetCommentCount")
+
+	resp, err := pc.getCommentCount(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish GetCommentCount: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish GetCommentCount: Successful")
+	return resp.(*models.GetCommentCountResp), nil
+}
+
+func (pc *postClient) GetPost(ctx context.Context, req *models.GetPostReq) (*models.Post, error) {
+	logger.Info("Start GetPost")
+
+	resp, err := pc.getPost(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish GetPost: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish GetPost: Successful")
+	return resp.(*models.Post), nil
+}
+
+func (pc *postClient) GetComment(ctx context.Context, req *models.GetCommentReq) (*models.Comment, error) {
+	logger.Info("Start GetComment")
+
+	resp, err := pc.getComment(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish GetComment: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish GetComment: Successful")
+	return resp.(*models.Comment), nil
 }

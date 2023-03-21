@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	newfeedProtoV1 "github.com/vantoan19/Petifies/proto/newfeed-service/v1"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/config"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/consumer"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
@@ -19,9 +20,12 @@ import (
 	logging "github.com/vantoan19/Petifies/server/libs/logging-config"
 	relationshipclient "github.com/vantoan19/Petifies/server/services/grpc-clients/relationship-client"
 	cmd "github.com/vantoan19/Petifies/server/services/newfeed-service/cmd"
+	postfeedservice "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/application/services/postfeed-service"
 	"github.com/vantoan19/Petifies/server/services/newfeed-service/internal/infra/listener"
 	postfeedCassandraRepo "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/infra/repositories/post/cassandra"
 	userCassandraRepo "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/infra/repositories/user/cassandra"
+	endpointsV1 "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/presentation/endpoints/grpc/v1"
+	serversV1 "github.com/vantoan19/Petifies/server/services/newfeed-service/internal/presentation/transport/grpc/v1"
 )
 
 var logger = logging.New("RelationshipService.Cmd.Grpc")
@@ -54,6 +58,8 @@ func serveGRPC(grpcServer *grpc.Server) {
 		panic(err)
 	}
 
+	registerServices(grpcServer)
+
 	reflection.Register(grpcServer)
 	err = grpcServer.Serve(listener)
 	if err != nil && err != grpc.ErrServerStopped {
@@ -62,6 +68,20 @@ func serveGRPC(grpcServer *grpc.Server) {
 	}
 
 	logger.Info("Finished serveGRPC: SUCCESSFUL")
+}
+
+func registerServices(grpcServer *grpc.Server) {
+	logger.Info("Start registerServices")
+
+	postfeedSvc, err := postfeedservice.NewPostFeedService(
+		postfeedservice.WithCassandraPostfeedRepository(cmd.DB),
+	)
+	if err != nil {
+		panic(err)
+	}
+	newfeedEndpoints := endpointsV1.NewNewfeedEndpoints(postfeedSvc)
+	newfeedProtoV1.RegisterNewfeedServiceServer(grpcServer, serversV1.NewNewfeedServer(newfeedEndpoints))
+	logger.Info("Finished registerServices: SUCCESSFUL")
 }
 
 func serveUserConsumer() {

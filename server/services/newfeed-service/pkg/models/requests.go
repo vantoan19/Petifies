@@ -1,11 +1,19 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type ListPostFeedsReq struct {
-	UserID uuid.UUID
+	UserID     uuid.UUID
+	PageSize   int
+	BeforeTime time.Time
 }
 
 type ListStoryFeedsReq struct {
-	UserID uuid.UUID
+	UserID     uuid.UUID
+	PageSize   int
+	BeforeTime time.Time
 }

@@ -37,7 +37,7 @@ class PostBody extends StatelessWidget {
             ),
           // Image & Video content
           if (images != null || videos != null)
-            CarouselSlider(
+            CarouselSlider.builder(
               options: CarouselOptions(
                 aspectRatio: 6 / 4,
                 height: MediaQuery.of(context).size.width,
@@ -46,56 +46,90 @@ class PostBody extends StatelessWidget {
                 disableCenter: true,
                 viewportFraction: 1.0,
               ),
-              items: [
-                // Images
-                if (images != null)
-                  ...images!
-                      .map(
-                        (image) => Builder(
-                          builder: (BuildContext context) {
-                            return Container(
-                              width: MediaQuery.of(context).size.width,
-                              decoration: BoxDecoration(
-                                color: Themes.blackColor,
-                              ),
-                              child: AspectRatio(
-                                aspectRatio: 4 / 6,
-                                child: Image.network(
-                                  image.uri,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) =>
-                                          (loadingProgress == null)
-                                              ? child
-                                              : CircularProgressIndicator(),
-                                  fit: BoxFit.fitWidth,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                      .toList(),
-                // Videos
-                if (videos != null)
-                  ...videos!.map(
-                    (video) => Builder(
-                      builder: (BuildContext context) {
-                        return Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: EdgeInsets.symmetric(horizontal: 5.0),
-                          child: VideoWidget(
-                            videoPlayerController:
-                                VideoPlayerController.network(
-                              video.uri,
-                            ),
-                            isAutoplaying: true,
-                            isLooping: true,
-                          ),
-                        );
-                      },
+              itemCount: ((images != null) ? images!.length : 0) +
+                  (videos != null ? videos!.length : 0),
+              itemBuilder:
+                  (BuildContext context, int itemIndex, int pageViewIndex) {
+                if (images != null && itemIndex < images!.length) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                      color: Themes.blackColor,
                     ),
-                  )
-              ],
+                    child: Image.network(
+                      images![itemIndex].uri,
+                      loadingBuilder: (context, child, loadingProgress) =>
+                          (loadingProgress == null)
+                              ? child
+                              : CircularProgressIndicator(),
+                      fit: BoxFit.contain,
+                    ),
+                  );
+                } else {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: EdgeInsets.symmetric(horizontal: 5.0),
+                    child: VideoWidget(
+                      videoPlayerController: VideoPlayerController.network(
+                        videos![itemIndex -
+                                (images != null ? images!.length : 0)]
+                            .uri,
+                      ),
+                      isAutoplaying: true,
+                      isLooping: true,
+                    ),
+                  );
+                }
+              },
+              // Images
+              // if (images != null)
+              //   ...images!
+              //       .map(
+              //         (image) => Builder(
+              //           builder: (BuildContext context) {
+              //             return Container(
+              //               width: MediaQuery.of(context).size.width,
+              //               decoration: BoxDecoration(
+              //                 color: Themes.blackColor,
+              //               ),
+              //               child: AspectRatio(
+              //                 aspectRatio: 4 / 6,
+              //                 child: Image.network(
+              //                   image.uri,
+              //                   loadingBuilder:
+              //                       (context, child, loadingProgress) =>
+              //                           (loadingProgress == null)
+              //                               ? child
+              //                               : CircularProgressIndicator(),
+              //                   fit: BoxFit.fitWidth,
+              //                 ),
+              //               ),
+              //             );
+              //           },
+              //         ),
+              //       )
+              //       .toList(),
+              // Videos
+              // if (videos != null)
+              //   ...videos!.map(
+              //     (video) => Builder(
+              //       builder: (BuildContext context) {
+              //         return Container(
+              //           width: MediaQuery.of(context).size.width,
+              //           margin: EdgeInsets.symmetric(horizontal: 5.0),
+              //           child: VideoWidget(
+              //             videoPlayerController:
+              //                 VideoPlayerController.network(
+              //               video.uri,
+              //             ),
+              //             isAutoplaying: true,
+              //             isLooping: true,
+              //           ),
+              //         );
+              //       },
+              //     ),
+              //   )
+              // ],
             )
         ],
       ),

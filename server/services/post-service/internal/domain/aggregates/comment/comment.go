@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	loveaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/love"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/valueobjects"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
@@ -15,6 +16,7 @@ import (
 
 var (
 	ErrDuplicatedLove    = status.Errorf(codes.AlreadyExists, "a user cannot add love twice")
+	ErrLoveNotExists     = status.Errorf(codes.NotFound, "love reaction does not exist")
 	ErrNotChildComment   = status.Errorf(codes.InvalidArgument, "parent ID does not identical to comment ID")
 	ErrPostParent        = status.Errorf(codes.InvalidArgument, "subcomment cannot have post parent")
 	ErrCommentIDNotExist = status.Errorf(codes.NotFound, "comment ID does not exist in the post")
@@ -24,7 +26,7 @@ var (
 // Comment represents an aggregate for Comment, Loves and its SubComments
 type Comment struct {
 	comment     *entities.Comment // root
-	loves       []*entities.Love
+	loves       []uuid.UUID
 	subcomments []uuid.UUID
 }
 
@@ -48,7 +50,7 @@ func New(content *models.CreateCommentReq) (*Comment, error) {
 
 	return &Comment{
 		comment:     commentEntity,
-		loves:       make([]*entities.Love, 0),
+		loves:       make([]uuid.UUID, 0),
 		subcomments: make([]uuid.UUID, 0),
 	}, nil
 }
@@ -75,60 +77,72 @@ func (c *Comment) UpdateCommentTextContent(textContent valueobjects.TextContent)
 
 // AddLoveByEntity adds a Love to Comment
 // This method is used for DTO
-func (c *Comment) AddLoveByEntity(love entities.Love) error {
-	for _, love_ := range c.loves {
-		if love_.AuthorID == love.AuthorID {
-			return ErrDuplicatedLove
+// func (c *Comment) AddLoveByEntity(love entities.Love) error {
+// 	for _, love_ := range c.loves {
+// 		if love_.AuthorID == love.AuthorID {
+// 			return ErrDuplicatedLove
+// 		}
+// 	}
+// 	if errs := love.Validate(); errs.Exist() {
+// 		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+// 	}
+
+// 	c.loves = append(c.loves, &love)
+// 	return nil
+// }
+
+// AddLoveByAuthorIDAndSave adds a new love to the comment
+// and save the love to the db
+func (c *Comment) AddLoveByAuthorIDAndSave(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
+	if l, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID); l != nil || err != nil {
+		if err != nil {
+			return err
 		}
+		return ErrDuplicatedLove
 	}
-	if errs := love.Validate(); errs.Exist() {
-		return status.Errorf(codes.InvalidArgument, errs[0].Error())
+	loveAggre, err := loveaggre.NewLove(&models.Love{
+		ID:           uuid.New(),
+		TargetID:     c.comment.ID,
+		IsPostTarget: false,
+		AuthorID:     authorID,
+		CreatedAt:    time.Now(),
+	})
+	if err != nil {
+		return err
 	}
 
-	c.loves = append(c.loves, &love)
+	savedLove, err := repo.SaveLove(context.Background(), *loveAggre)
+	if err != nil {
+		return err
+	}
+
+	c.loves = append(c.loves, savedLove.GetID())
 	return nil
 }
 
-// AddLoveByAuthorID adds a Love to the Comment
-func (c *Comment) AddLoveByAuthorID(authorID uuid.UUID) error {
-	for _, love := range c.loves {
-		if love.AuthorID == authorID {
-			return ErrDuplicatedLove
-		}
+// RemoveLoveByAuthorIDAndDelete removes a Love from the comment
+// and delete the love int the db
+func (c *Comment) RemoveLoveByAuthorIDAndDelete(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
+	love, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID)
+	if err != nil {
+		return err
+	}
+	if love == nil {
+		return ErrLoveNotExists
 	}
 
-	love := &entities.Love{
-		ID:        uuid.New(),
-		CommentID: c.comment.ID,
-		AuthorID:  authorID,
-		CreatedAt: time.Now(),
-	}
-	if errs := love.Validate(); errs.Exist() {
-		return status.Errorf(codes.InvalidArgument, errs[0].Error())
-	}
-
-	c.loves = append(c.loves, love)
-	return nil
-}
-
-// RemoveLoveByAuthorID removes a Love from the Comment
-func (c *Comment) RemoveLoveByAuthorID(authorID uuid.UUID) {
 	for i, l := range c.loves {
-		if l.AuthorID == authorID {
+		if l == love.GetID() {
 			c.loves = append(c.loves[:i], c.loves[i+1:]...)
 			break
 		}
 	}
+	return nil
 }
 
 // GetLoves returns the Loves associated with the Comment
-func (c *Comment) GetLoves() []entities.Love {
-	loves := make([]entities.Love, 0)
-	for _, love := range c.loves {
-		loves = append(loves, *love)
-	}
-
-	return loves
+func (c *Comment) GetLovesID() []uuid.UUID {
+	return c.loves
 }
 
 // AddSubcommentByEntity adds a UUID of a subcomment to the Comment
@@ -210,16 +224,6 @@ func (c *Comment) GetSubcommentsID() []uuid.UUID {
 	return c.subcomments
 }
 
-func (c *Comment) GetLovesByAuthorID(authorId uuid.UUID) entities.Love {
-	for _, love := range c.loves {
-		if love.AuthorID == authorId {
-			return *love
-		}
-	}
-
-	return entities.Love{}
-}
-
 // ============= Root Entity Getters =================
 
 func (c *Comment) GetID() uuid.UUID {
@@ -260,8 +264,4 @@ func (c *Comment) GetCreatedAt() time.Time {
 
 func (c *Comment) GetUpdatedAt() time.Time {
 	return c.comment.UpdatedAt
-}
-
-func (c *Comment) CountSubcomments() int {
-	return len(c.subcomments)
 }

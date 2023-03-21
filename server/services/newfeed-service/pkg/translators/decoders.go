@@ -30,7 +30,9 @@ func DecodeListPostFeedsRequest(_ context.Context, request interface{}) (interfa
 	}
 
 	return &models.ListPostFeedsReq{
-		UserID: id,
+		UserID:     id,
+		PageSize:   int(req.PageSize),
+		BeforeTime: req.BeforeTime.AsTime(),
 	}, nil
 }
 
@@ -66,7 +68,9 @@ func DecodeListStoryFeedsRequest(_ context.Context, request interface{}) (interf
 	}
 
 	return &models.ListStoryFeedsReq{
-		UserID: id,
+		UserID:     id,
+		PageSize:   int(req.PageSize),
+		BeforeTime: req.BeforeTime.AsTime(),
 	}, nil
 }
 

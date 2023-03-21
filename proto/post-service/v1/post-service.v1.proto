@@ -8,10 +8,12 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 message CreatePostRequest {
-    string author_id = 2 [(validate.rules).string.uuid = true];
-    string content = 3;
-    repeated Image images = 4;
-    repeated Video videos = 5;
+    string author_id = 1 [(validate.rules).string.uuid = true];
+    string visibility = 2;
+    string actitivty = 3;
+    string content = 4;
+    repeated Image images = 5;
+    repeated Video videos = 6;
 }
 
 message CreateCommentRequest {
@@ -26,16 +28,18 @@ message CreateCommentRequest {
 
 message EditCommentRequest {
     string id = 1 [(validate.rules).string.uuid = true];
-    string content = 2;
-    Image image = 3;
-    Video video = 4;
+    string content = 3;
+    Image image = 4;
+    Video video = 5;
 }
 
 message EditPostRequest {
     string id = 1 [(validate.rules).string.uuid = true];
-    string content = 2;
-    repeated Image images = 3;
-    repeated Video videos = 4;
+    string visibility = 2;
+    string activity = 3;
+    string content = 4;
+    repeated Image images = 5;
+    repeated Video videos = 6;
 }
 
 message ListCommentsRequest {
@@ -60,6 +64,32 @@ message LoveReactRequest {
     bool is_target_post = 3;
 }
 
+message GetLoveCountRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_target = 2;
+}
+
+message GetLoveCountReponse {
+    int32 count = 1;
+}
+
+message GetCommentCountRequest {
+    string parent_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 2;
+}
+
+message GetCommentCountReponse {
+    int32 count = 1;
+}
+
+message GetPostRequest {
+    string post_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetCommentRequest {
+    string comment_id = 1 [(validate.rules).string.uuid = true];
+}
+
 service PostService {
     rpc CreatePost(CreatePostRequest) returns (Post) {}
     rpc CreateComment(CreateCommentRequest) returns (Comment) {}
@@ -68,4 +98,7 @@ service PostService {
     rpc EditComment(EditCommentRequest) returns (Comment) {}
     rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
     rpc ListPosts(ListPostsRequest) returns (ListPostsResponse) {}
+    rpc GetLoveCount (GetLoveCountRequest) returns (GetLoveCountReponse) {}
+    rpc GetCommentCount (GetCommentCountRequest) returns (GetCommentCountReponse) {}
+    rpc GetPost(GetPostRequest) returns (Post) {}
 }

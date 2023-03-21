@@ -26,6 +26,21 @@ message User {
     google.protobuf.Timestamp updated_at = 8 [(validate.rules).timestamp.required = true];
 }
 
+message BasicUser {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string email = 2 [(validate.rules).string = {
+        email: true,
+        max_len: 300
+    }];
+    string user_avatar = 3;
+    string first_name = 4 [(validate.rules).string = {
+        max_len: 50
+    }];
+    string last_name = 5 [(validate.rules).string = {
+        max_len: 50
+    }];
+}
+
 message FileMetadata {
     string file_name = 1;
     string media_type = 2;
@@ -48,8 +63,8 @@ message Video {
 
 message Love {
     string id = 1 [(validate.rules).string.uuid = true];
-    string post_id = 2;
-    string comment_id = 3;
+    string target_id = 2 [(validate.rules).string.uuid = true];
+    bool is_post_target = 3;
     string author_id = 4 [(validate.rules).string.uuid = true];
     google.protobuf.Timestamp created_at = 5;
 }
@@ -60,10 +75,14 @@ message Post {
     string content = 3;
     repeated Image images = 4;
     repeated Video videos = 5;
-    repeated Love loves = 6;
-    repeated string comment_ids = 7;
-    google.protobuf.Timestamp created_at = 8 [(validate.rules).timestamp.required = true];
-    google.protobuf.Timestamp updated_at = 9 [(validate.rules).timestamp.required = true];
+    // repeated Love loves = 6;
+    // repeated string comment_ids = 7;
+    int32 love_count = 6;
+    int32 comment_count = 7;
+    string visibility = 8;
+    string activity = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
 }
 
 message Comment {
@@ -75,11 +94,10 @@ message Comment {
     string content = 6;
     Image image = 7;
     Video video = 8;
-    repeated Love loves = 9;
+    int32 love_count = 9;
     int32 subcomment_count = 10;
-    repeated string subcomment_ids = 11;
-    google.protobuf.Timestamp created_at = 12 [(validate.rules).timestamp.required = true];
-    google.protobuf.Timestamp updated_at = 13 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp created_at = 11 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 12 [(validate.rules).timestamp.required = true];
 }
 
 // ======== Post Service =========

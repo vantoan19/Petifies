@@ -9,6 +9,8 @@ import "google/protobuf/duration.proto";
 
 message ListPostFeedsRequest {
     string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    google.protobuf.Timestamp before_time = 3;
 }
 
 message ListPostFeedsResponse {
@@ -17,6 +19,8 @@ message ListPostFeedsResponse {
 
 message ListStoryFeedsRequest {
     string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    google.protobuf.Timestamp before_time = 3;
 }
 
 message ListStoryFeedsResponse {
@@ -24,7 +28,7 @@ message ListStoryFeedsResponse {
 }
 
 
-service PostService {
+service NewfeedService {
     rpc ListPostFeeds(ListPostFeedsRequest) returns (ListPostFeedsResponse) {}
     rpc ListStoryFeeds(ListStoryFeedsRequest) returns (ListStoryFeedsResponse) {}
 }
