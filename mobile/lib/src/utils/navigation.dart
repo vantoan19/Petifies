@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/src/features/comment/screens/create_comment_screen.dart';
+import 'package:mobile/src/features/home/screens/home_screen.dart';
+import 'package:mobile/src/features/media/screens/media_full_page_screen.dart';
+import 'package:mobile/src/models/basic_user_info.dart';
 
 class NavigatorUtil {
   static void toSignIn(context) {
@@ -22,7 +27,7 @@ class NavigatorUtil {
   }
 
   static void toCreatePost(context) {
-    Navigator.of(context).pushNamed('/create-post');
+    Navigator.of(context, rootNavigator: true).pushNamed('/create-post');
   }
 
   static void goBack(context) {

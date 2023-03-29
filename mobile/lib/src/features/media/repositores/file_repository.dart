@@ -8,9 +8,9 @@ import 'package:mobile/src/models/video.dart';
 import 'package:mobile/src/proto/common/common.pb.dart';
 import 'package:mobile/src/providers/service_providers.dart';
 import 'package:mobile/src/services/media_service.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final fileRepositoryProvider = Provider(
+final fileRepositoryProvider = Provider<IFileRepository>(
     (ref) => FileRepository(mediaService: ref.read(mediaServiceProvider)));
 
 abstract class IFileRepository {

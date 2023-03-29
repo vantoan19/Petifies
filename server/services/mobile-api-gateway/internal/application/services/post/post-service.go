@@ -18,6 +18,7 @@ import (
 	userservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/domain/repositories"
 	redisCommentCache "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/infra/repositories/comment/redis"
+	redisLoveCache "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/infra/repositories/love/redis"
 	redisPostCache "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/infra/repositories/post/redis"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/pkg/models"
 	postModels "github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
@@ -34,23 +35,36 @@ type postService struct {
 	userService      userservice.UserService
 	postCacheRepo    repositories.PostCacheRepository
 	commentCacheRepo repositories.CommentCacheRepository
+	loveCacheRepo    repositories.LoveCacheRepository
 }
 
 type PostService interface {
 	CreatePost(ctx context.Context, req *models.UserCreatePostReq) (*models.PostWithUserInfo, error)
 	CreateComment(ctx context.Context, req *models.UserCreateCommentReq) (*models.CommentWithUserInfo, error)
+	ToggleLoveReactPost(ctx context.Context, req *models.UserToggleLoveReq) (*models.UserToggleLoveResp, error)
+
 	EditPost(ctx context.Context, req *models.UserEditPostReq) (*models.PostWithUserInfo, error)
 	EditComment(ctx context.Context, req *models.UserEditCommentReq) (*models.CommentWithUserInfo, error)
+
 	GetPostContent(ctx context.Context, postID uuid.UUID) (*postModels.Post, error)
 	GetPostLoveCount(ctx context.Context, postID uuid.UUID) (int, error)
 	GetPostCommentCount(ctx context.Context, postID uuid.UUID) (int, error)
+
 	GetCommentContent(ctx context.Context, commendID uuid.UUID) (*postModels.Comment, error)
 	GetCommentLoveCount(ctx context.Context, commendID uuid.UUID) (int, error)
 	GetCommentSubCommentCount(ctx context.Context, commendID uuid.UUID) (int, error)
+
 	GetPostWithUserInfo(ctx context.Context, postID uuid.UUID) (*models.PostWithUserInfo, error)
 	GetCommentWithUserInfo(ctx context.Context, commentID uuid.UUID) (*models.CommentWithUserInfo, error)
+
 	ListPostsWithUserInfos(ctx context.Context, postIDs []uuid.UUID) ([]*models.PostWithUserInfo, error)
 	ListCommentsWithUserInfos(ctx context.Context, commentIDs []uuid.UUID) ([]*models.CommentWithUserInfo, error)
+	ListCommentsWithUserInfosByParentID(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*models.CommentWithUserInfo, error)
+
+	// Love Service
+	GetLove(ctx context.Context, authorID, targetID uuid.UUID) (*postModels.Love, error)
+	ExistsLove(ctx context.Context, authorID, targetID uuid.UUID) (bool, error)
+	GetLoveWithUserInfo(ctx context.Context, authorID, targetID uuid.UUID) (*models.LoveWithUserInfo, error)
 }
 
 func NewPostService(postClientConn *grpc.ClientConn, userClientConn *grpc.ClientConn, userService userservice.UserService, cfgs ...PostConfiguration) (PostService, error) {
@@ -84,6 +98,14 @@ func WithRedisCommentCacheRepository(client *redis.Client) PostConfiguration {
 	}
 }
 
+func WithRedisLoveCacheRepository(client *redis.Client) PostConfiguration {
+	return func(ps *postService) error {
+		repo := redisLoveCache.NewRedisLoveCacheRepository(client)
+		ps.loveCacheRepo = repo
+		return nil
+	}
+}
+
 func (ps *postService) CreatePost(ctx context.Context, req *models.UserCreatePostReq) (*models.PostWithUserInfo, error) {
 	logger.Info("Start CreatePost")
 
@@ -109,22 +131,14 @@ func (ps *postService) CreatePost(ctx context.Context, req *models.UserCreatePos
 
 	// Set cache
 	go func() {
-		err := ps.postCacheRepo.SetPostContent(ctx, postResp.ID, *postResp)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-		err = ps.postCacheRepo.SetPostCommentCount(ctx, postResp.ID, 0)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-		err = ps.postCacheRepo.SetPostLoveCount(ctx, postResp.ID, 0)
+		err := ps.postCacheRepo.SetPostContent(context.Background(), postResp.ID, *postResp)
 		if err != nil {
 			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 		}
 	}()
 
 	logger.Info("Finished CreatePost: SUCCESSFUL")
-	return aggregatePostWithUserInfo(postResp, userResp, 0, 0), nil
+	return aggregatePostWithUserInfo(postResp, userResp, 0, 0, false), nil
 }
 
 func (ps *postService) CreateComment(ctx context.Context, req *models.UserCreateCommentReq) (*models.CommentWithUserInfo, error) {
@@ -153,244 +167,191 @@ func (ps *postService) CreateComment(ctx context.Context, req *models.UserCreate
 
 	// Set cache
 	go func() {
-		err := ps.commentCacheRepo.SetCommentContent(ctx, commentResp.ID, *commentResp)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-		err = ps.commentCacheRepo.SetCommentLoveCount(ctx, commentResp.ID, 0)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-		err = ps.commentCacheRepo.SetCommentSubCommentCount(ctx, commentResp.ID, 0)
+		err := ps.commentCacheRepo.SetCommentContent(context.Background(), commentResp.ID, *commentResp)
 		if err != nil {
 			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 		}
 	}()
 
 	logger.Info("Finished CreateComment: SUCCESSFUL")
-	return aggregateCommentWithUserInfo(commentResp, userResp, 0, 0), nil
+	return aggregateCommentWithUserInfo(commentResp, userResp, 0, 0, false), nil
 }
 
 func (ps *postService) GetPostContent(ctx context.Context, postID uuid.UUID) (*postModels.Post, error) {
 	logger.Info("Start GetPostContent")
 
-	var post *postModels.Post
 	// Get from cache
-	if exist, err := ps.postCacheRepo.ExistsPostContent(ctx, postID); exist {
+	if exist, _ := ps.postCacheRepo.ExistsPostContent(ctx, postID); exist {
 		logger.Info("Executing GetPostContent: getting post content info from cache")
-		post_, err := ps.postCacheRepo.GetPostContent(ctx, postID)
+		post, err := ps.postCacheRepo.GetPostContent(ctx, postID)
 		if err != nil {
-			logger.ErrorData("Finished GetPostContent: FAILED", logging.Data{"error": err.Error()})
+			logger.WarningData("Executing GetPostContent: failed to get post content from cache", logging.Data{"error": err.Error()})
 			return nil, err
 		}
-		post = post_
-	} else if err != nil {
-		logger.ErrorData("Finished GetPostContent: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
-	} else { // Get from user service
-		logger.Info("Executing GetPostContent: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetPost(ctx, &postModels.GetPostReq{PostID: postID})
-		if err != nil {
-			logger.ErrorData("Finished GetPostContent: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		// save to cache
-		go func() {
-			err := ps.postCacheRepo.SetPostContent(ctx, postID, *resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		post = resp
+		return post, nil
 	}
 
+	// Get from user service
+	logger.Info("Executing GetPostContent: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetPost(ctx, &postModels.GetPostReq{PostID: postID})
+	if err != nil {
+		logger.ErrorData("Finished GetPostContent: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+	// save to cache
+	go func() {
+		err := ps.postCacheRepo.SetPostContent(context.Background(), postID, *resp)
+		if err != nil {
+			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+		}
+	}()
+
 	logger.Info("Finished GetPostContent: SUCCESSFUL")
-	return post, nil
+	return resp, nil
 }
 
 func (ps *postService) GetPostLoveCount(ctx context.Context, postID uuid.UUID) (int, error) {
 	logger.Info("Start GetPostLoveCount")
 
-	var count int
-	// Get from cache
-	if exist, err := ps.postCacheRepo.ExistsPostLoveCount(ctx, postID); exist {
-		logger.Info("Executing GetPostLoveCount: getting post love count info from cache")
-		count_, err := ps.postCacheRepo.GetPostLoveCount(ctx, postID)
-		if err != nil {
-			logger.ErrorData("Finished GetPostLoveCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		count = count_
-	} else if err != nil {
+	// Get from post service
+	logger.Info("Executing GetPostLoveCount: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetLoveCount(ctx, &postModels.GetLoveCountReq{TargetID: postID, IsPostParent: true})
+	if err != nil {
 		logger.ErrorData("Finished GetPostLoveCount: FAILED", logging.Data{"error": err.Error()})
 		return 0, err
-	} else { // Get from post service
-		logger.Info("Executing GetPostLoveCount: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetLoveCount(ctx, &postModels.GetLoveCountReq{TargetID: postID, IsPostParent: true})
-		if err != nil {
-			logger.ErrorData("Finished GetPostLoveCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		// save to cache
-		go func() {
-			err := ps.postCacheRepo.SetPostLoveCount(ctx, postID, resp.Count)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		count = resp.Count
 	}
 
 	logger.Info("Finished GetPostLoveCount: SUCCESSFUL")
-	return count, nil
+	return resp.Count, nil
 }
 
 func (ps *postService) GetPostCommentCount(ctx context.Context, postID uuid.UUID) (int, error) {
 	logger.Info("Start GetPostCommentCount")
 
-	var count int
-	// Get from cache
-	if exist, err := ps.postCacheRepo.ExistsPostCommentCount(ctx, postID); exist {
-		logger.Info("Executing GetPostCommentCount: getting post love count info from cache")
-		count_, err := ps.postCacheRepo.GetPostCommentCount(ctx, postID)
-		if err != nil {
-			logger.ErrorData("Finished GetPostCommentCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		count = count_
-	} else if err != nil {
+	// Get from post service
+	logger.Info("Executing GetPostCommentCount: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetCommentCount(ctx, &postModels.GetCommentCountReq{ParentID: postID, IsPostParent: true})
+	if err != nil {
 		logger.ErrorData("Finished GetPostCommentCount: FAILED", logging.Data{"error": err.Error()})
 		return 0, err
-	} else { // Get from post service
-		logger.Info("Executing GetPostCommentCount: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetCommentCount(ctx, &postModels.GetCommentCountReq{ParentID: postID, IsPostParent: true})
-		if err != nil {
-			logger.ErrorData("Finished GetPostCommentCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		// save to cache
-		go func() {
-			err := ps.postCacheRepo.SetPostCommentCount(ctx, postID, resp.Count)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		count = resp.Count
 	}
 
 	logger.Info("Finished GetPostCommentCount: SUCCESSFUL")
-	return count, nil
+	return resp.Count, nil
 }
 
 func (ps *postService) GetCommentContent(ctx context.Context, commentID uuid.UUID) (*postModels.Comment, error) {
 	logger.Info("Start GetCommentContent")
 
-	var comment *postModels.Comment
-	// Get from cache
-	if exist, err := ps.commentCacheRepo.ExistsCommentContent(ctx, commentID); exist {
-		logger.Info("Executing GetCommentContent: getting comment content info from cache")
-		comment_, err := ps.commentCacheRepo.GetCommentContent(ctx, commentID)
-		if err != nil {
-			logger.ErrorData("Finished GetCommentContent: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		comment = comment_
-	} else if err != nil {
+	// Get from post service
+	logger.Info("Executing GetCommentContent: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetComment(ctx, &postModels.GetCommentReq{CommentID: commentID})
+	if err != nil {
 		logger.ErrorData("Finished GetCommentContent: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
-	} else { // Get from post service
-		logger.Info("Executing GetCommentContent: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetComment(ctx, &postModels.GetCommentReq{CommentID: commentID})
-		if err != nil {
-			logger.ErrorData("Finished GetCommentContent: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		// save to cache
-		go func() {
-			err := ps.commentCacheRepo.SetCommentContent(ctx, commentID, *resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		comment = resp
 	}
 
 	logger.Info("Finished GetCommentContent: SUCCESSFUL")
-	return comment, nil
+	return resp, nil
 }
 
 func (ps *postService) GetCommentLoveCount(ctx context.Context, commentID uuid.UUID) (int, error) {
 	logger.Info("Start GetCommentLoveCount")
 
-	var count int
-	// Get from cache
-	if exist, err := ps.commentCacheRepo.ExistsCommentLoveCount(ctx, commentID); exist {
-		logger.Info("Executing GetCommentLoveCount: getting post love count info from cache")
-		count_, err := ps.commentCacheRepo.GetCommentLoveCount(ctx, commentID)
-		if err != nil {
-			logger.ErrorData("Finished GetCommentLoveCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		count = count_
-	} else if err != nil {
+	// Get from post service
+	logger.Info("Executing GetCommentLoveCount: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetLoveCount(ctx, &postModels.GetLoveCountReq{TargetID: commentID, IsPostParent: false})
+	if err != nil {
 		logger.ErrorData("Finished GetCommentLoveCount: FAILED", logging.Data{"error": err.Error()})
 		return 0, err
-	} else { // Get from post service
-		logger.Info("Executing GetCommentLoveCount: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetLoveCount(ctx, &postModels.GetLoveCountReq{TargetID: commentID, IsPostParent: false})
-		if err != nil {
-			logger.ErrorData("Finished GetCommentLoveCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		// save to cache
-		go func() {
-			err := ps.commentCacheRepo.SetCommentLoveCount(ctx, commentID, resp.Count)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		count = resp.Count
 	}
 
 	logger.Info("Finished GetCommentLoveCount: SUCCESSFUL")
-	return count, nil
+	return resp.Count, nil
 }
 
 func (ps *postService) GetCommentSubCommentCount(ctx context.Context, commendID uuid.UUID) (int, error) {
 	logger.Info("Start GetCommentSubCommentCount")
 
-	var count int
-	// Get from cache
-	if exist, err := ps.commentCacheRepo.ExistsCommentSubCommentCount(ctx, commendID); exist {
-		logger.Info("Executing GetCommentSubCommentCount: getting post love count info from cache")
-		count_, err := ps.commentCacheRepo.GetCommentSubCommentCount(ctx, commendID)
-		if err != nil {
-			logger.ErrorData("Finished GetCommentSubCommentCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		count = count_
-	} else if err != nil {
+	// Get from post service
+	logger.Info("Executing GetCommentSubCommentCount: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetCommentCount(ctx, &postModels.GetCommentCountReq{ParentID: commendID, IsPostParent: false})
+	if err != nil {
 		logger.ErrorData("Finished GetCommentSubCommentCount: FAILED", logging.Data{"error": err.Error()})
 		return 0, err
-	} else { // Get from post service
-		logger.Info("Executing GetCommentSubCommentCount: forwarding the request to Post Service")
-		resp, err := ps.postClient.GetCommentCount(ctx, &postModels.GetCommentCountReq{ParentID: commendID, IsPostParent: false})
-		if err != nil {
-			logger.ErrorData("Finished GetCommentSubCommentCount: FAILED", logging.Data{"error": err.Error()})
-			return 0, err
-		}
-		// save to cache
-		go func() {
-			err := ps.commentCacheRepo.SetCommentSubCommentCount(ctx, commendID, resp.Count)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		count = resp.Count
 	}
 
 	logger.Info("Finished GetCommentSubCommentCount: SUCCESSFUL")
-	return count, nil
+	return resp.Count, nil
+}
+
+func (ps *postService) GetLove(ctx context.Context, authorID, targetID uuid.UUID) (*postModels.Love, error) {
+	logger.Info("Start GetLove")
+
+	// Get from cache
+	if exist, _ := ps.loveCacheRepo.ExistsLove(ctx, authorID, targetID); exist {
+		logger.Info("Executing GetLove: getting love info from cache")
+		love, err := ps.loveCacheRepo.GetLove(ctx, authorID, targetID)
+		if err != nil {
+			logger.WarningData("Executing GetLove: failed to get love", logging.Data{"error": err.Error()})
+		}
+		return love, nil
+	}
+
+	// Get from post service
+	logger.Info("Executing GetLove: forwarding the request to Post Service")
+	resp, err := ps.postClient.GetLove(ctx, &postModels.GetLoveReq{AuthorID: authorID, TargetID: targetID})
+	if err != nil {
+		logger.ErrorData("Finished GetLove: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+	// save to cache
+	go func() {
+		err := ps.loveCacheRepo.SetLove(context.Background(), authorID, targetID, *resp)
+		if err != nil {
+			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+		}
+	}()
+
+	logger.Info("Finished GetLove: SUCCESSFUL")
+	return resp, nil
+}
+
+func (ps *postService) ExistsLove(ctx context.Context, authorID, targetID uuid.UUID) (bool, error) {
+	logger.Info("Start ExistsLove")
+
+	love, err := ps.GetLove(ctx, authorID, targetID)
+	if e, ok := status.FromError(err); ok {
+		if e.Code() == codes.NotFound {
+			return false, nil
+		}
+	}
+	if err != nil {
+		logger.ErrorData("Finished ExistsLove: FAILED", logging.Data{"error": err.Error()})
+		return false, err
+	}
+
+	logger.Info("Finished ExistsLove: SUCCESSFUL")
+	return (love != nil), nil
+}
+
+func (ps *postService) GetLoveWithUserInfo(ctx context.Context, authorID, targetID uuid.UUID) (*models.LoveWithUserInfo, error) {
+	logger.Info("Start GetLoveWithUserInfo")
+
+	userResp, err := ps.userService.GetMyInfo(ctx)
+	if err != nil {
+		logger.ErrorData("Finished GetLoveWithUserInfo: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	love, err := ps.GetLove(ctx, authorID, targetID)
+	if err != nil {
+		logger.ErrorData("Finished GetLoveWithUserInfo: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finished GetLoveWithUserInfo: SUCCESSFUL")
+	return aggregateLoveWithUserInfo(love, userResp), nil
 }
 
 func (ps *postService) EditPost(ctx context.Context, req *models.UserEditPostReq) (*models.PostWithUserInfo, error) {
@@ -437,17 +398,22 @@ func (ps *postService) EditPost(ctx context.Context, req *models.UserEditPostReq
 		logger.ErrorData("Finished EditPost: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+	hasReacted, err := ps.ExistsLove(ctx, userResp.ID, postResp.ID)
+	if err != nil {
+		logger.ErrorData("Finished EditPost: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
 
 	// save to cache
 	go func() {
-		err := ps.postCacheRepo.SetPostContent(ctx, req.PostID, *postResp)
+		err := ps.postCacheRepo.SetPostContent(context.Background(), req.PostID, *postResp)
 		if err != nil {
 			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 		}
 	}()
 
 	logger.Info("Finished EditPost: SUCCESSFUL")
-	return aggregatePostWithUserInfo(postResp, userResp, loveCount, commentCount), nil
+	return aggregatePostWithUserInfo(postResp, userResp, loveCount, commentCount, hasReacted), nil
 }
 
 func (ps *postService) EditComment(ctx context.Context, req *models.UserEditCommentReq) (*models.CommentWithUserInfo, error) {
@@ -492,79 +458,168 @@ func (ps *postService) EditComment(ctx context.Context, req *models.UserEditComm
 		logger.ErrorData("Finished EditPost: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
+	hasReacted, err := ps.ExistsLove(ctx, userResp.ID, commentResp.ID)
+	if err != nil {
+		logger.ErrorData("Finished EditPost: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
 
 	// save to cache
 	go func() {
-		err := ps.commentCacheRepo.SetCommentContent(ctx, req.CommentID, *commentResp)
+		err := ps.commentCacheRepo.SetCommentContent(context.Background(), req.CommentID, *commentResp)
 		if err != nil {
 			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 		}
 	}()
 
 	logger.Info("Finished EditComment: SUCCESSFUL")
-	return aggregateCommentWithUserInfo(commentResp, userResp, loveCount, commentCount), nil
+	return aggregateCommentWithUserInfo(commentResp, userResp, loveCount, commentCount, hasReacted), nil
 }
 
 func (ps *postService) GetPostWithUserInfo(ctx context.Context, postID uuid.UUID) (*models.PostWithUserInfo, error) {
 	logger.Info("Start GetPostWithUserInfo")
 
-	postResp, err := ps.GetPostContent(ctx, postID)
-	if err != nil {
-		logger.ErrorData("Finished GetPostWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
+	var (
+		post         *postModels.Post
+		loveCount    int
+		commentCount int
+		hasReacted   bool
+		wg           sync.WaitGroup
+		errsChan     = make(chan error, 4)
+	)
+
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		post_, err := ps.GetPostContent(ctx, postID)
+		if err != nil {
+			errsChan <- err
+		}
+		post = post_
+	}()
+
+	go func() {
+		defer wg.Done()
+		loveCount_, err := ps.GetPostLoveCount(ctx, postID)
+		if err != nil {
+			errsChan <- err
+		}
+		loveCount = loveCount_
+	}()
+
+	go func() {
+		defer wg.Done()
+		commentCount_, err := ps.GetPostCommentCount(ctx, postID)
+		if err != nil {
+			errsChan <- err
+		}
+		commentCount = commentCount_
+	}()
+
+	go func() {
+		defer wg.Done()
+		userID, err := commonutils.GetUserID(ctx)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		hasReacted_, err := ps.ExistsLove(ctx, userID, postID)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		hasReacted = hasReacted_
+	}()
+
+	wg.Wait()
+	close(errsChan)
+	errs := commonutils.ToSlice(errsChan)
+	if len(errs) > 0 {
+		logger.ErrorData("Finish GetPostWithUserInfo: Failed", logging.Data{"error": errs[0].Error()})
+		return nil, errs[0]
 	}
 
-	userResp, err := ps.userService.GetUser(ctx, postResp.AuthorID)
-	if err != nil {
-		logger.ErrorData("Finished GetPostWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
-	}
-
-	loveCount, err := ps.GetPostLoveCount(ctx, postID)
-	if err != nil {
-		logger.ErrorData("Finished GetPostWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
-	}
-
-	commentCount, err := ps.GetPostCommentCount(ctx, postID)
+	user, err := ps.userService.GetUser(ctx, post.AuthorID)
 	if err != nil {
 		logger.ErrorData("Finished GetPostWithUserInfo: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	logger.Info("Finished GetPostWithUserInfo: SUCCESSFUL")
-	return aggregatePostWithUserInfo(postResp, userResp, loveCount, commentCount), nil
+	return aggregatePostWithUserInfo(post, user, loveCount, commentCount, hasReacted), nil
 }
 
 func (ps *postService) GetCommentWithUserInfo(ctx context.Context, commentID uuid.UUID) (*models.CommentWithUserInfo, error) {
 	logger.Info("Start GetCommentWithUserInfo")
 
-	commentResp, err := ps.GetCommentContent(ctx, commentID)
-	if err != nil {
-		logger.ErrorData("Finished GetCommentWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
+	var (
+		comment         *postModels.Comment
+		loveCount       int
+		subcommentCount int
+		hasReacted      bool
+		wg              sync.WaitGroup
+		errsChan        = make(chan error, 4)
+	)
+
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		comment_, err := ps.GetCommentContent(ctx, commentID)
+		if err != nil {
+			errsChan <- err
+		}
+		comment = comment_
+	}()
+
+	go func() {
+		defer wg.Done()
+		loveCount_, err := ps.GetCommentLoveCount(ctx, commentID)
+		if err != nil {
+			errsChan <- err
+		}
+		loveCount = loveCount_
+	}()
+
+	go func() {
+		defer wg.Done()
+		subcommentCount_, err := ps.GetCommentSubCommentCount(ctx, commentID)
+		if err != nil {
+			errsChan <- err
+		}
+		subcommentCount = subcommentCount_
+	}()
+
+	go func() {
+		defer wg.Done()
+		userID, err := commonutils.GetUserID(ctx)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		hasReacted_, err := ps.ExistsLove(ctx, userID, commentID)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		hasReacted = hasReacted_
+	}()
+
+	wg.Wait()
+	close(errsChan)
+	errs := commonutils.ToSlice(errsChan)
+	if len(errs) > 0 {
+		logger.ErrorData("Finish GetCommentWithUserInfo: Failed", logging.Data{"error": errs[0].Error()})
+		return nil, errs[0]
 	}
 
-	userResp, err := ps.userService.GetUser(ctx, commentResp.AuthorID)
-	if err != nil {
-		logger.ErrorData("Finished GetCommentWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
-	}
-
-	loveCount, err := ps.GetCommentLoveCount(ctx, commentID)
-	if err != nil {
-		logger.ErrorData("Finished GetCommentWithUserInfo: FAILED", logging.Data{"error": err.Error()})
-		return nil, err
-	}
-
-	subcommentCount, err := ps.GetCommentSubCommentCount(ctx, commentID)
+	user, err := ps.userService.GetUser(ctx, comment.AuthorID)
 	if err != nil {
 		logger.ErrorData("Finished GetCommentWithUserInfo: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	logger.Info("Finished GetCommentWithUserInfo: SUCCESSFUL")
-	return aggregateCommentWithUserInfo(commentResp, userResp, loveCount, subcommentCount), nil
+	return aggregateCommentWithUserInfo(comment, user, loveCount, subcommentCount, hasReacted), nil
 }
 
 func (ps *postService) ListPostsWithUserInfos(ctx context.Context, postIDs []uuid.UUID) ([]*models.PostWithUserInfo, error) {
@@ -573,6 +628,7 @@ func (ps *postService) ListPostsWithUserInfos(ctx context.Context, postIDs []uui
 	var wg sync.WaitGroup
 	resultsChan := make(chan *models.PostWithUserInfo, len(postIDs))
 	errsChan := make(chan error, len(postIDs))
+	postMap := make(map[uuid.UUID]*models.PostWithUserInfo)
 
 	for _, id := range postIDs {
 		wg.Add(1)
@@ -601,9 +657,12 @@ func (ps *postService) ListPostsWithUserInfos(ctx context.Context, postIDs []uui
 		logger.ErrorData("Finish ListPostsWithUserInfos: Failed", logging.Data{"error": errs[0].Error()})
 		return nil, errs[0]
 	}
+	for _, p := range results {
+		postMap[p.ID] = p
+	}
 
 	logger.Info("Finish ListPostsWithUserInfos: Successful")
-	return results, nil
+	return commonutils.Map2(postIDs, func(pId uuid.UUID) *models.PostWithUserInfo { return postMap[pId] }), nil
 }
 
 func (ps *postService) ListCommentsWithUserInfos(ctx context.Context, commentIDs []uuid.UUID) ([]*models.CommentWithUserInfo, error) {
@@ -612,6 +671,7 @@ func (ps *postService) ListCommentsWithUserInfos(ctx context.Context, commentIDs
 	var wg sync.WaitGroup
 	resultsChan := make(chan *models.CommentWithUserInfo, len(commentIDs))
 	errsChan := make(chan error, len(commentIDs))
+	commentMap := make(map[uuid.UUID]*models.CommentWithUserInfo)
 
 	for _, id := range commentIDs {
 		wg.Add(1)
@@ -640,12 +700,102 @@ func (ps *postService) ListCommentsWithUserInfos(ctx context.Context, commentIDs
 		logger.ErrorData("Finish ListCommentsWithUserInfos: Failed", logging.Data{"error": errs[0].Error()})
 		return nil, errs[0]
 	}
+	for _, c := range results {
+		commentMap[c.ID] = c
+	}
 
 	logger.Info("Finish ListPostsWithUserInfos: Successful")
-	return results, nil
+	return commonutils.Map2(commentIDs, func(cId uuid.UUID) *models.CommentWithUserInfo { return commentMap[cId] }), nil
 }
 
-func aggregatePostWithUserInfo(post *postModels.Post, user *userModels.User, loveCount, commentCount int) *models.PostWithUserInfo {
+func (ps *postService) ToggleLoveReactPost(ctx context.Context, req *models.UserToggleLoveReq) (*models.UserToggleLoveResp, error) {
+	logger.Info("Start ToggleLoveReactPost")
+
+	userID, err := commonutils.GetUserID(ctx)
+	if err != nil {
+		logger.ErrorData("Finished ToggleLoveReactPost: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	exists, err := ps.ExistsLove(ctx, userID, req.TargetID)
+	if err != nil {
+		logger.ErrorData("Finished ToggleLoveReactPost: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	if !exists {
+		logger.Info("Executing ToggleLoveReactPost: user hasn't reacted to the post, toggle the love react on")
+		loveResp, err := ps.postClient.LoveReact(ctx, &postModels.LoveReactReq{
+			TargetID:     req.TargetID,
+			IsTargetPost: req.IsPostTarget,
+			AuthorID:     userID,
+		})
+		if err != nil {
+			logger.ErrorData("Finished ToggleLoveReactPost: FAILED", logging.Data{"error": err.Error()})
+			return nil, err
+		}
+
+		go func() {
+			err := ps.loveCacheRepo.SetLove(context.Background(), loveResp.AuthorID, loveResp.TargetID, *loveResp)
+			if err != nil {
+				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+			}
+		}()
+
+		logger.Info("Finished ToggleLoveReactPost: Successful")
+		return &models.UserToggleLoveResp{
+			HasReacted: true,
+		}, nil
+	} else {
+		logger.Info("Executing ToggleLoveReactPost: user already reacted to the post, toggle the love react off")
+		_, err := ps.postClient.RemoveLoveReact(ctx, &postModels.RemoveLoveReactReq{
+			TargetID:     req.TargetID,
+			IsTargetPost: req.IsPostTarget,
+			AuthorID:     userID,
+		})
+		if err != nil {
+			logger.ErrorData("Finished ToggleLoveReactPost: FAILED", logging.Data{"error": err.Error()})
+			return nil, err
+		}
+
+		go func() {
+			err := ps.loveCacheRepo.RemoveLove(context.Background(), userID, req.TargetID)
+			if err != nil {
+				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+			}
+		}()
+
+		logger.Info("Finished ToggleLoveReactPost: Successful")
+		return &models.UserToggleLoveResp{
+			HasReacted: false,
+		}, nil
+	}
+}
+
+func (ps *postService) ListCommentsWithUserInfosByParentID(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*models.CommentWithUserInfo, error) {
+	logger.Info("Start ListCommentsWithUserInfosByParentID")
+
+	listResp, err := ps.postClient.ListCommentIDsByParentID(ctx, &postModels.ListCommentIDsByParentIDReq{
+		ParentID:       parentID,
+		PageSize:       pageSize,
+		AfterCommentID: afterCommentID,
+	})
+	if err != nil {
+		logger.ErrorData("Finished ListCommentsWithUserInfosByParentID: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	comments, err := ps.ListCommentsWithUserInfos(ctx, listResp.CommentIDs)
+	if err != nil {
+		logger.ErrorData("Finished ListCommentsWithUserInfosByParentID: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finished ListCommentsWithUserInfosByParentID: Successful")
+	return comments, nil
+}
+
+func aggregatePostWithUserInfo(post *postModels.Post, user *userModels.User, loveCount, commentCount int, hasReacted bool) *models.PostWithUserInfo {
 	return &models.PostWithUserInfo{
 		ID: post.ID,
 		Author: models.BasicUserInfo{
@@ -662,12 +812,13 @@ func aggregatePostWithUserInfo(post *postModels.Post, user *userModels.User, lov
 		CommentCount: commentCount,
 		Visibility:   post.Visibility,
 		Activity:     post.Activity,
+		HasReacted:   hasReacted,
 		CreatedAt:    post.CreatedAt,
 		UpdatedAt:    post.UpdatedAt,
 	}
 }
 
-func aggregateCommentWithUserInfo(comment *postModels.Comment, user *userModels.User, loveCount, subCommentCount int) *models.CommentWithUserInfo {
+func aggregateCommentWithUserInfo(comment *postModels.Comment, user *userModels.User, loveCount, subCommentCount int, hasReacted bool) *models.CommentWithUserInfo {
 	return &models.CommentWithUserInfo{
 		ID: comment.ID,
 		Author: models.BasicUserInfo{
@@ -683,9 +834,26 @@ func aggregateCommentWithUserInfo(comment *postModels.Comment, user *userModels.
 		Content:         comment.Content,
 		Image:           comment.Image,
 		Video:           comment.Video,
+		HasReacted:      hasReacted,
 		LoveCount:       loveCount,
 		SubcommentCount: subCommentCount,
 		CreatedAt:       comment.CreatedAt,
 		UpdatedAt:       comment.UpdatedAt,
+	}
+}
+
+func aggregateLoveWithUserInfo(love *postModels.Love, user *userModels.User) *models.LoveWithUserInfo {
+	return &models.LoveWithUserInfo{
+		ID:           love.ID,
+		TargetID:     love.TargetID,
+		IsPostTarget: love.IsPostTarget,
+		Author: models.BasicUserInfo{
+			ID:         user.ID,
+			Email:      user.Email,
+			UserAvatar: "",
+			FirstName:  user.FirstName,
+			LastName:   user.LastName,
+		},
+		CreatedAt: love.CreatedAt,
 	}
 }

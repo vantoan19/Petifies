@@ -16,5 +16,5 @@ class Constants {
   static const emptyBoxPng = 'assets/images/empty_box.png';
   static const caCertPath = 'assets/cert/ca.crt';
 
-  static const horizontalScreenPadding = 30.0;
+  static const horizontalScreenPadding = 16.0;
 }

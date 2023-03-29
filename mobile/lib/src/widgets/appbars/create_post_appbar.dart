@@ -4,6 +4,7 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/theme/themes.dart';
 import 'package:mobile/src/utils/navigation.dart';
+import 'package:mobile/src/widgets/buttons/go_back_button.dart';
 
 class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback addPostAction;
@@ -26,14 +27,12 @@ class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       centerTitle: true,
-      leading: IconButton(
-        onPressed: () => {NavigatorUtil.goBack(context)},
-        icon: const Icon(Icons.arrow_back),
-      ),
+      leading: const GoBackButton(),
       actions: [
         IconButton(
           iconSize: 30,
           onPressed: addPostAction,
+          disabledColor: Themes.greyColor,
           icon: Icon(
             Icons.add,
             color: Themes.blueColor,

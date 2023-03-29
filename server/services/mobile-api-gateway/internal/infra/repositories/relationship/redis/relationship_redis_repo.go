@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -46,7 +45,7 @@ func (r *redisRelationshipCacheRepository) SetFollowingsInfo(ctx context.Context
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, followingsStr, time.Minute).Err()
+	err = r.client.Set(ctx, key, followingsStr, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -89,7 +88,7 @@ func (r *redisRelationshipCacheRepository) SetFollowersInfo(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, followersStr, time.Minute).Err()
+	err = r.client.Set(ctx, key, followersStr, 0).Err()
 	if err != nil {
 		return err
 	}

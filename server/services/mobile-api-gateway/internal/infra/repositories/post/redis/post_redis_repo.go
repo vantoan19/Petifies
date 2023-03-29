@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -46,7 +45,7 @@ func (r *redisPostCacheRepository) SetPostContent(ctx context.Context, postID uu
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, postContentStr, time.Minute).Err()
+	err = r.client.Set(ctx, key, postContentStr, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -56,66 +55,6 @@ func (r *redisPostCacheRepository) SetPostContent(ctx context.Context, postID uu
 
 func (r *redisPostCacheRepository) ExistsPostContent(ctx context.Context, postID uuid.UUID) (bool, error) {
 	key := fmt.Sprintf("post:%s:content", postID.String())
-	exists, err := r.client.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-
-	return exists == 1, nil
-}
-
-func (r *redisPostCacheRepository) GetPostLoveCount(ctx context.Context, postID uuid.UUID) (int, error) {
-	key := fmt.Sprintf("post:%s:loveCount", postID.String())
-	count, err := r.client.Get(ctx, key).Int()
-	if err == redis.Nil {
-		return -1, nil
-	}
-
-	return count, nil
-}
-
-func (r *redisPostCacheRepository) SetPostLoveCount(ctx context.Context, postID uuid.UUID, loveCount int) error {
-	key := fmt.Sprintf("post:%s:loveCount", postID.String())
-	err := r.client.Set(ctx, key, loveCount, time.Minute).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *redisPostCacheRepository) ExistsPostLoveCount(ctx context.Context, postID uuid.UUID) (bool, error) {
-	key := fmt.Sprintf("post:%s:loveCount", postID.String())
-	exists, err := r.client.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-
-	return exists == 1, nil
-}
-
-func (r *redisPostCacheRepository) GetPostCommentCount(ctx context.Context, postID uuid.UUID) (int, error) {
-	key := fmt.Sprintf("post:%s:commentCount", postID.String())
-	commentCount, err := r.client.Get(ctx, key).Int()
-	if err == redis.Nil {
-		return -1, nil
-	}
-
-	return commentCount, nil
-}
-
-func (r *redisPostCacheRepository) SetPostCommentCount(ctx context.Context, postID uuid.UUID, commentCount int) error {
-	key := fmt.Sprintf("post:%s:commentCount", postID.String())
-	err := r.client.Set(ctx, key, commentCount, time.Minute).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *redisPostCacheRepository) ExistsPostCommentCount(ctx context.Context, postID uuid.UUID) (bool, error) {
-	key := fmt.Sprintf("post:%s:commentCount", postID.String())
 	exists, err := r.client.Exists(ctx, key).Result()
 	if err != nil {
 		return false, err

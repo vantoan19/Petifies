@@ -58,3 +58,13 @@ type GetLoveCountResp struct {
 type GetCommentCountResp struct {
 	Count int
 }
+
+type RemoveLoveReactResp struct{}
+
+type ListCommentIDsByParentIDResp struct {
+	CommentIDs []uuid.UUID
+}
+
+type ListCommentAncestorsResp struct {
+	AncestorComments []*Comment
+}

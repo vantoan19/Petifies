@@ -10,6 +10,7 @@ import (
 type LoveRepository interface {
 	GetByTargetID(ctx context.Context, targetID uuid.UUID, pageToken paginateutils.PageToken) ([]*Love, error)
 	GetByTargetIDAndAuthorID(ctx context.Context, authorID uuid.UUID, targetID uuid.UUID) (*Love, error)
+	ExistsLoveByTargetIDAndAuthorID(ctx context.Context, authorID uuid.UUID, targetID uuid.UUID) (bool, error)
 	CountLoveByTargetID(ctx context.Context, targetID uuid.UUID) (int, error)
 	SaveLove(ctx context.Context, love Love) (*Love, error)
 	DeleteByUUID(ctx context.Context, id uuid.UUID) error

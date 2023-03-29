@@ -15,6 +15,7 @@ var initFuncs = []func() error{
 	initUserService,
 	initRelationshipService,
 	initPostService,
+	initFeedService,
 }
 
 func Initialize() {

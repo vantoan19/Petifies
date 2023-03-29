@@ -27,15 +27,28 @@ func NewCassandraPostRepository(session *gocql.Session) (*PostRepository, error)
 	}, nil
 }
 
-func (pr *PostRepository) GetByUserID(ctx context.Context, userID uuid.UUID, pageSize int, beforeTime time.Time) ([]*postfeedaggre.PostFeedAggre, error) {
+func (pr *PostRepository) GetByUserID(ctx context.Context, userID uuid.UUID, pageSize int, afterPostID uuid.UUID) ([]*postfeedaggre.PostFeedAggre, error) {
 	logger.Info("Start GetByUserID")
+
+	var createTime time.Time
+	if afterPostID != uuid.Nil {
+		query := `SELECT created_at 
+				  FROM postfeeds_by_user_id_and_post_id
+				  WHERE user_id=? AND post_id=?`
+		if err := pr.session.Query(query, userID.String(), afterPostID.String()).Scan(&createTime); err != nil {
+			logger.ErrorData("Finish ExistsPostFeed: FAILED", logging.Data{"error": err.Error()})
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	} else {
+		createTime = time.Now()
+	}
 
 	var result []*postfeedaggre.PostFeedAggre
 	query := `SELECT user_id, author_id, post_id, created_at 
               FROM postfeeds_by_user_id 
               WHERE user_id=? AND created_at<?
               LIMIT ?`
-	iter := pr.session.Query(query, userID.String(), beforeTime, pageSize).Iter()
+	iter := pr.session.Query(query, userID.String(), createTime, pageSize).Iter()
 	var postFeedModel models.PostFeed
 	for iter.Scan(&postFeedModel.UserID, &postFeedModel.AuthorID, &postFeedModel.PostID, &postFeedModel.CreatedAt) {
 		postfeed, err := mapper.DbPostFeedToPostFeedAggregate(&postFeedModel)

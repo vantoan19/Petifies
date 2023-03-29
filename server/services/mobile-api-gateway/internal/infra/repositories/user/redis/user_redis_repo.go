@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -46,7 +45,7 @@ func (r *redisUserCacheRepository) SetUser(ctx context.Context, userID uuid.UUID
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, userStr, time.Minute).Err()
+	err = r.client.Set(ctx, key, userStr, 0).Err()
 	if err != nil {
 		return err
 	}

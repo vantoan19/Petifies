@@ -7,7 +7,6 @@ import (
 	newfeedProtoV1 "github.com/vantoan19/Petifies/proto/newfeed-service/v1"
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/newfeed-service/pkg/models"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func EncodeListPostFeedsRequest(_ context.Context, request interface{}) (interface{}, error) {
@@ -17,9 +16,9 @@ func EncodeListPostFeedsRequest(_ context.Context, request interface{}) (interfa
 	}
 
 	return &newfeedProtoV1.ListPostFeedsRequest{
-		UserId:     req.UserID.String(),
-		PageSize:   int32(req.PageSize),
-		BeforeTime: timestamppb.New(req.BeforeTime),
+		UserId:      req.UserID.String(),
+		PageSize:    int32(req.PageSize),
+		AfterPostId: req.AfterPostID.String(),
 	}, nil
 }
 
@@ -41,9 +40,9 @@ func EncodeListStoryFeedsRequest(_ context.Context, request interface{}) (interf
 	}
 
 	return &newfeedProtoV1.ListStoryFeedsRequest{
-		UserId:     req.UserID.String(),
-		PageSize:   int32(req.PageSize),
-		BeforeTime: timestamppb.New(req.BeforeTime),
+		UserId:       req.UserID.String(),
+		PageSize:     int32(req.PageSize),
+		AfterStoryId: req.AfterStoryID.String(),
 	}, nil
 }
 

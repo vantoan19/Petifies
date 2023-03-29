@@ -81,15 +81,37 @@ func (lr *LoveRepository) GetByTargetIDAndAuthorID(ctx context.Context, authorID
 		return nil
 	})
 	if err != nil {
-		if err == ErrLoveNotExist {
-			return nil, nil
-		}
 		logger.ErrorData("Finish GetByTargetIDAndAuthorID: Failed", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	logger.Info("Finish GetByTargetIDAndAuthorID: Successful")
 	return love, nil
+}
+
+func (lr *LoveRepository) ExistsLoveByTargetIDAndAuthorID(ctx context.Context, authorID uuid.UUID, targetID uuid.UUID) (bool, error) {
+	logger.Info("Start GetByTargetIDAndAuthorID")
+	var exists bool
+
+	err := lr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		_, err := lr.GetByTargetIDAndAuthorIDWithSession(ssCtx, authorID, targetID)
+		if err != nil {
+			if err == ErrLoveNotExist {
+				exists = false
+				return nil
+			}
+			return err
+		}
+		exists = true
+		return nil
+	})
+	if err != nil {
+		logger.ErrorData("Finish GetByTargetIDAndAuthorID: Failed", logging.Data{"error": err.Error()})
+		return false, err
+	}
+
+	logger.Info("Finish GetByTargetIDAndAuthorID: Successful")
+	return exists, nil
 }
 
 func (lr *LoveRepository) CountLoveByTargetID(ctx context.Context, targetID uuid.UUID) (int, error) {

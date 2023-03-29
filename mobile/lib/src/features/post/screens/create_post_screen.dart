@@ -5,18 +5,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/exceptions/failure.dart';
+import 'package:mobile/src/features/feed/screens/feed_screen.dart';
 import 'package:mobile/src/features/post/controllers/create_post_controller.dart';
-import 'package:mobile/src/features/post/controllers/image_controlller.dart';
-import 'package:mobile/src/features/post/controllers/video_controller.dart';
+import 'package:mobile/src/features/media/controllers/image_controller.dart';
+import 'package:mobile/src/features/media/controllers/video_controller.dart';
+import 'package:mobile/src/models/basic_user_info.dart';
 import 'package:mobile/src/models/image.dart';
+import 'package:mobile/src/models/uploading_post.dart';
 import 'package:mobile/src/models/user_model.dart';
 import 'package:mobile/src/models/video.dart';
 import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/utils/navigation.dart';
 import 'package:mobile/src/widgets/appbars/create_post_appbar.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile/src/widgets/media_viewer/image_viewer.dart';
+import 'package:mobile/src/widgets/images/image_upload_viewer.dart';
 import 'package:mobile/src/widgets/pickers/visibility_picker.dart';
+import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
@@ -31,7 +35,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   TextEditingController _textController = TextEditingController();
   List<File> _images = [];
   List<VideoPlayerController> _videoControllers = [];
-  String? _visibility = "public";
+  String _visibility = "public";
   List<Future<Either<Failure, NetworkImageModel>>> _imagesFutures = [];
   List<Future<Either<Failure, NetworkVideoModel>>> _videosFutures = [];
 
@@ -39,6 +43,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   late FocusNode _textContentFocusNode;
 
   Future<void> _pickImages(String userID) async {
+    if (_images.length + _videoControllers.length >= 4) {
+      return;
+    }
+
     final List<XFile>? images = await _picker.pickMultiImage();
     if (images != null) {
       setState(() {
@@ -58,6 +66,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _pickVideo(String userID) async {
+    if (_images.length + _videoControllers.length >= 4) {
+      return;
+    }
+
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
       setState(() {
@@ -77,6 +89,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _takePicture(String userID) async {
+    if (_images.length + _videoControllers.length >= 4) {
+      return;
+    }
+
     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
     if (image != null) {
       setState(() {
@@ -91,6 +107,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _takeVideo(String userID) async {
+    if (_images.length + _videoControllers.length >= 4) {
+      return;
+    }
+
     final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
     if (video != null) {
       setState(() {
@@ -110,6 +130,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   void _removeImage(int idx) async {
+    if (idx >= _images.length) {
+      return;
+    }
+
     Future<Either<Failure, NetworkImageModel>> imgFuture = _imagesFutures[idx];
     setState(() {
       _images.removeAt(idx);
@@ -120,24 +144,39 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     });
   }
 
-  void _submitPostCreationRequest(UserModel author) async {
-    final imageEithers = await Future.wait(_imagesFutures);
-    final videoEithers = await Future.wait(_videosFutures);
-    List<NetworkImageModel> images = [];
-    List<NetworkVideoModel> videos = [];
-    imageEithers.forEach((either) {
-      either.fold((l) => NavigatorUtil.goBack(context), (r) => images.add(r));
-    });
-    videoEithers.forEach((either) {
-      either.fold((l) => NavigatorUtil.goBack(context), (r) => videos.add(r));
-    });
+  void _submitPostCreationRequest(BasicUserInfoModel author) {
+    if (_images.length + _videoControllers.length > 4) {
+      return;
+    }
+    if (_textController.text == "" &&
+        _images.length == 0 &&
+        _videoControllers.length == 0) {
+      return;
+    }
+
+    final tempId = Uuid().v4();
+    ref
+        .read(newlyCreatedPostsProvider.notifier)
+        .addNewlyCreatedPost(UploadingPostModel(
+          tempId: tempId,
+          owner: author,
+          postActivity: "post",
+          textContent: _textController.text,
+          images: _images,
+          videos: _videoControllers,
+          createdAt: DateTime.now(),
+        ));
 
     ref.read(createPostControllerProvider.notifier).createPost(
+          tempId: tempId,
           author: author,
+          visibility: _visibility,
+          activity: "post",
           textContent: _textController.text,
-          images: images,
-          videos: videos,
+          imageFutures: _imagesFutures,
+          videoFutures: _videosFutures,
         );
+
     NavigatorUtil.goBack(context);
   }
 
@@ -175,9 +214,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
 
     return Scaffold(
-      bottomNavigationBar: const SizedBox(height: 45),
       appBar: CreatePostAppBar(
-        addPostAction: () => _submitPostCreationRequest(userInfo),
+        addPostAction: () => _submitPostCreationRequest(BasicUserInfoModel(
+          id: userInfo.id,
+          email: userInfo.email,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+        )),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -211,7 +254,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   // Visibility selection
                   VisibilityPicker(
                     initialValue: _visibility,
-                    onVisibilityChangedFunc: (value) => _visibility = value,
+                    onVisibilityChangedFunc: (value) {
+                      if (value != null) {
+                        _visibility = value;
+                      }
+                    },
                   ),
                 ],
               ),
@@ -244,7 +291,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._images.asMap().entries.map((entry) {
-                            return ImageViewer(
+                            return ImageUploadViewer(
                               image: entry.value,
                               uploaderID: userInfo.id,
                               removeAction: () => _removeImage(entry.key),

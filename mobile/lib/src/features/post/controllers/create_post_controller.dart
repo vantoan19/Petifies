@@ -1,59 +1,62 @@
 import 'dart:async';
-import 'dart:ffi';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mobile/src/exceptions/failure.dart';
 import 'package:mobile/src/features/feed/screens/feed_screen.dart';
-import 'package:mobile/src/features/post/repository/file_repository.dart';
 import 'package:mobile/src/features/post/repository/post_repository.dart';
+import 'package:mobile/src/models/basic_user_info.dart';
 import 'package:mobile/src/models/image.dart';
 import 'package:mobile/src/models/post.dart';
-import 'package:mobile/src/models/user_model.dart';
 import 'package:mobile/src/models/video.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final createPostControllerProvider =
-    AsyncNotifierProvider.autoDispose<CreatePostController, void>(
-        CreatePostController.new);
+part 'create_post_controller.g.dart';
 
-class CreatePostController extends AutoDisposeAsyncNotifier<void> {
+@Riverpod(keepAlive: false)
+class CreatePostController extends _$CreatePostController {
   @override
   void build() {
     return;
   }
 
   Future<Either<Failure, PostModel?>> createPost({
-    required UserModel author,
+    required String tempId,
+    required BasicUserInfoModel author,
     required String textContent,
-    required List<NetworkImageModel> images,
-    required List<NetworkVideoModel> videos,
+    required String activity,
+    String visibility = "public",
+    required List<Future<Either<Failure, NetworkImageModel>>> imageFutures,
+    required List<Future<Either<Failure, NetworkVideoModel>>> videoFutures,
   }) async {
     final postRepository = ref.read(postRepositoryProvider);
 
-    final postFuture = postRepository.createPost(
+    // wait for uploading images and videos to be fullfilled
+    final imageEithers = await Future.wait(imageFutures);
+    final videoEithers = await Future.wait(videoFutures);
+    List<NetworkImageModel> images = [];
+    List<NetworkVideoModel> videos = [];
+    imageEithers.forEach((either) {
+      either.fold((l) => null, (r) => images.add(r));
+    });
+    videoEithers.forEach((either) {
+      either.fold((l) => null, (r) => videos.add(r));
+    });
+
+    final postEither = await postRepository.createPost(
       author: author,
+      visibility: visibility,
+      activity: activity,
       textContent: textContent,
       images: images,
       videos: videos,
     );
 
-    ref
-        .read(newlyCreatedPostFuturesProvider.notifier)
-        .addPostFuture(postFuture);
-    ref.read(newlyCreatedPostProvider.notifier).addNewlyCreatedPost(
-          PostModel(
-            owner: author,
-            postActivity: "post",
-            textContent: textContent,
-            images: images,
-            videos: videos,
-            createdAt: DateTime.now(),
-            loveCount: 0,
-            commentCount: 0,
-          ),
-        );
+    postEither.fold((l) => null, (r) {
+      ref.read(newlyCreatedPostsProvider.notifier).removePost(tempId);
+      ref.read(postFeedsProvider.notifier).addPostToHead(r);
+    });
 
-    return postFuture;
+    return postEither;
   }
 }

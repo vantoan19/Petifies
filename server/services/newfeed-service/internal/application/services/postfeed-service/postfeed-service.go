@@ -47,7 +47,7 @@ func WithCassandraPostfeedRepository(session *gocql.Session) PostfeedConfigurati
 func (s *postfeedService) ListPostFeeds(ctx context.Context, req *models.ListPostFeedsReq) ([]*postfeedaggre.PostFeedAggre, error) {
 	logger.Info("Start ListPostFeeds")
 
-	postFeeds, err := s.postFeedRepository.GetByUserID(ctx, req.UserID, req.PageSize, req.BeforeTime)
+	postFeeds, err := s.postFeedRepository.GetByUserID(ctx, req.UserID, req.PageSize, req.AfterPostID)
 	if err != nil {
 		logger.ErrorData("Finish ListPostFeeds: Failed", logging.Data{"error": err.Error()})
 		return nil, err

@@ -6,119 +6,121 @@ import 'package:mobile/src/features/profile/screens/my_profile_screen.dart';
 import 'package:mobile/src/providers/user_model_providers.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final Function(PreferredSizeWidget?, Widget) navigateCallback;
+  final VoidCallback toMyProfileCallback;
 
   const ProfileScreen({
     Key? key,
-    required this.navigateCallback,
+    required this.toMyProfileCallback,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        _UserProfile(
-          navigateCallback: navigateCallback,
-        ),
-        Divider(
-          thickness: 5,
-          color: Color.fromRGBO(10, 10, 10, 10),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(25.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _MenuButton(
-                label: "Petifies",
-                action: () {},
-                icon: Icon(Icons.pets),
-              ),
-              _MenuButton(
-                label: "New Feeds",
-                action: () {},
-                icon: Icon(Icons.feed),
-              ),
-              _MenuButton(
-                label: "Stories",
-                action: () {},
-                icon: Icon(Icons.tv),
-              ),
-              _MenuButton(
-                label: "Friends",
-                action: () {},
-                icon: Icon(Icons.group),
-              ),
-            ],
+    return Scaffold(
+      body: ListView(
+        children: [
+          _UserProfile(
+            toMyProfileCallback: toMyProfileCallback,
           ),
-        ),
-        Divider(
-          thickness: 5,
-          color: Color.fromRGBO(10, 10, 10, 10),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(13.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Text(
-                  "Account settings",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w400,
+          Divider(
+            thickness: 5,
+            color: Color.fromRGBO(10, 10, 10, 10),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(25.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MenuButton(
+                  label: "Petifies",
+                  action: () {},
+                  icon: Icon(Icons.pets),
+                ),
+                _MenuButton(
+                  label: "New Feeds",
+                  action: () {},
+                  icon: Icon(Icons.feed),
+                ),
+                _MenuButton(
+                  label: "Stories",
+                  action: () {},
+                  icon: Icon(Icons.tv),
+                ),
+                _MenuButton(
+                  label: "Friends",
+                  action: () {},
+                  icon: Icon(Icons.group),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            thickness: 5,
+            color: Color.fromRGBO(10, 10, 10, 10),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(13.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "Account settings",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
-              ),
-              _AccountSettingButton(
-                label: "Personal information",
-                action: () {},
-                icon: Icon(Icons.person),
-              ),
-              _AccountSettingButton(
-                label: "Password and security",
-                action: () {},
-                icon: Icon(Icons.security),
-              ),
-              _AccountSettingButton(
-                label: "Languages",
-                action: () {},
-                icon: Icon(Icons.language),
-              ),
-              _AccountSettingButton(
-                label: "Notifications",
-                action: () {},
-                icon: Icon(Icons.notifications),
-              ),
-              _AccountSettingButton(
-                label: "Privacy and sharing",
-                action: () {},
-                icon: Icon(Icons.lock),
-              ),
-              _AccountSettingButton(
-                label: "Posts and stories",
-                action: () {},
-                icon: Icon(Icons.dynamic_feed),
-              ),
-              _AccountSettingButton(
-                label: "Themes",
-                action: () {},
-                icon: Icon(Icons.dark_mode),
-              ),
-            ],
-          ),
-        )
-      ],
+                _AccountSettingButton(
+                  label: "Personal information",
+                  action: () {},
+                  icon: Icon(Icons.person),
+                ),
+                _AccountSettingButton(
+                  label: "Password and security",
+                  action: () {},
+                  icon: Icon(Icons.security),
+                ),
+                _AccountSettingButton(
+                  label: "Languages",
+                  action: () {},
+                  icon: Icon(Icons.language),
+                ),
+                _AccountSettingButton(
+                  label: "Notifications",
+                  action: () {},
+                  icon: Icon(Icons.notifications),
+                ),
+                _AccountSettingButton(
+                  label: "Privacy and sharing",
+                  action: () {},
+                  icon: Icon(Icons.lock),
+                ),
+                _AccountSettingButton(
+                  label: "Posts and stories",
+                  action: () {},
+                  icon: Icon(Icons.dynamic_feed),
+                ),
+                _AccountSettingButton(
+                  label: "Themes",
+                  action: () {},
+                  icon: Icon(Icons.dark_mode),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }
 
 class _UserProfile extends ConsumerWidget {
-  final Function(PreferredSizeWidget?, Widget) navigateCallback;
+  final VoidCallback toMyProfileCallback;
 
   const _UserProfile({
-    required this.navigateCallback,
+    required this.toMyProfileCallback,
   });
 
   @override
@@ -141,7 +143,7 @@ class _UserProfile extends ConsumerWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
-          navigateCallback(null, MyProfileScreen());
+          toMyProfileCallback();
         },
         child: Container(
           child: Row(

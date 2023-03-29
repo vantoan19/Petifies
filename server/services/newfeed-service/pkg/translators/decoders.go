@@ -28,11 +28,15 @@ func DecodeListPostFeedsRequest(_ context.Context, request interface{}) (interfa
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
+	afterPostId, err := uuid.Parse(req.AfterPostId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
 
 	return &models.ListPostFeedsReq{
-		UserID:     id,
-		PageSize:   int(req.PageSize),
-		BeforeTime: req.BeforeTime.AsTime(),
+		UserID:      id,
+		PageSize:    int(req.PageSize),
+		AfterPostID: afterPostId,
 	}, nil
 }
 
@@ -66,11 +70,15 @@ func DecodeListStoryFeedsRequest(_ context.Context, request interface{}) (interf
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
+	afterStoryId, err := uuid.Parse(req.AfterStoryId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
 
 	return &models.ListStoryFeedsReq{
-		UserID:     id,
-		PageSize:   int(req.PageSize),
-		BeforeTime: req.BeforeTime.AsTime(),
+		UserID:       id,
+		PageSize:     int(req.PageSize),
+		AfterStoryID: afterStoryId,
 	}, nil
 }
 

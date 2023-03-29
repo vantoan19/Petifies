@@ -22,7 +22,7 @@ var logger = logging.New("MobileGateway.UserService")
 type UserConfiguration func(us *userService) error
 
 type userService struct {
-	userClient userclient.UserClient
+	userClient    userclient.UserClient
 	userCacheRepo repositories.UserCacheRepository
 }
 
@@ -66,11 +66,11 @@ func (s *userService) CreateUser(ctx context.Context, req *commonProto.CreateUse
 	}
 
 	// save to cache
-	go func ()  {
-		user, _ := translator.DecodeCreateUserResponse(ctx, resp)
+	go func() {
+		user, _ := translator.DecodeCreateUserResponse(context.Background(), resp)
 		userModel, ok := user.(models.User)
 		if ok {
-			err := s.userCacheRepo.SetUser(ctx, userModel.ID, userModel)
+			err := s.userCacheRepo.SetUser(context.Background(), userModel.ID, userModel)
 			if err != nil {
 				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 			}
@@ -92,12 +92,12 @@ func (s *userService) Login(ctx context.Context, req *commonProto.LoginRequest) 
 	}
 
 	// save to cache
-	go func ()  {
-		loginResp, _ := translator.DecodeLoginResponse(ctx, resp)
+	go func() {
+		loginResp, _ := translator.DecodeLoginResponse(context.Background(), resp)
 		loginRespModel, ok := loginResp.(models.LoginResp)
 		if ok {
-			if exist, err := s.userCacheRepo.ExistsUser(ctx, loginRespModel.User.ID); !exist && err == nil {
-				err := s.userCacheRepo.SetUser(ctx, loginRespModel.User.ID, loginRespModel.User)
+			if exist, err := s.userCacheRepo.ExistsUser(context.Background(), loginRespModel.User.ID); !exist && err == nil {
+				err := s.userCacheRepo.SetUser(context.Background(), loginRespModel.User.ID, loginRespModel.User)
 				if err != nil {
 					logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 				}
@@ -152,8 +152,8 @@ func (s *userService) GetMyInfo(ctx context.Context) (*models.User, error) {
 			return nil, err
 		}
 		// save to cache
-		go func ()  {
-			err := s.userCacheRepo.SetUser(ctx, userID, *resp)
+		go func() {
+			err := s.userCacheRepo.SetUser(context.Background(), userID, *resp)
 			if err != nil {
 				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 			}
@@ -189,8 +189,8 @@ func (s *userService) GetUser(ctx context.Context, userID uuid.UUID) (*models.Us
 			return nil, err
 		}
 		// save to cache
-		go func ()  {
-			err := s.userCacheRepo.SetUser(ctx, userID, *resp)
+		go func() {
+			err := s.userCacheRepo.SetUser(context.Background(), userID, *resp)
 			if err != nil {
 				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 			}

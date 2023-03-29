@@ -95,6 +95,8 @@ services:
   central-cache:
     image: redis:7
     restart: "always"
+    ports: 
+      - "6379:6379"
     volumes: 
       - ../db-data/central-cache:/data
     networks:

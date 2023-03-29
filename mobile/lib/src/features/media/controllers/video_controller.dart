@@ -4,14 +4,14 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mobile/src/exceptions/failure.dart';
-import 'package:mobile/src/features/post/repository/file_repository.dart';
+import 'package:mobile/src/features/media/repositores/file_repository.dart';
 import 'package:mobile/src/models/video.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final videoControllerProvider =
-    AsyncNotifierProvider.autoDispose<VideoController, NetworkVideoModel?>(
-        VideoController.new);
+part 'video_controller.g.dart';
 
-class VideoController extends AutoDisposeAsyncNotifier<NetworkVideoModel?> {
+@Riverpod(keepAlive: false)
+class VideoController extends _$VideoController {
   @override
   FutureOr<NetworkVideoModel?> build() {
     return null;

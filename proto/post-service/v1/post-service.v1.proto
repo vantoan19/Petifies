@@ -64,6 +64,14 @@ message LoveReactRequest {
     bool is_target_post = 3;
 }
 
+message RemoveLoveReactRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    string author_id = 2 [(validate.rules).string.uuid = true];
+    bool is_target_post = 3;
+}
+
+message RemoveLoveReactResponse {}
+
 message GetLoveCountRequest {
     string target_id = 1 [(validate.rules).string.uuid = true];
     bool is_post_target = 2;
@@ -90,10 +98,35 @@ message GetCommentRequest {
     string comment_id = 1 [(validate.rules).string.uuid = true];
 }
 
+message GetLoveRequest {
+    string author_id = 1 [(validate.rules).string.uuid = true];
+    string target_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message ListCommentIDsByParentIDRequest {
+    string parent_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_comment_id = 3;
+}
+
+message ListCommentIDsByParentIDResponse {
+    repeated string comment_ids = 1;
+    string next_page_token = 2;
+}
+
+message ListCommentAncestorsRequest {
+    string comment_id = 1;
+}
+
+message ListCommentAncestorsResponse {
+    repeated Comment ancestor_comments = 1;
+}
+
 service PostService {
     rpc CreatePost(CreatePostRequest) returns (Post) {}
     rpc CreateComment(CreateCommentRequest) returns (Comment) {}
     rpc LoveReact(LoveReactRequest) returns (Love) {}
+    rpc RemoveLoveReact(RemoveLoveReactRequest) returns (RemoveLoveReactResponse) {}
     rpc EditPost(EditPostRequest) returns (Post) {}
     rpc EditComment(EditCommentRequest) returns (Comment) {}
     rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse) {}
@@ -101,4 +134,8 @@ service PostService {
     rpc GetLoveCount (GetLoveCountRequest) returns (GetLoveCountReponse) {}
     rpc GetCommentCount (GetCommentCountRequest) returns (GetCommentCountReponse) {}
     rpc GetPost(GetPostRequest) returns (Post) {}
+    rpc GetLove(GetLoveRequest) returns (Love) {}
+    rpc ListCommentIDsByParentID(ListCommentIDsByParentIDRequest) returns (ListCommentIDsByParentIDResponse) {}
+    rpc GetComment(GetCommentRequest) returns (Comment) {}
+    rpc ListCommentAncestors(ListCommentAncestorsRequest) returns (ListCommentAncestorsResponse) {}
 }

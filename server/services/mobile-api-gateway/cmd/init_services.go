@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	feedservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/feed"
 	postservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/post"
 	relationshipservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/relationship"
 	userservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
@@ -9,6 +10,7 @@ import (
 var PostService postservice.PostService
 var RelationshipService relationshipservice.RelationshipService
 var UserService userservice.UserService
+var FeedService feedservice.FeedService
 
 func initUserService() error {
 	logger.Info("Start initUserService")
@@ -52,6 +54,7 @@ func initPostService() error {
 		UserService,
 		postservice.WithRedisPostCacheRepository(RedisClient),
 		postservice.WithRedisCommentCacheRepository(RedisClient),
+		postservice.WithRedisLoveCacheRepository(RedisClient),
 	)
 	if err != nil {
 		return err
@@ -59,5 +62,22 @@ func initPostService() error {
 
 	logger.Info("Finished initPostService: SUCCESSFUL")
 	PostService = service
+	return nil
+}
+
+func initFeedService() error {
+	logger.Info("Start initPostService")
+
+	service, err := feedservice.NewFeedService(
+		NewfeedServiceConn,
+		PostService,
+		feedservice.WithRedisFeedCacheRepository(RedisClient),
+	)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Finished initPostService: SUCCESSFUL")
+	FeedService = service
 	return nil
 }

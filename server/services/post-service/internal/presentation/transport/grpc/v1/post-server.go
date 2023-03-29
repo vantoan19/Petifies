@@ -12,17 +12,21 @@ import (
 )
 
 type gRPCPostServer struct {
-	createPost      grpctransport.Handler
-	createComment   grpctransport.Handler
-	loveReact       grpctransport.Handler
-	editPost        grpctransport.Handler
-	editComment     grpctransport.Handler
-	listComments    grpctransport.Handler
-	listPosts       grpctransport.Handler
-	getLoveCount    grpctransport.Handler
-	getCommentCount grpctransport.Handler
-	getPost         grpctransport.Handler
-	getComment      grpctransport.Handler
+	createPost               grpctransport.Handler
+	createComment            grpctransport.Handler
+	loveReact                grpctransport.Handler
+	editPost                 grpctransport.Handler
+	editComment              grpctransport.Handler
+	listComments             grpctransport.Handler
+	listPosts                grpctransport.Handler
+	getLoveCount             grpctransport.Handler
+	getCommentCount          grpctransport.Handler
+	getPost                  grpctransport.Handler
+	getComment               grpctransport.Handler
+	removeLoveReact          grpctransport.Handler
+	getLove                  grpctransport.Handler
+	listCommentIDsByParentID grpctransport.Handler
+	listCommentAncestors     grpctransport.Handler
 }
 
 func NewPostServer(endpoints endpointsV1.PostEndpoints) postProtoV1.PostServiceServer {
@@ -81,6 +85,26 @@ func NewPostServer(endpoints endpointsV1.PostEndpoints) postProtoV1.PostServiceS
 			endpoints.GetPost,
 			translators.DecodeGetPostRequest,
 			translators.EncodePostResponse,
+		),
+		getLove: grpctransport.NewServer(
+			endpoints.GetLove,
+			translators.DecodeGetLoveRequest,
+			translators.EncodeLoveResponse,
+		),
+		removeLoveReact: grpctransport.NewServer(
+			endpoints.RemoveLoveReact,
+			translators.DecodeRemoveLoveReactRequest,
+			translators.EncodeRemoveLoveReactResponse,
+		),
+		listCommentIDsByParentID: grpctransport.NewServer(
+			endpoints.ListCommentIDsByParentID,
+			translators.DecodeListCommentIDsByParentIDRequest,
+			translators.EncodeListCommentIDsByParentIDResponse,
+		),
+		listCommentAncestors: grpctransport.NewServer(
+			endpoints.ListCommentAncestors,
+			translators.DecodeListCommentAncestorsRequest,
+			translators.EncodeListCommentAncestorsResponse,
 		),
 	}
 }
@@ -171,4 +195,36 @@ func (s *gRPCPostServer) GetComment(ctx context.Context, req *postProtoV1.GetCom
 		return nil, err
 	}
 	return resp.(*commonProto.Comment), nil
+}
+
+func (s *gRPCPostServer) RemoveLoveReact(ctx context.Context, req *postProtoV1.RemoveLoveReactRequest) (*postProtoV1.RemoveLoveReactResponse, error) {
+	_, resp, err := s.removeLoveReact.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*postProtoV1.RemoveLoveReactResponse), nil
+}
+
+func (s *gRPCPostServer) GetLove(ctx context.Context, req *postProtoV1.GetLoveRequest) (*commonProto.Love, error) {
+	_, resp, err := s.getLove.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*commonProto.Love), nil
+}
+
+func (s *gRPCPostServer) ListCommentIDsByParentID(ctx context.Context, req *postProtoV1.ListCommentIDsByParentIDRequest) (*postProtoV1.ListCommentIDsByParentIDResponse, error) {
+	_, resp, err := s.listCommentIDsByParentID.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*postProtoV1.ListCommentIDsByParentIDResponse), nil
+}
+
+func (s *gRPCPostServer) ListCommentAncestors(ctx context.Context, req *postProtoV1.ListCommentAncestorsRequest) (*postProtoV1.ListCommentAncestorsResponse, error) {
+	_, resp, err := s.listCommentIDsByParentID.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*postProtoV1.ListCommentAncestorsResponse), nil
 }

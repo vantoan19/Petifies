@@ -34,7 +34,7 @@ class Petifies extends ConsumerWidget {
       title: 'Petifies',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: Locale('vi', ''),
+      locale: Locale('en', ''),
       theme: Themes.darkModeAppTheme,
       home: isLoading
           ? Center(

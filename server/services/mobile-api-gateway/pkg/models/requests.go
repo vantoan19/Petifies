@@ -37,3 +37,8 @@ type UserEditCommentReq struct {
 	Image     models.Image
 	Video     models.Video
 }
+
+type UserToggleLoveReq struct {
+	TargetID     uuid.UUID
+	IsPostTarget bool
+}

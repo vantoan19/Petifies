@@ -17,17 +17,20 @@ import (
 var logger = logging.New("PostClient")
 
 type postClient struct {
-	createPost      endpoint.Endpoint
-	createComment   endpoint.Endpoint
-	loveReact       endpoint.Endpoint
-	editPost        endpoint.Endpoint
-	editComment     endpoint.Endpoint
-	listComments    endpoint.Endpoint
-	listPosts       endpoint.Endpoint
-	getLoveCount    endpoint.Endpoint
-	getCommentCount endpoint.Endpoint
-	getPost         endpoint.Endpoint
-	getComment      endpoint.Endpoint
+	createPost               endpoint.Endpoint
+	createComment            endpoint.Endpoint
+	loveReact                endpoint.Endpoint
+	editPost                 endpoint.Endpoint
+	editComment              endpoint.Endpoint
+	listComments             endpoint.Endpoint
+	listPosts                endpoint.Endpoint
+	getLoveCount             endpoint.Endpoint
+	getCommentCount          endpoint.Endpoint
+	getPost                  endpoint.Endpoint
+	getComment               endpoint.Endpoint
+	removeLoveReact          endpoint.Endpoint
+	getLove                  endpoint.Endpoint
+	listCommentIDsByParentID endpoint.Endpoint
 }
 
 type PostClient interface {
@@ -42,6 +45,9 @@ type PostClient interface {
 	GetCommentCount(ctx context.Context, req *models.GetCommentCountReq) (*models.GetCommentCountResp, error)
 	GetPost(ctx context.Context, req *models.GetPostReq) (*models.Post, error)
 	GetComment(ctx context.Context, req *models.GetCommentReq) (*models.Comment, error)
+	RemoveLoveReact(ctx context.Context, req *models.RemoveLoveReactReq) (*models.RemoveLoveReactResp, error)
+	GetLove(ctx context.Context, req *models.GetLoveReq) (*models.Love, error)
+	ListCommentIDsByParentID(ctx context.Context, req *models.ListCommentIDsByParentIDReq) (*models.ListCommentIDsByParentIDResp, error)
 }
 
 func New(conn *grpc.ClientConn) PostClient {
@@ -133,6 +139,30 @@ func New(conn *grpc.ClientConn) PostClient {
 			translators.EncodeGetCommentRequest,
 			translators.DecodeCommentResponse,
 			commonProto.Comment{},
+		).Endpoint(),
+		removeLoveReact: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"RemoveLoveReact",
+			translators.EncodeRemoveLoveReactRequest,
+			translators.DecodeRemoveLoveReactResponse,
+			postProtoV1.RemoveLoveReactResponse{},
+		).Endpoint(),
+		getLove: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"GetLove",
+			translators.EncodeGetLoveRequest,
+			translators.DecodeLoveResponse,
+			commonProto.Love{},
+		).Endpoint(),
+		listCommentIDsByParentID: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"ListCommentIDsByParentID",
+			translators.EncodeListCommentIDsByParentIDRequest,
+			translators.DecodeListCommentIDsByParentIDResponse,
+			postProtoV1.ListCommentIDsByParentIDResponse{},
 		).Endpoint(),
 	}
 }
@@ -278,4 +308,43 @@ func (pc *postClient) GetComment(ctx context.Context, req *models.GetCommentReq)
 
 	logger.Info("Finish GetComment: Successful")
 	return resp.(*models.Comment), nil
+}
+
+func (pc *postClient) RemoveLoveReact(ctx context.Context, req *models.RemoveLoveReactReq) (*models.RemoveLoveReactResp, error) {
+	logger.Info("Start RemoveLoveReact")
+
+	resp, err := pc.removeLoveReact(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish RemoveLoveReact: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish RemoveLoveReact: Successful")
+	return resp.(*models.RemoveLoveReactResp), nil
+}
+
+func (pc *postClient) GetLove(ctx context.Context, req *models.GetLoveReq) (*models.Love, error) {
+	logger.Info("Start GetLove")
+
+	resp, err := pc.getLove(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish GetLove: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish GetLove: Successful")
+	return resp.(*models.Love), nil
+}
+
+func (pc *postClient) ListCommentIDsByParentID(ctx context.Context, req *models.ListCommentIDsByParentIDReq) (*models.ListCommentIDsByParentIDResp, error) {
+	logger.Info("Start ListCommentsByParentID")
+
+	resp, err := pc.listCommentIDsByParentID(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish ListCommentsByParentID: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListCommentsByParentID: Successful")
+	return resp.(*models.ListCommentIDsByParentIDResp), nil
 }

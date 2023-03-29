@@ -78,9 +78,9 @@ func registerServices(grpcServer *grpc.Server) {
 	publicProtoV1.RegisterPublicGatewayServer(grpcServer, grpcServers.NewPublicServer(userEndpoints))
 	authProtoV1.RegisterAuthGatewayServer(grpcServer, grpcServers.NewAuthServer(
 		cmd.MediaServiceConn,
-		cmd.NewfeedServiceConn,
 		cmd.PostService,
 		cmd.RelationshipService,
+		cmd.FeedService,
 		userEndpoints,
 		postEndpoints,
 	))

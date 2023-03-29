@@ -1,136 +1,98 @@
-import 'package:carousel_slider/carousel_slider.dart';
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:mobile/src/models/image.dart';
-import 'package:mobile/src/models/video.dart';
-import 'package:mobile/src/theme/themes.dart';
-import 'package:mobile/src/widgets/videos/video.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/widgets/media_view/media_view.dart';
+import 'package:mobile/src/widgets/posts/post.dart';
+import 'package:mobile/src/widgets/posts/uploading_post.dart';
 import 'package:video_player/video_player.dart';
 
-class PostBody extends StatelessWidget {
-  final String? textContent;
-  final List<NetworkImageModel>? images;
-  final List<NetworkVideoModel>? videos;
+class PostBody extends ConsumerWidget {
+  final bool isUploadingPost;
 
-  const PostBody(
-      {super.key,
-      this.textContent = null,
-      this.images = null,
-      this.videos = null});
+  const PostBody({
+    required this.isUploadingPost,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    String? textContent;
+    List<String>? imageURLs;
+    List<String>? videoURLs;
+    List<File>? imageFiles;
+    List<VideoPlayerController>? videoControllers;
+
+    if (isUploadingPost) {
+      textContent = ref
+          .watch(uploadingPostInfoProvider.select((info) => info.textContent));
+      imageURLs = null;
+      videoURLs = null;
+      imageFiles =
+          ref.watch(uploadingPostInfoProvider.select((info) => info.images));
+      videoControllers =
+          ref.watch(uploadingPostInfoProvider.select((info) => info.videos));
+    } else {
+      textContent =
+          ref.watch(postInfoProvider.select((info) => info.textContent));
+      imageURLs = ref
+              .watch(postInfoProvider.select((info) => info.images))
+              ?.map((e) => e.uri)
+              .toList() ??
+          null;
+      videoURLs = ref
+              .watch(postInfoProvider.select((info) => info.videos))
+              ?.map((e) => e.uri)
+              .toList() ??
+          null;
+      imageFiles = null;
+      videoControllers = null;
+    }
+
+    bool onlyText = (imageURLs == null || imageURLs.length == 0) &
+        (videoURLs == null || videoURLs.length == 0) &
+        (imageFiles == null || imageFiles.length == 0) &
+        (videoControllers == null || videoControllers.length == 0);
+
+    bool onlyMedia = (textContent == null);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 18, 0, 8),
+      padding: const EdgeInsets.fromLTRB(0, 20, 0, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Text Content
-          if (textContent != null)
+          if (textContent != null && textContent != "")
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 12, 18),
-              child: Text(
-                textContent!,
-                style: TextStyle(
-                  fontSize: 16,
+              padding: EdgeInsets.fromLTRB(
+                Constants.horizontalScreenPadding + 4,
+                0,
+                Constants.horizontalScreenPadding,
+                onlyText ? 0 : 16,
+              ),
+              child: Align(
+                child: Text(
+                  textContent,
+                  style: TextStyle(
+                    fontSize: onlyText ? 24 : 18,
+                  ),
                 ),
+                alignment: Alignment.topLeft,
               ),
             ),
           // Image & Video content
-          if (images != null || videos != null)
-            CarouselSlider.builder(
-              options: CarouselOptions(
-                aspectRatio: 6 / 4,
-                height: MediaQuery.of(context).size.width,
-                enableInfiniteScroll: false,
-                enlargeCenterPage: true,
-                disableCenter: true,
-                viewportFraction: 1.0,
-              ),
-              itemCount: ((images != null) ? images!.length : 0) +
-                  (videos != null ? videos!.length : 0),
-              itemBuilder:
-                  (BuildContext context, int itemIndex, int pageViewIndex) {
-                if (images != null && itemIndex < images!.length) {
-                  return Container(
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                      color: Themes.blackColor,
-                    ),
-                    child: Image.network(
-                      images![itemIndex].uri,
-                      loadingBuilder: (context, child, loadingProgress) =>
-                          (loadingProgress == null)
-                              ? child
-                              : CircularProgressIndicator(),
-                      fit: BoxFit.contain,
-                    ),
-                  );
-                } else {
-                  return Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: EdgeInsets.symmetric(horizontal: 5.0),
-                    child: VideoWidget(
-                      videoPlayerController: VideoPlayerController.network(
-                        videos![itemIndex -
-                                (images != null ? images!.length : 0)]
-                            .uri,
-                      ),
-                      isAutoplaying: true,
-                      isLooping: true,
-                    ),
-                  );
-                }
-              },
-              // Images
-              // if (images != null)
-              //   ...images!
-              //       .map(
-              //         (image) => Builder(
-              //           builder: (BuildContext context) {
-              //             return Container(
-              //               width: MediaQuery.of(context).size.width,
-              //               decoration: BoxDecoration(
-              //                 color: Themes.blackColor,
-              //               ),
-              //               child: AspectRatio(
-              //                 aspectRatio: 4 / 6,
-              //                 child: Image.network(
-              //                   image.uri,
-              //                   loadingBuilder:
-              //                       (context, child, loadingProgress) =>
-              //                           (loadingProgress == null)
-              //                               ? child
-              //                               : CircularProgressIndicator(),
-              //                   fit: BoxFit.fitWidth,
-              //                 ),
-              //               ),
-              //             );
-              //           },
-              //         ),
-              //       )
-              //       .toList(),
-              // Videos
-              // if (videos != null)
-              //   ...videos!.map(
-              //     (video) => Builder(
-              //       builder: (BuildContext context) {
-              //         return Container(
-              //           width: MediaQuery.of(context).size.width,
-              //           margin: EdgeInsets.symmetric(horizontal: 5.0),
-              //           child: VideoWidget(
-              //             videoPlayerController:
-              //                 VideoPlayerController.network(
-              //               video.uri,
-              //             ),
-              //             isAutoplaying: true,
-              //             isLooping: true,
-              //           ),
-              //         );
-              //       },
-              //     ),
-              //   )
-              // ],
-            )
+          if ((imageURLs != null && imageURLs.length > 0) ||
+              (videoURLs != null && videoURLs.length > 0) ||
+              (imageFiles != null && imageFiles.length > 0) ||
+              (videoControllers != null && videoControllers.length > 0))
+            MediaView(
+              imageUrls: imageURLs != null ? imageURLs : [],
+              videoUrls: videoURLs != null ? videoURLs : [],
+              imageFiles: imageFiles,
+              videoControllers: videoControllers,
+              isClickable: !isUploadingPost,
+            ),
         ],
       ),
     );

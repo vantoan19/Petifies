@@ -2,17 +2,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:mobile/src/exceptions/failure.dart';
-import 'package:mobile/src/models/image.dart';
 import 'package:mobile/src/theme/themes.dart';
 
-class ImageViewer extends StatelessWidget {
+class ImageUploadViewer extends StatelessWidget {
   final File image;
   final String uploaderID;
   final VoidCallback removeAction;
 
-  const ImageViewer({
+  const ImageUploadViewer({
     Key? key,
     required this.image,
     required this.uploaderID,
@@ -38,8 +35,8 @@ class ImageViewer extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Container(
-                    width: 30,
-                    height: 30,
+                    width: 23,
+                    height: 23,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Themes.whiteColor,
@@ -47,7 +44,7 @@ class ImageViewer extends StatelessWidget {
                     child: Icon(
                       Icons.cancel,
                       color: Themes.blackColor,
-                      size: 30,
+                      size: 22,
                     ),
                   ),
                 ),
@@ -55,7 +52,7 @@ class ImageViewer extends StatelessWidget {
             ],
           ),
         ),
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
     );
   }

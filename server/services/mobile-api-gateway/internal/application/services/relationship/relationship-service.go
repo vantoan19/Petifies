@@ -65,19 +65,19 @@ func (rs *relationshipService) AddRelationship(ctx context.Context, req *models.
 	// caching
 	go func() {
 		if req.RelationshipType == "FOLLOW" {
-			fromUserFollowings, err := rs.relationshipClient.ListFollowings(ctx, req.FromUserID)
+			fromUserFollowings, err := rs.relationshipClient.ListFollowings(context.Background(), req.FromUserID)
 			if err == nil {
-				err = rs.relationshipCacheRepo.SetFollowingsInfo(ctx, req.FromUserID, fromUserFollowings)
-                if err != nil {
-                    logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-                }
+				err = rs.relationshipCacheRepo.SetFollowingsInfo(context.Background(), req.FromUserID, fromUserFollowings)
+				if err != nil {
+					logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+				}
 			}
-			toUserFollowers, err := rs.relationshipClient.ListFollowers(ctx, req.FromUserID)
+			toUserFollowers, err := rs.relationshipClient.ListFollowers(context.Background(), req.FromUserID)
 			if err == nil {
-				err = rs.relationshipCacheRepo.SetFollowersInfo(ctx, req.ToUserID, toUserFollowers)
-                if err != nil {
-                    logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-                }
+				err = rs.relationshipCacheRepo.SetFollowersInfo(context.Background(), req.ToUserID, toUserFollowers)
+				if err != nil {
+					logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+				}
 			}
 		}
 	}()
@@ -98,19 +98,19 @@ func (rs *relationshipService) RemoveRelationship(ctx context.Context, req *mode
 	// caching
 	go func() {
 		if req.RelationshipType == "FOLLOW" {
-			fromUserFollowings, err := rs.relationshipClient.ListFollowings(ctx, req.FromUserID)
+			fromUserFollowings, err := rs.relationshipClient.ListFollowings(context.Background(), req.FromUserID)
 			if err == nil {
-				err = rs.relationshipCacheRepo.SetFollowingsInfo(ctx, req.FromUserID, fromUserFollowings)
-                if err != nil {
-                    logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-                }
+				err = rs.relationshipCacheRepo.SetFollowingsInfo(context.Background(), req.FromUserID, fromUserFollowings)
+				if err != nil {
+					logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+				}
 			}
-			toUserFollowers, err := rs.relationshipClient.ListFollowers(ctx, req.FromUserID)
+			toUserFollowers, err := rs.relationshipClient.ListFollowers(context.Background(), req.FromUserID)
 			if err == nil {
-				err = rs.relationshipCacheRepo.SetFollowersInfo(ctx, req.ToUserID, toUserFollowers)
-                if err != nil {
-                    logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-                }
+				err = rs.relationshipCacheRepo.SetFollowersInfo(context.Background(), req.ToUserID, toUserFollowers)
+				if err != nil {
+					logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
+				}
 			}
 		}
 	}()
@@ -146,8 +146,8 @@ func (rs *relationshipService) ListFollowers(ctx context.Context, req *models.Li
 
 		// save to cache
 		go func() {
-			err := rs.relationshipCacheRepo.SetFollowersInfo(ctx, req.UserID, resp)
-            if err != nil {
+			err := rs.relationshipCacheRepo.SetFollowersInfo(context.Background(), req.UserID, resp)
+			if err != nil {
 				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 			}
 		}()
@@ -186,8 +186,8 @@ func (rs *relationshipService) ListFollowings(ctx context.Context, req *models.L
 
 		// save to cache
 		go func() {
-			err := rs.relationshipCacheRepo.SetFollowingsInfo(ctx, req.UserID, resp)
-            if err != nil {
+			err := rs.relationshipCacheRepo.SetFollowingsInfo(context.Background(), req.UserID, resp)
+			if err != nil {
 				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
 			}
 		}()

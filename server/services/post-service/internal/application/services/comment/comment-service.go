@@ -40,6 +40,9 @@ type CommentService interface {
 	GetLoveCount(ctx context.Context, commentID uuid.UUID) (int, error)
 	GetSubcommentCount(ctx context.Context, commentID uuid.UUID) (int, error)
 	GetComment(ctx context.Context, commentID uuid.UUID) (*commentaggre.Comment, error)
+	RemoveLoveReactComment(ctx context.Context, req *models.RemoveLoveReactReq) error
+	ListCommentsByParentID(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*commentaggre.Comment, error)
+	ListCommentAncestors(ctx context.Context, commentID uuid.UUID) ([]*commentaggre.Comment, error)
 }
 
 func NewCommentService(cfgs ...CommentConfiguration) (CommentService, error) {
@@ -137,10 +140,6 @@ func (cs *commentService) LoveReactComment(ctx context.Context, req *models.Love
 	if err != nil {
 		logger.ErrorData("Finish LoveReactComment: Failed", logging.Data{"error": err.Error()})
 		return nil, err
-	}
-	if love == nil {
-		logger.ErrorData("Finish LoveReactComment: Failed", logging.Data{"error": err.Error()})
-		return nil, status.Errorf(codes.Internal, "failed to react post")
 	}
 
 	logger.Info("Finish LoveReactComment: Successful")
@@ -256,4 +255,56 @@ func (cs *commentService) GetComment(ctx context.Context, commentID uuid.UUID) (
 
 	logger.Info("Finish GetComment: Successful")
 	return comment, nil
+}
+
+func (cs *commentService) RemoveLoveReactComment(ctx context.Context, req *models.RemoveLoveReactReq) error {
+	logger.Info("RemoveLoveReactComment")
+
+	comment, err := cs.commentRepo.GetByUUID(ctx, req.TargetID)
+	if err != nil {
+		logger.ErrorData("Finish RemoveLoveReactComment: Failed", logging.Data{"error": err.Error()})
+		return err
+	}
+	err = comment.RemoveLoveByAuthorIDAndDelete(req.AuthorID, cs.loveRepo)
+	if err != nil {
+		logger.ErrorData("Finish RemoveLoveReactComment: Failed", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	if exists, err := cs.loveRepo.ExistsLoveByTargetIDAndAuthorID(ctx, req.AuthorID, req.TargetID); err != nil {
+		logger.ErrorData("Finish RemoveLoveReactComment: Failed", logging.Data{"error": err.Error()})
+		return err
+	} else if exists {
+		logger.ErrorData("Finish RemoveLoveReactComment: Failed", logging.Data{"error": "faiiled to remove react"})
+		return status.Errorf(codes.Internal, "failed to remove react")
+	}
+
+	logger.Info("Finish RemoveLoveReactComment: Successful")
+	return nil
+}
+
+func (cs *commentService) ListCommentsByParentID(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*commentaggre.Comment, error) {
+	logger.Info("ListCommentsByParentID")
+
+	comments, err := cs.commentRepo.GetByParentID(ctx, parentID, pageSize, afterCommentID)
+	if err != nil {
+		logger.ErrorData("Finish RemoveLoveReactComment: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListCommentsByParentID: Successful")
+	return comments, nil
+}
+
+func (cs *commentService) ListCommentAncestors(ctx context.Context, commentID uuid.UUID) ([]*commentaggre.Comment, error) {
+	logger.Info("ListCommentAncestors")
+
+	comments, err := cs.commentRepo.GetCommentAncestors(ctx, commentID)
+	if err != nil {
+		logger.ErrorData("Finish ListCommentAncestors: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListCommentAncestors: Successful")
+	return comments, nil
 }

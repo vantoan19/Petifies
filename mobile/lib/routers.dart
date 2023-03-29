@@ -4,7 +4,9 @@ import 'package:mobile/src/features/auth/screens/signin_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_form_screen.dart';
 import 'package:mobile/src/features/auth/screens/signup_screen.dart';
 import 'package:mobile/src/features/auth/screens/splash_screen.dart';
+import 'package:mobile/src/features/comment/screens/create_comment_screen.dart';
 import 'package:mobile/src/features/home/screens/home_screen.dart';
+import 'package:mobile/src/features/media/screens/media_full_page_screen.dart';
 import 'package:mobile/src/features/post/screens/create_post_screen.dart';
 
 Route onGenerateRoute(RouteSettings settings) {

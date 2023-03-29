@@ -7,7 +7,7 @@ import 'package:mobile/src/proto/common/common.pb.dart';
 import 'package:mobile/src/providers/service_providers.dart';
 import 'package:mobile/src/services/user_service.dart';
 
-final userRepositoryProvider = Provider(
+final userRepositoryProvider = Provider<IUserRepository>(
     (ref) => UserRepository(userService: ref.read(userServiceProvider)));
 
 abstract class IUserRepository {

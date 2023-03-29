@@ -55,6 +55,12 @@ type LoveReactReq struct {
 	IsTargetPost bool
 }
 
+type RemoveLoveReactReq struct {
+	TargetID     uuid.UUID
+	AuthorID     uuid.UUID
+	IsTargetPost bool
+}
+
 type ListCommentsReq struct {
 	CommentIDs []uuid.UUID
 }
@@ -78,5 +84,20 @@ type GetPostReq struct {
 }
 
 type GetCommentReq struct {
+	CommentID uuid.UUID
+}
+
+type GetLoveReq struct {
+	AuthorID uuid.UUID
+	TargetID uuid.UUID
+}
+
+type ListCommentIDsByParentIDReq struct {
+	ParentID       uuid.UUID
+	PageSize       int
+	AfterCommentID uuid.UUID
+}
+
+type ListCommentAncestorsReq struct {
 	CommentID uuid.UUID
 }

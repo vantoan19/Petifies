@@ -94,10 +94,9 @@ func (c *Comment) UpdateCommentTextContent(textContent valueobjects.TextContent)
 // AddLoveByAuthorIDAndSave adds a new love to the comment
 // and save the love to the db
 func (c *Comment) AddLoveByAuthorIDAndSave(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
-	if l, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID); l != nil || err != nil {
-		if err != nil {
-			return err
-		}
+	if exists, err := repo.ExistsLoveByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID); err != nil {
+		return err
+	} else if exists {
 		return ErrDuplicatedLove
 	}
 	loveAggre, err := loveaggre.NewLove(&models.Love{
@@ -123,12 +122,18 @@ func (c *Comment) AddLoveByAuthorIDAndSave(authorID uuid.UUID, repo loveaggre.Lo
 // RemoveLoveByAuthorIDAndDelete removes a Love from the comment
 // and delete the love int the db
 func (c *Comment) RemoveLoveByAuthorIDAndDelete(authorID uuid.UUID, repo loveaggre.LoveRepository) error {
+	if exists, err := repo.ExistsLoveByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID); err != nil {
+		return err
+	} else if !exists {
+		return ErrLoveNotExists
+	}
 	love, err := repo.GetByTargetIDAndAuthorID(context.Background(), authorID, c.comment.ID)
 	if err != nil {
 		return err
 	}
-	if love == nil {
-		return ErrLoveNotExists
+	err = repo.DeleteByUUID(context.Background(), love.GetID())
+	if err != nil {
+		return err
 	}
 
 	for i, l := range c.loves {

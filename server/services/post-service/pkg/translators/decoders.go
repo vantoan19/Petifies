@@ -310,6 +310,37 @@ func DecodeGetCommentCountResponse(_ context.Context, response interface{}) (int
 	}, nil
 }
 
+func DecodeRemoveLoveReactRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.RemoveLoveReactRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	targetID, err := uuid.Parse(req.GetTargetId())
+	if err != nil {
+		return nil, err
+	}
+	authorID, err := uuid.Parse(req.GetAuthorId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.RemoveLoveReactReq{
+		TargetID:     targetID,
+		AuthorID:     authorID,
+		IsTargetPost: req.GetIsTargetPost(),
+	}, nil
+}
+
+func DecodeRemoveLoveReactResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*postProtoV1.RemoveLoveReactResponse)
+	if !ok {
+		return nil, MustBeProtoRespErr
+	}
+
+	return &models.RemoveLoveReactResp{}, nil
+}
+
 func DecodeGetPostRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*postProtoV1.GetPostRequest)
 	if !ok {
@@ -339,6 +370,108 @@ func DecodeGetCommentRequest(_ context.Context, request interface{}) (interface{
 
 	return &models.GetCommentReq{
 		CommentID: commentID,
+	}, nil
+}
+
+func DecodeGetLoveRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.GetLoveRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	authorID, err := uuid.Parse(req.AuthorId)
+	if err != nil {
+		return nil, err
+	}
+
+	targetID, err := uuid.Parse(req.TargetId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.GetLoveReq{
+		AuthorID: authorID,
+		TargetID: targetID,
+	}, nil
+}
+
+func DecodeListCommentIDsByParentIDRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.ListCommentIDsByParentIDRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	parentID, err := uuid.Parse(req.ParentId)
+	if err != nil {
+		return nil, err
+	}
+	commentID, err := uuid.Parse(req.AfterCommentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListCommentIDsByParentIDReq{
+		ParentID:       parentID,
+		PageSize:       int(req.PageSize),
+		AfterCommentID: commentID,
+	}, nil
+}
+
+func DecodeListCommentIDsByParentIDResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*postProtoV1.ListCommentIDsByParentIDResponse)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	commentIDs := make([]uuid.UUID, 0)
+	for _, id_ := range resp.GetCommentIds() {
+		id, err := uuid.Parse(id_)
+		if err != nil {
+			return nil, err
+		}
+
+		commentIDs = append(commentIDs, id)
+	}
+
+	return &models.ListCommentIDsByParentIDResp{
+		CommentIDs: commentIDs,
+	}, nil
+}
+
+func DecodeListCommentAncestorsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*postProtoV1.ListCommentAncestorsRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	commentID, err := uuid.Parse(req.CommentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListCommentAncestorsReq{
+		CommentID: commentID,
+	}, nil
+}
+
+func DecodeListCommentAncestorsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*postProtoV1.ListCommentAncestorsResponse)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	comments := make([]*models.Comment, 0)
+	for _, c := range resp.AncestorComments {
+		comment, err := decodeCommentProtoModel(c)
+		if err != nil {
+			return nil, err
+		}
+
+		comments = append(comments, comment)
+	}
+
+	return &models.ListCommentAncestorsResp{
+		AncestorComments: comments,
 	}, nil
 }
 

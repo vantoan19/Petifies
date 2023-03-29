@@ -108,3 +108,20 @@ func DecodeUserEditCommentRequest(_ context.Context, request interface{}) (inter
 		Video:     postModels.Video{URL: req.Video.Uri, Description: req.Video.Description},
 	}, nil
 }
+
+func DecodeUserToggleLoveRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*authProtoV1.UserToggleLoveRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	targetID, err := uuid.Parse(req.TargetId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.UserToggleLoveReq{
+		TargetID:     targetID,
+		IsPostTarget: req.IsPostTarget,
+	}, nil
+}

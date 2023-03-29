@@ -57,7 +57,7 @@ func (u *UserAggregate) Unfollow(userID uuid.UUID) error {
 }
 
 func (u *UserAggregate) GetFollowings() []uuid.UUID {
-	return append(u.followings, u.user.ID)
+	return u.followings
 }
 
 func (u *UserAggregate) AddFollower(userID uuid.UUID) {
@@ -65,7 +65,7 @@ func (u *UserAggregate) AddFollower(userID uuid.UUID) {
 }
 
 func (u *UserAggregate) GetFollowers() []uuid.UUID {
-	return append(u.followers, u.user.ID)
+	return u.followers
 }
 
 // ========= Aggregate Root Getter =========

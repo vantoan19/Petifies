@@ -3,6 +3,7 @@ package mongo_comment
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -42,6 +43,23 @@ func New(client *mongo.Client) *CommentRepository {
 	}
 }
 
+func (cr *CommentRepository) GetByParentID(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*commentaggre.Comment, error) {
+	var comments []*commentaggre.Comment
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comments_, err := cr.GetByParentIDWithSession(ssCtx, parentID, pageSize, afterCommentID)
+		if err != nil {
+			return err
+		}
+		comments = comments_
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return comments, nil
+}
+
 func (cr *CommentRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
 	var comment *commentaggre.Comment
 	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
@@ -57,6 +75,23 @@ func (cr *CommentRepository) GetByUUID(ctx context.Context, id uuid.UUID) (*comm
 	}
 
 	return comment, nil
+}
+
+func (cr *CommentRepository) GetCommentAncestors(ctx context.Context, id uuid.UUID) ([]*commentaggre.Comment, error) {
+	var comments []*commentaggre.Comment
+	err := cr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
+		comments_, err := cr.GetCommentAncestorsWithSession(ssCtx, id)
+		if err != nil {
+			return err
+		}
+		comments = comments_
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 func (cr *CommentRepository) CountCommentByParentID(ctx context.Context, parentID uuid.UUID) (int, error) {
@@ -127,6 +162,44 @@ func (cr *CommentRepository) DeleteByUUID(ctx context.Context, id uuid.UUID) (*c
 	return comment, nil
 }
 
+func (cr *CommentRepository) GetByParentIDWithSession(ctx context.Context, parentID uuid.UUID, pageSize int, afterCommentID uuid.UUID) ([]*commentaggre.Comment, error) {
+	var createdAt time.Time
+
+	if afterCommentID == uuid.Nil {
+		createdAt = time.Now()
+	} else {
+		afterComment, err := cr.GetByUUID(ctx, afterCommentID)
+		if err != nil {
+			return nil, err
+		}
+		createdAt = afterComment.GetCreatedAt()
+	}
+
+	filter := bson.D{{Key: "parent_id", Value: parentID}, {Key: "created_at", Value: bson.D{{Key: "$lt", Value: createdAt}}}}
+	opts := options.Find().SetLimit(int64(pageSize)).SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := cr.commentCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var commentModels []models.Comment
+	if err = cursor.All(ctx, &commentModels); err != nil {
+		return nil, err
+	}
+
+	var comments []*commentaggre.Comment
+	for _, c := range commentModels {
+		comment, err := mapper.DbModelsToCommentAggregate(&c)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
+}
+
 func (cr *CommentRepository) GetByUUIDWithSession(ctx context.Context, id uuid.UUID) (*commentaggre.Comment, error) {
 	var comment models.Comment
 	err := cr.commentCollection.FindOne(ctx, bson.D{{Key: "id", Value: id}}).Decode(&comment)
@@ -142,6 +215,32 @@ func (cr *CommentRepository) GetByUUIDWithSession(ctx context.Context, id uuid.U
 		return nil, err
 	}
 	return result, nil
+}
+
+func (cr *CommentRepository) GetCommentAncestorsWithSession(ctx context.Context, id uuid.UUID) ([]*commentaggre.Comment, error) {
+	var comment models.Comment
+	err := cr.commentCollection.FindOne(ctx, bson.D{{Key: "id", Value: id}}).Decode(&comment)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrCommentNoExist
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	if comment.IsPostParent && comment.ParentID == comment.PostID {
+		return []*commentaggre.Comment{}, nil // Parent is post, return empty array
+	}
+
+	parentAncestors, err := cr.GetCommentAncestorsWithSession(ctx, comment.ParentID)
+	if err != nil {
+		return nil, err
+	}
+	parentComment, err := cr.GetByUUIDWithSession(ctx, comment.ParentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(parentAncestors, parentComment), nil
 }
 
 func (cr *CommentRepository) CountCommentByParentIDWithSession(ctx context.Context, parentID uuid.UUID) (int64, error) {

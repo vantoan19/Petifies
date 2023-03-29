@@ -7,43 +7,53 @@ import 'package:mobile/src/models/user_model.dart';
 import 'package:mobile/src/models/video.dart';
 import 'package:mobile/src/proto/google/protobuf/timestamp.pb.dart';
 
+import 'basic_user_info.dart';
+
 class PostModel {
-  final UserModel owner;
+  final String id;
+  final BasicUserInfoModel owner;
   final String postActivity;
   final DateTime createdAt;
   final String? textContent;
   final List<NetworkImageModel>? images;
   final List<NetworkVideoModel>? videos;
+  final bool hasReacted;
   final int loveCount;
   final int commentCount;
   PostModel({
+    required this.id,
     required this.owner,
     required this.postActivity,
     required this.createdAt,
     this.textContent = null,
     this.images = null,
     this.videos = null,
+    required this.hasReacted,
     required this.loveCount,
     required this.commentCount,
   });
 
   PostModel copyWith({
-    UserModel? owner,
+    String? id,
+    BasicUserInfoModel? owner,
     String? postActivity,
     DateTime? createdAt,
     String? textContent,
     List<NetworkImageModel>? images,
     List<NetworkVideoModel>? videos,
+    bool? hasReacted,
     int? loveCount,
     int? commentCount,
   }) {
     return PostModel(
+      id: id ?? this.id,
       owner: owner ?? this.owner,
       postActivity: postActivity ?? this.postActivity,
       createdAt: createdAt ?? this.createdAt,
       textContent: textContent ?? this.textContent,
       images: images ?? this.images,
       videos: videos ?? this.videos,
+      hasReacted: hasReacted ?? this.hasReacted,
       loveCount: loveCount ?? this.loveCount,
       commentCount: commentCount ?? this.commentCount,
     );
@@ -51,12 +61,14 @@ class PostModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'id': id,
       'owner': owner.toMap(),
       'postActivity': postActivity,
-      'createdAt': createdAt,
+      'createdAt': createdAt.millisecondsSinceEpoch,
       'textContent': textContent,
       'images': images?.map((x) => x.toMap()).toList(),
       'videos': videos?.map((x) => x.toMap()).toList(),
+      'hasReacted': hasReacted,
       'loveCount': loveCount,
       'commentCount': commentCount,
     };
@@ -64,9 +76,10 @@ class PostModel {
 
   factory PostModel.fromMap(Map<String, dynamic> map) {
     return PostModel(
-      owner: UserModel.fromMap(map['owner'] as Map<String, dynamic>),
+      id: map['id'] as String,
+      owner: BasicUserInfoModel.fromMap(map['owner'] as Map<String, dynamic>),
       postActivity: map['postActivity'] as String,
-      createdAt: map['createdAt'],
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       textContent:
           map['textContent'] != null ? map['textContent'] as String : null,
       images: map['images'] != null
@@ -83,6 +96,7 @@ class PostModel {
               ),
             )
           : null,
+      hasReacted: map['hasReacted'] as bool,
       loveCount: map['loveCount'] as int,
       commentCount: map['commentCount'] as int,
     );
@@ -95,7 +109,7 @@ class PostModel {
 
   @override
   String toString() {
-    return 'PostModel(owner: $owner, postActivity: $postActivity, createdAt: $createdAt, textContent: $textContent, images: $images, videos: $videos, loveCount: $loveCount, commentCount: $commentCount)';
+    return 'PostModel(id: $id, owner: $owner, postActivity: $postActivity, createdAt: $createdAt, textContent: $textContent, images: $images, videos: $videos, hasReacted: $hasReacted, loveCount: $loveCount, commentCount: $commentCount)';
   }
 
   @override
@@ -103,24 +117,28 @@ class PostModel {
     if (identical(this, other)) return true;
     final listEquals = const DeepCollectionEquality().equals;
 
-    return other.owner == owner &&
+    return other.id == id &&
+        other.owner == owner &&
         other.postActivity == postActivity &&
         other.createdAt == createdAt &&
         other.textContent == textContent &&
         listEquals(other.images, images) &&
         listEquals(other.videos, videos) &&
+        other.hasReacted == hasReacted &&
         other.loveCount == loveCount &&
         other.commentCount == commentCount;
   }
 
   @override
   int get hashCode {
-    return owner.hashCode ^
+    return id.hashCode ^
+        owner.hashCode ^
         postActivity.hashCode ^
         createdAt.hashCode ^
         textContent.hashCode ^
         images.hashCode ^
         videos.hashCode ^
+        hasReacted.hashCode ^
         loveCount.hashCode ^
         commentCount.hashCode;
   }

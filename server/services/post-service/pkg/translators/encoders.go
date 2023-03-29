@@ -253,6 +253,86 @@ func EncodeGetCommentRequest(_ context.Context, request interface{}) (interface{
 	}, nil
 }
 
+func EncodeRemoveLoveReactRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.RemoveLoveReactReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.RemoveLoveReactRequest{
+		TargetId:     req.TargetID.String(),
+		AuthorId:     req.AuthorID.String(),
+		IsTargetPost: req.IsTargetPost,
+	}, nil
+}
+
+func EncodeRemoveLoveReactResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*models.RemoveLoveReactResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &postProtoV1.RemoveLoveReactResponse{}, nil
+}
+
+func EncodeGetLoveRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.GetLoveReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.GetLoveRequest{
+		AuthorId: req.AuthorID.String(),
+		TargetId: req.TargetID.String(),
+	}, nil
+}
+
+func EncodeListCommentIDsByParentIDRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.ListCommentIDsByParentIDReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.ListCommentIDsByParentIDRequest{
+		ParentId:       req.ParentID.String(),
+		PageSize:       int32(req.PageSize),
+		AfterCommentId: req.AfterCommentID.String(),
+	}, nil
+}
+
+func EncodeListCommentIDsByParentIDResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListCommentIDsByParentIDResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &postProtoV1.ListCommentIDsByParentIDResponse{
+		CommentIds: utils.Map2(resp.CommentIDs, func(c uuid.UUID) string { return c.String() }),
+	}, nil
+}
+
+func EncodeListCommentAncestorsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.ListCommentAncestorsReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &postProtoV1.ListCommentAncestorsRequest{
+		CommentId: req.CommentID.String(),
+	}, nil
+}
+
+func EncodeListCommentAncestorsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListCommentAncestorsResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &postProtoV1.ListCommentAncestorsResponse{
+		AncestorComments: utils.Map2(resp.AncestorComments, func(c *models.Comment) *commonProto.Comment { return encodeCommentModel(c) }),
+	}, nil
+}
+
 func encodePostModel(post *models.Post) *commonProto.Post {
 	return &commonProto.Post{
 		Id:       post.ID.String(),

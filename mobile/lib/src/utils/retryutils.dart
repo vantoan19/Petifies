@@ -3,7 +3,7 @@ import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/providers/service_providers.dart';
 import 'package:mobile/src/providers/storages_provider.dart';
 import 'package:retry/retry.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RetryUtils {
   static Future<dynamic> RetryRefreshToken(Function fn, Ref ref) async {

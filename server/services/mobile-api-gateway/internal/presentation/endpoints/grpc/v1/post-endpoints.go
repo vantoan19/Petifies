@@ -10,18 +10,20 @@ import (
 )
 
 type PostEndpoints struct {
-	CreatePost    endpoint.Endpoint
-	CreateComment endpoint.Endpoint
-	EditPost      endpoint.Endpoint
-	EditComment   endpoint.Endpoint
+	CreatePost          endpoint.Endpoint
+	CreateComment       endpoint.Endpoint
+	EditPost            endpoint.Endpoint
+	EditComment         endpoint.Endpoint
+	UserToggleLoveReact endpoint.Endpoint
 }
 
 func NewPostEndpoints(s postService.PostService) PostEndpoints {
 	return PostEndpoints{
-		CreatePost:    makeCreatePostEndpoint(s),
-		CreateComment: makeCreateCommentEndpoint(s),
-		EditPost:      makeEditPostEndpoint(s),
-		EditComment:   makeEditCommentEndpoint(s),
+		CreatePost:          makeCreatePostEndpoint(s),
+		CreateComment:       makeCreateCommentEndpoint(s),
+		EditPost:            makeEditPostEndpoint(s),
+		EditComment:         makeEditCommentEndpoint(s),
+		UserToggleLoveReact: makeUserToggleLoveReactEndpoint(s),
 	}
 }
 
@@ -62,6 +64,17 @@ func makeEditCommentEndpoint(s postService.PostService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.UserEditCommentReq)
 		resp, err := s.EditComment(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
+	}
+}
+
+func makeUserToggleLoveReactEndpoint(s postService.PostService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.UserToggleLoveReq)
+		resp, err := s.ToggleLoveReactPost(ctx, req)
 		if err != nil {
 			return nil, err
 		}

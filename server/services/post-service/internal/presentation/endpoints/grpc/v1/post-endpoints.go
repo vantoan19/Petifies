@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/google/uuid"
 
 	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	commentservice "github.com/vantoan19/Petifies/server/services/post-service/internal/application/services/comment"
@@ -16,32 +17,39 @@ import (
 )
 
 type PostEndpoints struct {
-	CreatePost      endpoint.Endpoint
-	CreateComment   endpoint.Endpoint
-	LoveReact       endpoint.Endpoint
-	EditPost        endpoint.Endpoint
-	EditComment     endpoint.Endpoint
-	ListComments    endpoint.Endpoint
-	ListPosts       endpoint.Endpoint
-	GetLoveCount    endpoint.Endpoint
-	GetCommentCount endpoint.Endpoint
-	GetPost         endpoint.Endpoint
-	GetComment      endpoint.Endpoint
+	CreatePost               endpoint.Endpoint
+	CreateComment            endpoint.Endpoint
+	LoveReact                endpoint.Endpoint
+	RemoveLoveReact          endpoint.Endpoint
+	EditPost                 endpoint.Endpoint
+	EditComment              endpoint.Endpoint
+	ListComments             endpoint.Endpoint
+	ListPosts                endpoint.Endpoint
+	GetLoveCount             endpoint.Endpoint
+	GetCommentCount          endpoint.Endpoint
+	GetPost                  endpoint.Endpoint
+	GetComment               endpoint.Endpoint
+	GetLove                  endpoint.Endpoint
+	ListCommentIDsByParentID endpoint.Endpoint
+	ListCommentAncestors     endpoint.Endpoint
 }
 
 func NewPostEndpoints(ps postservice.PostService, cs commentservice.CommentService) PostEndpoints {
 	return PostEndpoints{
-		CreatePost:      makeCreatePostEndpoint(ps),
-		CreateComment:   makeCreateCommentEndpoint(cs),
-		LoveReact:       makeLoveReactEndpoint(ps, cs),
-		EditPost:        makeEditPostEndpoint(ps),
-		EditComment:     makeEditCommentEndpoint(cs),
-		ListComments:    makeListCommentsEndpoint(cs),
-		ListPosts:       makeListPostsEndpoint(ps),
-		GetLoveCount:    makeGetLoveCountEndpoint(ps, cs),
-		GetCommentCount: makeGetCommentCountEndpoint(ps, cs),
-		GetComment:      makeGetCommentEndpoint(cs),
-		GetPost:         makeGetPostEndpoint(ps),
+		CreatePost:               makeCreatePostEndpoint(ps),
+		CreateComment:            makeCreateCommentEndpoint(cs),
+		LoveReact:                makeLoveReactEndpoint(ps, cs),
+		EditPost:                 makeEditPostEndpoint(ps),
+		EditComment:              makeEditCommentEndpoint(cs),
+		ListComments:             makeListCommentsEndpoint(cs),
+		ListPosts:                makeListPostsEndpoint(ps),
+		GetLoveCount:             makeGetLoveCountEndpoint(ps, cs),
+		GetCommentCount:          makeGetCommentCountEndpoint(ps, cs),
+		GetComment:               makeGetCommentEndpoint(cs),
+		GetPost:                  makeGetPostEndpoint(ps),
+		RemoveLoveReact:          makeRemoveLoveReactEndpoint(ps, cs),
+		GetLove:                  makeGetLoveEndpoint(ps),
+		ListCommentIDsByParentID: makeListCommentIDsByParentIDEndpoint(cs),
 	}
 }
 
@@ -88,7 +96,7 @@ func makeLoveReactEndpoint(ps postservice.PostService, cs commentservice.Comment
 			}
 		}
 
-		return mapLoveEntityToLoveModel(result), nil
+		return mapLoveAggreToLoveModel(result), nil
 	}
 }
 
@@ -190,6 +198,9 @@ func makeGetPostEndpoint(ps postservice.PostService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.GetPostReq)
 		result, err := ps.GetPost(ctx, req.PostID)
+		if err != nil {
+			return nil, err
+		}
 
 		return mapPostAggregateToPostModel(result), err
 	}
@@ -199,8 +210,79 @@ func makeGetCommentEndpoint(cs commentservice.CommentService) endpoint.Endpoint 
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.GetCommentReq)
 		result, err := cs.GetComment(ctx, req.CommentID)
+		if err != nil {
+			return nil, err
+		}
 
 		return mapCommentAggregateToCommentModel(result), err
+	}
+}
+
+func makeRemoveLoveReactEndpoint(ps postservice.PostService, cs commentservice.CommentService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.RemoveLoveReactReq)
+
+		if req.IsTargetPost {
+			err = ps.RemoveLoveReactPost(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = cs.RemoveLoveReactComment(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &models.RemoveLoveReactResp{}, nil
+	}
+}
+
+func makeGetLoveEndpoint(ps postservice.PostService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.GetLoveReq)
+		result, err := ps.GetLove(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return mapLoveAggreToLoveModel(result), err
+	}
+}
+
+func makeListCommentIDsByParentIDEndpoint(cs commentservice.CommentService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.ListCommentIDsByParentIDReq)
+		results, err := cs.ListCommentsByParentID(ctx, req.ParentID, req.PageSize, req.AfterCommentID)
+		if err != nil {
+			return nil, err
+		}
+		var commenIDs []uuid.UUID
+		for _, p := range results {
+			commenIDs = append(commenIDs, p.GetID())
+		}
+
+		return &models.ListCommentIDsByParentIDResp{
+			CommentIDs: commenIDs,
+		}, nil
+	}
+}
+
+func makeListCommentAncestorsEndpoint(cs commentservice.CommentService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.ListCommentAncestorsReq)
+		results, err := cs.ListCommentAncestors(ctx, req.CommentID)
+		if err != nil {
+			return nil, err
+		}
+		var commentModels []*models.Comment
+		for _, p := range results {
+			commentModels = append(commentModels, mapCommentAggregateToCommentModel(p))
+		}
+
+		return &models.ListCommentAncestorsResp{
+			AncestorComments: commentModels,
+		}, nil
 	}
 }
 
@@ -248,7 +330,7 @@ func mapCommentAggregateToCommentModel(comment *commentaggre.Comment) *models.Co
 	}
 }
 
-func mapLoveEntityToLoveModel(love *loveaggre.Love) *models.Love {
+func mapLoveAggreToLoveModel(love *loveaggre.Love) *models.Love {
 	return &models.Love{
 		ID:           love.GetID(),
 		TargetID:     love.GetTargetID(),

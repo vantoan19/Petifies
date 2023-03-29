@@ -25,6 +25,7 @@ type PostWithUserInfo struct {
 	CommentCount int            `json:"comment_count"`
 	Visibility   string         `json:"visibility"`
 	Activity     string         `json:"activity"`
+	HasReacted   bool           `json:"has_reacted"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 }
@@ -39,7 +40,20 @@ type CommentWithUserInfo struct {
 	Image           models.Image  `json:"image"`
 	Video           models.Video  `json:"video"`
 	LoveCount       int           `json:"love_count"`
+	HasReacted      bool          `json:"has_reacted"`
 	SubcommentCount int           `json:"subcomment_count"`
 	CreatedAt       time.Time     `json:"created_at"`
 	UpdatedAt       time.Time     `json:"updated_at"`
+}
+
+type LoveWithUserInfo struct {
+	ID           uuid.UUID     `json:"id"`
+	TargetID     uuid.UUID     `json:"target_id"`
+	IsPostTarget bool          `json:"is_post_target"`
+	Author       BasicUserInfo `json:"author"`
+	CreatedAt    time.Time     `json:"created_at"`
+}
+
+type UserToggleLoveResp struct {
+	HasReacted bool
 }
