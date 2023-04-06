@@ -61,6 +61,8 @@ class ListCommentsController extends _$ListCommentsController {
               lastName: commentResp.author.lastName),
           createdAt: commentResp.createdAt.toDateTime(),
           postID: commentResp.postId,
+          parentID: commentResp.parentId,
+          isPostParent: commentResp.isPostParent,
           textContent: commentResp.content == "" ? null : commentResp.content,
           image: commentResp.image.uri == ""
               ? null

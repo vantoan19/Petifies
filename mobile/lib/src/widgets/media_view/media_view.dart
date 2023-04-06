@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:mobile/src/constants/constants.dart';
@@ -13,6 +14,7 @@ class MediaView extends StatefulWidget {
   final List<File>? imageFiles;
   final List<String> videoUrls;
   final List<VideoPlayerController>? videoControllers;
+  final double width;
 
   final bool isClickable;
 
@@ -22,6 +24,7 @@ class MediaView extends StatefulWidget {
     this.imageFiles = null,
     required this.videoUrls,
     this.videoControllers = null,
+    required this.width,
     required this.isClickable,
   }) : super(key: key);
 
@@ -49,14 +52,13 @@ class _MediaViewState extends State<MediaView> {
     final mediaLength = imagesLength + videosLength;
 
     Widget grid;
-
     switch (mediaLength) {
       // ==============================================
       // ================ Only 1 media ================
       // ==============================================
       case 1:
-        final mediaWidth = MediaQuery.of(context).size.width;
-        final maxMediaHeight = mediaWidth * 1.2;
+        final mediaWidth = widget.width;
+        final maxMediaHeight = min(mediaWidth * 1.5, 500.0);
         grid = (imagesLength > 0)
             ? ImageCard(
                 isRoundedTopLeft: true,
@@ -65,8 +67,6 @@ class _MediaViewState extends State<MediaView> {
                 isRoundedBottomRight: true,
                 width: mediaWidth,
                 maxHeight: maxMediaHeight,
-                padding: EdgeInsets.symmetric(
-                    horizontal: Constants.horizontalScreenPadding),
                 imageUrl:
                     widget.imageUrls.length > 0 ? widget.imageUrls[0] : "",
                 imageFile:
@@ -82,8 +82,6 @@ class _MediaViewState extends State<MediaView> {
                 isRoundedBottomRight: true,
                 width: mediaWidth,
                 maxHeight: maxMediaHeight,
-                padding: EdgeInsets.symmetric(
-                    horizontal: Constants.horizontalScreenPadding),
                 videoUrl:
                     widget.videoUrls.length > 0 ? widget.videoUrls[0] : "",
                 controller: (widget.videoControllers != null &&
@@ -99,13 +97,8 @@ class _MediaViewState extends State<MediaView> {
         // ==============================================
         // ================== 2 medias ==================
         // ==============================================
-        final mediaWidth = (MediaQuery.of(context).size.width -
-                Constants.horizontalScreenPadding * 2) /
-            2;
-        final mediaHeight = ((MediaQuery.of(context).size.width -
-                    Constants.horizontalScreenPadding * 2) /
-                2) *
-            1.4;
+        final mediaWidth = widget.width / 2;
+        final mediaHeight = mediaWidth * 1.4;
 
         List<Widget> children = [];
         for (int i = 0; i < 2; i++) {
@@ -149,27 +142,19 @@ class _MediaViewState extends State<MediaView> {
             ));
           }
         }
-        grid = Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: Constants.horizontalScreenPadding - 3),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
-            children: children,
-          ),
+        grid = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: children,
         );
         break;
       case 3:
         // ==============================================
         // ================== 3 medias ==================
         // ==============================================
-        final mediaWidth = (MediaQuery.of(context).size.width -
-                Constants.horizontalScreenPadding * 2) /
-            2;
-        final mediaHeight = ((MediaQuery.of(context).size.width -
-                    Constants.horizontalScreenPadding * 2) /
-                2) *
-            1.4;
+        final mediaWidth = widget.width / 2;
+        final mediaHeight = mediaWidth * 1.4;
+
         List<Widget> children = [];
         for (int i = 0; i < 3; i++) {
           if (i >= videosLength) {
@@ -222,34 +207,25 @@ class _MediaViewState extends State<MediaView> {
             ));
           }
         }
-        grid = Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: Constants.horizontalScreenPadding),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              children[0],
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [...children.sublist(1)],
-              )
-            ],
-          ),
+        grid = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            children[0],
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [...children.sublist(1)],
+            )
+          ],
         );
         break;
       case 4:
         // ==============================================
         // ================== 4 medias ==================
         // ==============================================
-        final mediaWidth = (MediaQuery.of(context).size.width -
-                Constants.horizontalScreenPadding * 2) /
-            2;
-        final mediaHeight = ((MediaQuery.of(context).size.width -
-                    Constants.horizontalScreenPadding * 2) /
-                2) *
-            0.7;
+        final mediaWidth = widget.width / 2;
+        final mediaHeight = mediaWidth * 0.7;
 
         List<Widget> children = [];
         for (int i = 0; i < 4; i++) {
@@ -293,25 +269,21 @@ class _MediaViewState extends State<MediaView> {
             ));
           }
         }
-        grid = Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: Constants.horizontalScreenPadding),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [children[0], children[2]],
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [children[1], children[3]],
-              )
-            ],
-          ),
+        grid = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [children[0], children[2]],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [children[1], children[3]],
+            )
+          ],
         );
         break;
       default:

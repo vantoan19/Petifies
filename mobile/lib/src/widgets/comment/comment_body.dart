@@ -4,25 +4,27 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile/src/constants/constants.dart';
-import 'package:mobile/src/widgets/comment/comment.dart';
-import 'package:mobile/src/widgets/comment/uploading_comment.dart';
+import 'package:mobile/src/providers/comment_providers.dart';
 import 'package:mobile/src/widgets/images/image_card.dart';
 import 'package:mobile/src/widgets/videos/video_player_card.dart';
 import 'package:video_player/video_player.dart';
 
 class CommentBody extends ConsumerWidget {
   final bool isUploadingComment;
+  final double width;
+  final double onlyTextFontSize;
+  final double normalFontSize;
 
   const CommentBody({
     Key? key,
     required this.isUploadingComment,
+    required this.width,
+    required this.onlyTextFontSize,
+    required this.normalFontSize,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mediaWidth = MediaQuery.of(context).size.width - 126;
-
     String? textContent;
     String? imageURL;
     String? videoURL;
@@ -69,7 +71,10 @@ class CommentBody extends ConsumerWidget {
             ),
             child: Text(
               textContent,
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: onlyText ? onlyTextFontSize : normalFontSize,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
             ),
           ),
         (imageURL != null || imageFile != null)
@@ -78,8 +83,8 @@ class CommentBody extends ConsumerWidget {
                 isRoundedTopRight: true,
                 isRoundedBottomLeft: true,
                 isRoundedBottomRight: true,
-                width: mediaWidth,
-                maxHeight: 400,
+                width: width,
+                maxHeight: 300,
                 imageUrl: imageURL ?? "",
                 imageFile: imageFile,
                 isClickable: !isUploadingComment,
@@ -94,8 +99,8 @@ class CommentBody extends ConsumerWidget {
                 videoUrl: videoURL ?? "",
                 controller: videoController,
                 autoPlay: true,
-                width: mediaWidth,
-                maxHeight: 400,
+                width: width,
+                maxHeight: 300,
                 playNextVideoCallback: () => {},
                 isClickable: !isUploadingComment,
               )

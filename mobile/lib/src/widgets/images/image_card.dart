@@ -4,11 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/media/screens/media_full_page_screen.dart';
-import 'package:mobile/src/models/basic_user_info.dart';
+import 'package:mobile/src/providers/comment_providers.dart';
+import 'package:mobile/src/providers/context_providers.dart';
+import 'package:mobile/src/providers/post_providers.dart';
 import 'package:mobile/src/utils/navigation.dart';
-import 'package:mobile/src/widgets/buttons/love_react_button.dart';
-import 'package:mobile/src/widgets/comment/comment.dart';
-import 'package:mobile/src/widgets/posts/post.dart';
 
 class ImageCard extends ConsumerWidget {
   final bool isRoundedTopLeft;
@@ -85,20 +84,10 @@ class ImageCard extends ConsumerWidget {
               useSafeArea: true,
               barrierColor: Theme.of(context).scaffoldBackgroundColor,
               builder: (context) {
-                final isPostTarget = ref.read(isPostContextProvider);
-                return ProviderScope(
-                  overrides: [
-                    isPostContextProvider.overrideWithValue(isPostTarget),
-                    postInfoProvider
-                        .overrideWithValue(ref.read(postInfoProvider)),
-                    if (!isPostTarget)
-                      commentInfoProvider
-                          .overrideWithValue(ref.read(commentInfoProvider)),
-                  ],
-                  child: MediaFullPageScreen(
-                    mediaUrl: imageUrl,
-                    isMediaImage: true,
-                  ),
+                return NavigatorUtil.showMediaFullPageBottomSheet(
+                  ref: ref,
+                  mediaUrl: imageUrl,
+                  isMediaImage: true,
                 );
               });
         },

@@ -71,6 +71,8 @@ class CommentRepository implements ICommentRepository {
         id: resp.id,
         owner: author,
         postID: resp.postId,
+        parentID: resp.parentId,
+        isPostParent: resp.isPostParent,
         createdAt: resp.createdAt.toDateTime(),
         textContent: resp.content == "" ? null : resp.content,
         image: resp.image.uri == ""

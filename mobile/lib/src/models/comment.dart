@@ -9,6 +9,8 @@ import 'basic_user_info.dart';
 class CommentModel {
   final String id;
   final String postID;
+  final String parentID;
+  final bool isPostParent;
   final BasicUserInfoModel owner;
   final DateTime createdAt;
   final String? textContent;
@@ -20,6 +22,8 @@ class CommentModel {
   CommentModel({
     required this.id,
     required this.postID,
+    required this.parentID,
+    required this.isPostParent,
     required this.owner,
     required this.createdAt,
     this.textContent,
@@ -33,6 +37,8 @@ class CommentModel {
   CommentModel copyWith({
     String? id,
     String? postID,
+    String? parentID,
+    bool? isPostParent,
     BasicUserInfoModel? owner,
     DateTime? createdAt,
     String? textContent,
@@ -45,6 +51,8 @@ class CommentModel {
     return CommentModel(
       id: id ?? this.id,
       postID: postID ?? this.postID,
+      parentID: parentID ?? this.parentID,
+      isPostParent: isPostParent ?? this.isPostParent,
       owner: owner ?? this.owner,
       createdAt: createdAt ?? this.createdAt,
       textContent: textContent ?? this.textContent,
@@ -60,6 +68,8 @@ class CommentModel {
     return <String, dynamic>{
       'id': id,
       'postID': postID,
+      'parentID': parentID,
+      'isPostParent': isPostParent,
       'owner': owner.toMap(),
       'createdAt': createdAt.millisecondsSinceEpoch,
       'textContent': textContent,
@@ -75,6 +85,8 @@ class CommentModel {
     return CommentModel(
       id: map['id'] as String,
       postID: map['postID'] as String,
+      parentID: map['parentID'] as String,
+      isPostParent: map['isPostParent'] as bool,
       owner: BasicUserInfoModel.fromMap(map['owner'] as Map<String, dynamic>),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
       textContent:
@@ -98,7 +110,7 @@ class CommentModel {
 
   @override
   String toString() {
-    return 'CommentModel(id: $id, postID: $postID, owner: $owner, createdAt: $createdAt, textContent: $textContent, image: $image, video: $video, hasReacted: $hasReacted, loveCount: $loveCount, subcommentCount: $subcommentCount)';
+    return 'CommentModel(id: $id, postID: $postID, parentID: $parentID, isPostParent: $isPostParent, owner: $owner, createdAt: $createdAt, textContent: $textContent, image: $image, video: $video, hasReacted: $hasReacted, loveCount: $loveCount, subcommentCount: $subcommentCount)';
   }
 
   @override
@@ -107,6 +119,8 @@ class CommentModel {
 
     return other.id == id &&
         other.postID == postID &&
+        other.parentID == parentID &&
+        other.isPostParent == isPostParent &&
         other.owner == owner &&
         other.createdAt == createdAt &&
         other.textContent == textContent &&
@@ -121,6 +135,8 @@ class CommentModel {
   int get hashCode {
     return id.hashCode ^
         postID.hashCode ^
+        parentID.hashCode ^
+        isPostParent.hashCode ^
         owner.hashCode ^
         createdAt.hashCode ^
         textContent.hashCode ^

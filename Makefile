@@ -6,6 +6,8 @@ MEDIA_SERVICE_BINARY=mediaService
 POST_SERVICE_BINARY=postService
 RELATIONSHIP_SERVICE_BINARY=relationshipService
 NEWFEED_SERVICE_BINARY=newfeedService
+PETIFIES_SERVICE_BINARY=petifiesService
+LOCATION_SERVICE_BINARY=locationService
 
 MOBILE_API_GATEWAY_MAIN=./server/services/mobile-api-gateway/cmd/grpc
 USER_SERVICE_MAIN=./server/services/user-service/cmd/grpc
@@ -13,10 +15,12 @@ MEDIA_SERVICE_MAIN=./server/services/media-service/cmd/grpc
 POST_SERVICE_MAIN=./server/services/post-service/cmd/grpc
 RELATIONSHIP_SERVICE_MAIN=./server/services/relationship-service/cmd/grpc
 NEWFEED_SERVICE_MAIN=./server/services/newfeed-service/cmd/grpc
+PETIFIES_SERVICE_MAIN=./server/services/petifies-service/cmd/grpc
+LOCATION_SERVICE_MAIN=./server/services/location-service/cmd/grpc
 
 COMPOSE_DATABASES=-f common.yaml -f databases.yaml
 COMPOSE_KAFKA=-f common.yaml -f kafka.yaml -f init-kafka.yaml
-COMPOSE_FILES=-f common.yaml -f mobile-gateway.yaml -f user-service.yaml -f media-service.yaml -f post-service.yaml -f relationship-service.yaml -f newfeed-service.yaml
+COMPOSE_FILES=-f common.yaml -f mobile-gateway.yaml -f user-service.yaml -f media-service.yaml -f post-service.yaml -f relationship-service.yaml -f newfeed-service.yaml -f petifies-service.yaml -f location-service.yaml
 
 ## up: starts all containers in the background without forcing build
 up: format
@@ -24,14 +28,14 @@ up: format
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: down format gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service build_relationship_service build_newfeed_service
+up_build: down format gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service build_relationship_service build_newfeed_service build_petifies_service build_location_service
 	@echo "Building and starting docker images..."
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_KAFKA} up --build -d
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_DATABASES} up --build -d
 	sleep 60
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_FILES} up --build
 
-ci_up_build: gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service build_relationship_service build_newfeed_service
+ci_up_build: gen_cert gen_proto_server build_mobile_api_gateway build_user_service build_media_service build_post_service build_relationship_service build_newfeed_service build_petifies_service build_location_service
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_KAFKA} up --build -d
 	cd server/infrastructure/docker-compose; docker compose ${COMPOSE_DATABASES} up --build -d
 	sleep 30
@@ -78,6 +82,18 @@ build_relationship_service:
 build_newfeed_service:
 	@echo "Building newfeed service binary..."
 	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${NEWFEED_SERVICE_BINARY} ${NEWFEED_SERVICE_MAIN}
+	@echo "Done!"
+
+## build_petifies_service: builds the petifies service binary as a linux executable
+build_petifies_service:
+	@echo "Building petifies service binary..."
+	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${PETIFIES_SERVICE_BINARY} ${PETIFIES_SERVICE_MAIN}
+	@echo "Done!"
+
+## build_location_service: builds the location service binary as a linux executable
+build_location_service:
+	@echo "Building location service binary..."
+	env GOOS=linux CGO_ENABLED=0 go build -o ${GO_BUILD_DIR}/${LOCATION_SERVICE_BINARY} ${LOCATION_SERVICE_MAIN}
 	@echo "Done!"
 
 ## gen: generates TLS certificates 

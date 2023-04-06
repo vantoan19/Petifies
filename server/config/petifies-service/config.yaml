@@ -1,0 +1,12 @@
+GrpcPort: 8888
+Domain:
+MongoUrl: "mongodb://petifies-mongo-1:27017,petifies-mongo-2:27017,petifies-mongo-3:27017/?replicaSet=my-petifies-mongo-set"
+DatabaseName: "petifiesServiceDatabase"
+PetfiesEventTopic: "petifies-event"
+PetifiesProposalEventTopic: "petifies-proposal-event"
+PetifiesSessionEventTopic: "petifies-session-event"
+ReviewEventTopic: "review-event"
+Brokers: 
+  - kafka-broker-1:9092
+  - kafka-broker-2:9092
+  - kafka-broker-3:9092

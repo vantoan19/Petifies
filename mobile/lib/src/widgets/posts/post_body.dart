@@ -4,16 +4,23 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/constants/constants.dart';
+import 'package:mobile/src/providers/post_providers.dart';
 import 'package:mobile/src/widgets/media_view/media_view.dart';
-import 'package:mobile/src/widgets/posts/post.dart';
-import 'package:mobile/src/widgets/posts/uploading_post.dart';
 import 'package:video_player/video_player.dart';
 
 class PostBody extends ConsumerWidget {
   final bool isUploadingPost;
+  final double width;
+  final double onlyTextFontSize;
+  final double normalFontSize;
+  final double spaceBetweenTextAndMedia;
 
   const PostBody({
     required this.isUploadingPost,
+    required this.width,
+    required this.onlyTextFontSize,
+    required this.normalFontSize,
+    required this.spaceBetweenTextAndMedia,
   });
 
   @override
@@ -57,44 +64,43 @@ class PostBody extends ConsumerWidget {
 
     bool onlyMedia = (textContent == null);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 20, 0, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Text Content
-          if (textContent != null && textContent != "")
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                Constants.horizontalScreenPadding + 4,
-                0,
-                Constants.horizontalScreenPadding,
-                onlyText ? 0 : 16,
-              ),
-              child: Align(
-                child: Text(
-                  textContent,
-                  style: TextStyle(
-                    fontSize: onlyText ? 24 : 18,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Text Content
+        if (textContent != null && textContent != "")
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              4,
+              0,
+              0,
+              onlyText ? 0 : spaceBetweenTextAndMedia,
+            ),
+            child: Align(
+              child: Text(
+                textContent,
+                style: TextStyle(
+                  fontSize: onlyText ? onlyTextFontSize : normalFontSize,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
-                alignment: Alignment.topLeft,
               ),
+              alignment: Alignment.topLeft,
             ),
-          // Image & Video content
-          if ((imageURLs != null && imageURLs.length > 0) ||
-              (videoURLs != null && videoURLs.length > 0) ||
-              (imageFiles != null && imageFiles.length > 0) ||
-              (videoControllers != null && videoControllers.length > 0))
-            MediaView(
-              imageUrls: imageURLs != null ? imageURLs : [],
-              videoUrls: videoURLs != null ? videoURLs : [],
-              imageFiles: imageFiles,
-              videoControllers: videoControllers,
-              isClickable: !isUploadingPost,
-            ),
-        ],
-      ),
+          ),
+        // Image & Video content
+        if ((imageURLs != null && imageURLs.length > 0) ||
+            (videoURLs != null && videoURLs.length > 0) ||
+            (imageFiles != null && imageFiles.length > 0) ||
+            (videoControllers != null && videoControllers.length > 0))
+          MediaView(
+            width: width,
+            imageUrls: imageURLs != null ? imageURLs : [],
+            videoUrls: videoURLs != null ? videoURLs : [],
+            imageFiles: imageFiles,
+            videoControllers: videoControllers,
+            isClickable: !isUploadingPost,
+          ),
+      ],
     );
   }
 }

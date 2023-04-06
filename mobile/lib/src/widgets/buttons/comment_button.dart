@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mobile/src/features/comment/controller/comment_count_controller.dart';
-import 'package:mobile/src/features/comment/screens/create_comment_screen.dart';
-import 'package:mobile/src/utils/navigation.dart';
+import 'package:mobile/src/features/comment/screens/comment_details_screen.dart';
+import 'package:mobile/src/features/home/navigators/home_navigator.dart';
+import 'package:mobile/src/features/post/screens/post_detail_screen.dart';
+import 'package:mobile/src/providers/comment_providers.dart';
+import 'package:mobile/src/providers/context_providers.dart';
+import 'package:mobile/src/providers/post_providers.dart';
 import 'package:mobile/src/utils/stringutils.dart';
 import 'package:mobile/src/widgets/buttons/love_react_button.dart';
-import 'package:mobile/src/widgets/comment/comment.dart';
-import 'package:mobile/src/widgets/posts/post.dart';
+import 'package:mobile/src/widgets/buttons/no_padding_icon_button.dart';
 
 class CommentButton extends StatelessWidget {
   final double textSize;
@@ -26,6 +29,7 @@ class CommentButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         CommentReplyButton(
           iconSize: iconSize,
@@ -61,26 +65,40 @@ class CommentReplyButton extends ConsumerWidget {
       targetID = ref.watch(commentInfoProvider.select((info) => info.id));
     }
 
-    return IconButton(
-      constraints: BoxConstraints(
-        minWidth: 10,
-        minHeight: 10,
-      ),
-      padding: EdgeInsets.all(0),
+    return NoPaddingIconButton(
       onPressed: () {
         if (isPostTarget) {
           Navigator.pushNamed(
             context,
-            '/post-details',
-            arguments: Tuple2(ref.read(postInfoProvider), true),
+            HomeNavigatorRoutes.postDetails,
+            arguments: PostDetailsScreenArguments(
+              postData: ref.read(postInfoProvider),
+              autoFocus: true,
+            ),
+          );
+        } else {
+          Navigator.pushNamed(
+            context,
+            HomeNavigatorRoutes.commentDetails,
+            arguments: CommentDetailsScreenArguments(
+              postData: ref.read(postInfoProvider),
+              commentData: ref.read(commentInfoProvider),
+              ancestorComments: ref.read(commentInfoProvider).isPostParent
+                  ? [ref.read(commentInfoProvider)]
+                  : [
+                      ...ref.read(ancestorCommentsProvider),
+                      ref.read(commentInfoProvider),
+                    ],
+              autoFocus: true,
+            ),
           );
         }
       },
       icon: Icon(
         FontAwesomeIcons.comment,
-        size: iconSize,
         color: Theme.of(context).colorScheme.secondary,
       ),
+      iconSize: iconSize,
     );
   }
 }

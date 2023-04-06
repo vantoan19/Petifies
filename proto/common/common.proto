@@ -61,6 +61,19 @@ message Video {
     string description = 2;
 }
 
+message Address {
+    string address_line_one = 1;
+    string address_line_two = 2;
+    string street = 3;
+    string district = 4;
+    string city = 5;
+    string region = 6;
+    string postal_code = 7;
+    string country = 8;
+    double longitude = 9;
+    double latitude = 10;
+}
+
 message Love {
     string id = 1 [(validate.rules).string.uuid = true];
     string target_id = 2 [(validate.rules).string.uuid = true];

@@ -1,9 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
-import 'package:introduction_screen/introduction_screen.dart';
-import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/theme/themes.dart';
-import 'package:mobile/src/utils/navigation.dart';
 import 'package:mobile/src/widgets/buttons/go_back_button.dart';
 
 class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -32,7 +29,6 @@ class CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           iconSize: 30,
           onPressed: addPostAction,
-          disabledColor: Themes.greyColor,
           icon: Icon(
             Icons.add,
             color: Themes.blueColor,

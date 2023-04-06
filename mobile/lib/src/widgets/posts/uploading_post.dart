@@ -3,12 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/constants/constants.dart';
 import 'package:mobile/src/models/uploading_post.dart';
-import 'package:mobile/src/widgets/media_view/media_view.dart';
 import 'package:mobile/src/widgets/posts/post_body.dart';
 import 'package:mobile/src/widgets/posts/post_head.dart';
-
-final uploadingPostInfoProvider =
-    Provider<UploadingPostModel>((ref) => throw UnimplementedError());
 
 class UploadingPost extends StatelessWidget {
   const UploadingPost({
@@ -29,8 +25,16 @@ class UploadingPost extends StatelessWidget {
                 const PostHead(
                   isUploadingPost: true,
                 ),
-                const PostBody(
-                  isUploadingPost: true,
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: PostBody(
+                    isUploadingPost: true,
+                    width: MediaQuery.of(context).size.width -
+                        Constants.horizontalScreenPadding * 2,
+                    onlyTextFontSize: 24,
+                    normalFontSize: 18,
+                    spaceBetweenTextAndMedia: 8,
+                  ),
                 ),
               ],
             ),

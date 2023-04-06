@@ -10,9 +10,6 @@ import 'package:mobile/src/widgets/comment/comment_head.dart';
 import 'package:mobile/src/widgets/images/image_card.dart';
 import 'package:mobile/src/widgets/videos/video_player_card.dart';
 
-final uploadingCommentInfoProvider =
-    Provider<UploadingCommentModel>((ref) => throw UnimplementedError());
-
 class UploadingComment extends StatelessWidget {
   const UploadingComment({
     Key? key,
@@ -37,8 +34,11 @@ class UploadingComment extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                  child: const CommentBody(
+                  child: CommentBody(
                     isUploadingComment: true,
+                    width: MediaQuery.of(context).size.width - 126,
+                    onlyTextFontSize: 17,
+                    normalFontSize: 16,
                   ),
                 ),
               ],

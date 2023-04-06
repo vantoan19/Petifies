@@ -131,6 +131,22 @@ message UserListCommentsByParentIDResponse {
     repeated CommentWithUserInfo comments = 1;
 }
 
+// message UserListCommentAncestorsRequest {
+//     string comment_id = 1 [(validate.rules).string.uuid = true];
+// }
+
+// message UserListCommentAncestorsResponse {
+//     repeated CommentWithUserInfo comments = 1;
+// }
+
+// message UserGetPostByIDRequest {
+//     string post_id = 1 [(validate.rules).string.uuid = true];
+// }
+
+// message UserGetPostByIDResponse {
+//     PostWithUserInfo post = 1;
+// }
+
 service AuthGateway {
     rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
     rpc UserCreatePost(UserCreatePostRequest) returns (PostWithUserInfo) {}
@@ -144,4 +160,6 @@ service AuthGateway {
     rpc UserUploadFile(stream UploadFileRequest) returns (UploadFileResponse) {}
     rpc ListNewFeeds(stream ListNewFeedsRequest) returns (stream ListNewFeedsResponse) {}
     rpc UserListCommentsByParentID(stream UserListCommentsByParentIDRequest) returns (stream UserListCommentsByParentIDResponse) {}
+    // rpc UserGetPostByID(UserGetPostByIDRequest) returns (UserGetPostByIDResponse) {}
+    // rpc UserListCommentAncestors(UserListCommentAncestorsRequest) returns (UserListCommentAncestorsResponse) {}
 }

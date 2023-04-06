@@ -115,7 +115,7 @@ message ListCommentIDsByParentIDResponse {
 }
 
 message ListCommentAncestorsRequest {
-    string comment_id = 1;
+    string comment_id = 1 [(validate.rules).string.uuid = true];
 }
 
 message ListCommentAncestorsResponse {

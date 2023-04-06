@@ -168,7 +168,7 @@ func (cr *CommentRepository) GetByParentIDWithSession(ctx context.Context, paren
 	if afterCommentID == uuid.Nil {
 		createdAt = time.Now()
 	} else {
-		afterComment, err := cr.GetByUUID(ctx, afterCommentID)
+		afterComment, err := cr.GetByUUIDWithSession(ctx, afterCommentID)
 		if err != nil {
 			return nil, err
 		}

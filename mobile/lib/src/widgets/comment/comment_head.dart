@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/models/basic_user_info.dart';
+import 'package:mobile/src/providers/comment_providers.dart';
 import 'package:mobile/src/utils/stringutils.dart';
-import 'package:mobile/src/widgets/comment/comment.dart';
+import 'package:mobile/src/widgets/buttons/no_padding_icon_button.dart';
 import 'package:mobile/src/widgets/comment/uploading_comment.dart';
 
 class CommentHead extends ConsumerWidget {
@@ -58,7 +59,7 @@ class CommentHead extends ConsumerWidget {
           ],
         ),
         // More button
-        IconButton(
+        NoPaddingIconButton(
           onPressed: () {},
           icon: Icon(Icons.more_horiz),
           padding: EdgeInsets.zero,

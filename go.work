@@ -16,6 +16,8 @@ use (
 	./server/services/post-service
 	./server/services/relationship-service
 	./server/services/newfeed-service
+	./server/services/location-service
+	./server/services/petifies-service
 	./server/infrastructure/kafka
 	./server/infrastructure/outbox
 )

@@ -3,6 +3,7 @@ package postservice
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -108,7 +109,7 @@ func (ps *postService) CreatePost(ctx context.Context, post *models.CreatePostRe
 	err = ps.postEventPublisher.Publish(ctx, kafkamodels.PostEvent{
 		ID:        createdPost.GetPostID(),
 		AuthorID:  createdPost.GetAuthorID(),
-		CreatedAt: createdPost.GetCreatedAt(),
+		CreatedAt: time.Now(),
 		Status:    kafkamodels.POST_CREATED,
 	})
 	if err != nil {

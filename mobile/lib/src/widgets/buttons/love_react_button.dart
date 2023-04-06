@@ -4,13 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mobile/src/features/love/controllers/love_count_controller.dart';
+import 'package:mobile/src/providers/comment_providers.dart';
+import 'package:mobile/src/providers/context_providers.dart';
+import 'package:mobile/src/providers/post_providers.dart';
 import 'package:mobile/src/theme/themes.dart';
 import 'package:mobile/src/utils/stringutils.dart';
-import 'package:mobile/src/widgets/comment/comment.dart';
-import 'package:mobile/src/widgets/posts/post.dart';
-
-final isPostContextProvider =
-    Provider<bool>((ref) => throw UnimplementedError());
+import 'package:mobile/src/widgets/buttons/no_padding_icon_button.dart';
 
 class LoveReactButton extends StatelessWidget {
   final double iconSize;
@@ -27,6 +26,7 @@ class LoveReactButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         LoveReactIconButton(
           iconSize: iconSize,
@@ -82,9 +82,7 @@ class LoveReactIconButton extends ConsumerWidget {
       size: iconSize,
     );
 
-    return IconButton(
-      constraints: BoxConstraints(minWidth: 10, minHeight: 10),
-      padding: EdgeInsets.all(0),
+    return NoPaddingIconButton(
       onPressed: () {
         ref
             .read(loveCountControllerProvider(Tuple2(targetID, isPostTarget))

@@ -10,10 +10,18 @@ services:
       echo -e 'Deleting old kafka topics'
       kafka-topics --bootstrap-server kafka-broker-1:9092 --topic user-event --delete --if-exists
       kafka-topics --bootstrap-server kafka-broker-1:9092 --topic post-event --delete --if-exists
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic petifies-event --delete --if-exists
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic petifies-session-event --delete --if-exists
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic petifies-proposal-event --delete --if-exists
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --topic review-event --delete --if-exists
 
       echo -e 'Creating new kafka topics'
       kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic user-event --replication-factor 3 --partitions 3
       kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic post-event --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic petifies-event --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic petifies-session-event --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic petifies-proposal-event --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka-broker-1:9092 --create --if-not-exists --topic review-event --replication-factor 3 --partitions 3
 
       kafka-topics --bootstrap-server kafka-broker-1:9092 --list
       "

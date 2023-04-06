@@ -31,6 +31,7 @@ type postClient struct {
 	removeLoveReact          endpoint.Endpoint
 	getLove                  endpoint.Endpoint
 	listCommentIDsByParentID endpoint.Endpoint
+	listCommentAncestors     endpoint.Endpoint
 }
 
 type PostClient interface {
@@ -48,6 +49,7 @@ type PostClient interface {
 	RemoveLoveReact(ctx context.Context, req *models.RemoveLoveReactReq) (*models.RemoveLoveReactResp, error)
 	GetLove(ctx context.Context, req *models.GetLoveReq) (*models.Love, error)
 	ListCommentIDsByParentID(ctx context.Context, req *models.ListCommentIDsByParentIDReq) (*models.ListCommentIDsByParentIDResp, error)
+	ListCommentAncestors(ctx context.Context, req *models.ListCommentAncestorsReq) (*models.ListCommentAncestorsResp, error)
 }
 
 func New(conn *grpc.ClientConn) PostClient {
@@ -163,6 +165,14 @@ func New(conn *grpc.ClientConn) PostClient {
 			translators.EncodeListCommentIDsByParentIDRequest,
 			translators.DecodeListCommentIDsByParentIDResponse,
 			postProtoV1.ListCommentIDsByParentIDResponse{},
+		).Endpoint(),
+		listCommentAncestors: grpctransport.NewClient(
+			conn,
+			"PostService",
+			"ListCommentAncestors",
+			translators.EncodeListCommentAncestorsRequest,
+			translators.DecodeListCommentAncestorsResponse,
+			postProtoV1.ListCommentAncestorsResponse{},
 		).Endpoint(),
 	}
 }
@@ -347,4 +357,17 @@ func (pc *postClient) ListCommentIDsByParentID(ctx context.Context, req *models.
 
 	logger.Info("Finish ListCommentsByParentID: Successful")
 	return resp.(*models.ListCommentIDsByParentIDResp), nil
+}
+
+func (pc *postClient) ListCommentAncestors(ctx context.Context, req *models.ListCommentAncestorsReq) (*models.ListCommentAncestorsResp, error) {
+	logger.Info("Start ListCommentAncestors")
+
+	resp, err := pc.listCommentAncestors(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finish ListCommentAncestors: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListCommentAncestors: Successful")
+	return resp.(*models.ListCommentAncestorsResp), nil
 }

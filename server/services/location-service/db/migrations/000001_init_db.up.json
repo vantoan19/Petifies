@@ -1,0 +1,40 @@
+[
+    {
+        "createUser": "admin",
+        "pwd": "{{.DB_PASSWORD}}",
+        "roles": [
+            {
+                "role": "readWrite",
+                "db": "locationServiceDatabase"
+            }
+        ]
+    },
+    {
+        "createIndexes": "locations",
+        "indexes": [
+            {
+                "key": {
+                    "location": "2dsphere"
+                },
+                "name": "location_2dsphere_index",
+                "background": true
+            },
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true
+            },
+            {
+                "key": {
+                    "entity_id": 1
+                },
+                "name": "entity_id",
+                "unique": true,
+                "background": true
+            }
+        ]
+    }
+]

@@ -16,7 +16,7 @@ services:
     networks:
       - petifies
 
-  mongo-express:
+  post-mongo-express:
     image: mongo-express
     restart: always
     ports:
