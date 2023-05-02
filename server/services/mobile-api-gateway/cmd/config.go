@@ -24,6 +24,8 @@ type Config struct {
 	MediaServiceHost        string `yaml:"MediaServiceHost"`
 	RelationshipServiceHost string `yaml:"RelationshipServiceHost"`
 	NewfeedServiceHost      string `yaml:"NewfeedServiceHost"`
+	PetifiesServiceHost     string `yaml:"PetifiesServiceHost"`
+	LocationServiceHost     string `yaml:"LocationServiceHost"`
 }
 
 var (

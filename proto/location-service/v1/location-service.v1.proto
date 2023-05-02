@@ -1,16 +1,12 @@
 syntax = "proto3";
 
-option go_package = "github.com/vantoan19/Petifies/proto/post-service/v1";
+package location_service.v1;
+option go_package = "github.com/vantoan19/Petifies/proto/location-service/v1";
 
 import "common/common.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-
-enum LocationType {
-    LOCATION_UNKNOWN = 0;
-    LOCATION_TYPE_PETIFIES = 1;
-}
 
 message Location {
     string id = 1 [(validate.rules).string.uuid = true];
@@ -23,6 +19,8 @@ message ListNearByLocationsByTypeRequest {
     double longitude = 2;
     double latitude = 3;
     double radius = 4;
+    int32 page_size = 5;
+    int32 offset = 6;
 }
 
 message ListNearByLocationsByTypeResponse {

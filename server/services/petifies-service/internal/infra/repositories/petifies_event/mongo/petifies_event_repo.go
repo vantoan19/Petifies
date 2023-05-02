@@ -2,6 +2,7 @@ package petifieseventmongo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,8 +59,8 @@ func (pr *petifiesEventRepository) AddEvent(event outbox_repo.Event) (*outbox_re
 func (pr *petifiesEventRepository) GetEventsByLockerID(lockerID uuid.UUID) ([]*outbox_repo.Event, error) {
 	logger.Info("Start GetEventsByLockerID")
 	var events []models.PetifiesEvent
-
-	cursor, err := pr.petifiesEventCollection.Find(context.Background(), bson.D{{Key: "lock_by", Value: lockerID}})
+	fmt.Println(lockerID)
+	cursor, err := pr.petifiesEventCollection.Find(context.Background(), bson.D{{Key: "locked_by", Value: lockerID}})
 	if err != nil {
 		logger.ErrorData("Finish AddEvent: GetEventsByLockerID", logging.Data{"error": err.Error()})
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -68,6 +69,7 @@ func (pr *petifiesEventRepository) GetEventsByLockerID(lockerID uuid.UUID) ([]*o
 		logger.ErrorData("Finish GetEventsByLockerID: Failed", logging.Data{"error": err.Error()})
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	fmt.Println(events)
 
 	var results []*outbox_repo.Event
 	for _, e := range events {
@@ -85,14 +87,17 @@ func (pr *petifiesEventRepository) GetEventsByLockerID(lockerID uuid.UUID) ([]*o
 
 func (pr *petifiesEventRepository) LockStartedEvents(lockerID uuid.UUID) error {
 	logger.Info("Start LockStartedEvents")
-	filter := bson.D{{Key: "outbox_state", Value: models.OutboxStateSTARTED}}
+	filter := bson.D{{Key: "outbox_state", Value: string(models.OutboxStateSTARTED)}}
 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "locked_by", Value: lockerID}, {Key: "locked_at", Value: time.Now()}}}}
 
-	_, err := pr.petifiesEventCollection.UpdateMany(context.Background(), filter, update)
+	fmt.Println(lockerID)
+
+	res, err := pr.petifiesEventCollection.UpdateMany(context.Background(), filter, update)
 	if err != nil {
 		logger.ErrorData("Finish LockStartedEvents: Failed", logging.Data{"error": err.Error()})
 		return status.Errorf(codes.Internal, err.Error())
 	}
+	fmt.Println(res)
 
 	logger.Info("Finish LockStartedEvents: Success")
 	return nil

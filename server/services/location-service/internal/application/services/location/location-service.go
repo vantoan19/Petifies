@@ -46,7 +46,15 @@ func WithMongoLocationRepository(client *mongo.Client) LocationConfiguration {
 func (ls *locationService) ListNearByLocationsByType(ctx context.Context, req *models.ListNearByLocationsByTypeReq) ([]*locationaggre.LocationAggre, error) {
 	logger.Info("Start ListNearByLocationsByType")
 
-	locations, err := ls.locationRepo.FindNearbyLocationsByEntityType(ctx, req.Longitude, req.Latitude, req.Radius, valueobjects.EntityType(req.LocationType))
+	locations, err := ls.locationRepo.FindNearbyLocationsByEntityType(
+		ctx,
+		req.Longitude,
+		req.Latitude,
+		req.Radius,
+		valueobjects.EntityType(req.LocationType),
+		req.PageSize,
+		req.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

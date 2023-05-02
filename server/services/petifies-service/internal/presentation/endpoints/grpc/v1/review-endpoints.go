@@ -17,6 +17,7 @@ type ReviewEndpoints struct {
 	GetReviewById           endpoint.Endpoint
 	ListReviewsByIds        endpoint.Endpoint
 	ListReviewsByPetifiesId endpoint.Endpoint
+	ListReviewsByUserId     endpoint.Endpoint
 }
 
 func NewReviewEndpoints(rs reviewservice.ReviewService) ReviewEndpoints {
@@ -26,6 +27,7 @@ func NewReviewEndpoints(rs reviewservice.ReviewService) ReviewEndpoints {
 		GetReviewById:           makeGetReviewByIdEndpoint(rs),
 		ListReviewsByIds:        makeListReviewsByIdsEndpoint(rs),
 		ListReviewsByPetifiesId: makeListReviewsByPetifiesIdEndpoint(rs),
+		ListReviewsByUserId:     makeListReviewsByUserIdEndpoint(rs),
 	}
 }
 
@@ -87,6 +89,22 @@ func makeListReviewsByPetifiesIdEndpoint(rs reviewservice.ReviewService) endpoin
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*models.ListReviewsByPetifiesIdReq)
 		results, err := rs.ListByPetifiesId(ctx, req.PetifiesID, req.PageSize, req.AfterID)
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.ManyReviews{
+			Reviews: commonutils.Map2(results, func(r *reviewaggre.ReviewAggre) *models.Review {
+				return mapReviewAggregateToReviewModel(r)
+			}),
+		}, nil
+	}
+}
+
+func makeListReviewsByUserIdEndpoint(rs reviewservice.ReviewService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.ListReviewsByUserIdReq)
+		results, err := rs.ListByUserId(ctx, req.UserId, req.PageSize, req.AfterID)
 		if err != nil {
 			return nil, err
 		}

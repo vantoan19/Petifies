@@ -35,6 +35,7 @@ type CreatePetifiesReq struct {
 }
 
 type CreatePetifiesSessionReq struct {
+	CreatorID  uuid.UUID
 	PetifiesID uuid.UUID
 	FromTime   time.Time
 	ToTime     time.Time
@@ -134,4 +135,33 @@ type ListReviewsByPetifiesIdReq struct {
 
 type ListReviewsByIdsReq struct {
 	ReviewIDs []uuid.UUID
+}
+
+type AcceptProposalReq struct {
+	UserId     uuid.UUID
+	SessionId  uuid.UUID
+	ProposalId uuid.UUID
+}
+
+type RejectProposalReq struct {
+	UserId     uuid.UUID
+	SessionId  uuid.UUID
+	ProposalId uuid.UUID
+}
+
+type CancelProposalReq struct {
+	UserId     uuid.UUID
+	ProposalId uuid.UUID
+}
+
+type ListProposalsByUserIdReq struct {
+	UserId   uuid.UUID
+	PageSize int
+	AfterID  uuid.UUID
+}
+
+type ListReviewsByUserIdReq struct {
+	UserId   uuid.UUID
+	PageSize int
+	AfterID  uuid.UUID
 }

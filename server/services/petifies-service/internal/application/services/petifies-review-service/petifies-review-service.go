@@ -46,6 +46,7 @@ type ReviewService interface {
 	GetById(ctx context.Context, id uuid.UUID) (*reviewaggre.ReviewAggre, error)
 	ListByIds(ctx context.Context, ids []uuid.UUID) ([]*reviewaggre.ReviewAggre, error)
 	ListByPetifiesId(ctx context.Context, petifiesID uuid.UUID, pageSize int, afterId uuid.UUID) ([]*reviewaggre.ReviewAggre, error)
+	ListByUserId(ctx context.Context, userId uuid.UUID, pageSize int, afterId uuid.UUID) ([]*reviewaggre.ReviewAggre, error)
 }
 
 func NewReviewService(cfgs ...ReviewConfiguration) (ReviewService, error) {
@@ -201,5 +202,18 @@ func (rs *reviewService) ListByPetifiesId(ctx context.Context, petifiesID uuid.U
 	}
 
 	logger.Info("Finish ListByPetifiesId: Successful")
+	return reviews, nil
+}
+
+func (rs *reviewService) ListByUserId(ctx context.Context, userId uuid.UUID, pageSize int, afterId uuid.UUID) ([]*reviewaggre.ReviewAggre, error) {
+	logger.Info("Start ListByUserId")
+
+	reviews, err := rs.reviewRepo.GetByUserId(ctx, userId, pageSize, afterId)
+	if err != nil {
+		logger.ErrorData("Finish ListByUserId: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListByUserId: Successful")
 	return reviews, nil
 }

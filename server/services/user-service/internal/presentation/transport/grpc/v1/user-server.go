@@ -12,9 +12,10 @@ import (
 )
 
 type gRPCUserServer struct {
-	createUser grpctransport.Handler
-	login      grpctransport.Handler
-	getUser    grpctransport.Handler
+	createUser     grpctransport.Handler
+	login          grpctransport.Handler
+	getUser        grpctransport.Handler
+	listUsersByIds grpctransport.Handler
 }
 
 func NewUserServer(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServiceServer {
@@ -33,6 +34,11 @@ func NewUserServer(endpoints userEndpointsV1.UserEndpoints) userProtoV1.UserServ
 			endpoints.GetUser,
 			translator.DecodeGetUserRequest,
 			translator.EncodeGetUserResponse,
+		),
+		listUsersByIds: grpctransport.NewServer(
+			endpoints.ListUsersByIds,
+			translator.DecodeListUsersByIdsRequest,
+			translator.EncodeListUsersByIdsResponse,
 		),
 	}
 }
@@ -67,4 +73,12 @@ func (s *gRPCUserServer) GetUser(ctx context.Context, req *userProtoV1.GetUserRe
 		return nil, err
 	}
 	return resp.(*commonProto.User), nil
+}
+
+func (s *gRPCUserServer) ListUsersByIds(ctx context.Context, req *userProtoV1.ListUsersByIdsRequest) (*userProtoV1.ListUsersByIdsResponse, error) {
+	_, resp, err := s.listUsersByIds.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*userProtoV1.ListUsersByIdsResponse), nil
 }

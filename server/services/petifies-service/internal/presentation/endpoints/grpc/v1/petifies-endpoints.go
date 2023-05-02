@@ -104,7 +104,8 @@ func mapPetifiesAggregateToPetifiesModel(petify *petifiesaggre.PetifiesAggre) *m
 	return &models.Petifies{
 		ID:          petify.GetID(),
 		OwnerID:     petify.GetOwnerID(),
-		Title:       string(petify.GetType()),
+		Type:        string(petify.GetType()),
+		Title:       petify.GetTitle(),
 		Description: petify.GetDescription(),
 		Address: models.Address{
 			AddressLineOne: address.AddressLineOne,

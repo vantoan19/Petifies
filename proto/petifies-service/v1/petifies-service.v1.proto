@@ -1,45 +1,12 @@
 syntax = "proto3";
 
-option go_package = "github.com/vantoan19/Petifies/proto/post-service/v1";
+package petifies_service.v1;
+option go_package = "github.com/vantoan19/Petifies/proto/petifies-service/v1";
 
 import "common/common.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-
-enum PetifiesType {
-    PETIFIES_TYPE_UNKNOWN = 0;
-    PETIFIES_TYPE_DOG_WALKING = 1;
-    PETIFIES_TYPE_CAT_PLAYING = 2;
-    PETIFIES_TYPE_DOG_SITTING = 3;
-    PETIFIES_TYPE_CAT_SITTING = 4;
-    PETIFIES_TYPE_DOG_ADOPTION = 5;
-    PETIFIES_TYPE_CAT_ADOPTION = 6;
-}
-
-enum PetifiesStatus {
-    PETIFIES_STATUS_UNKNOWN = 0;
-    PETIFIES_STATUS_UNAVAILABLE = 1;
-    PETIFIES_STATUS_ON_A_SESSION = 2;
-    PETIFIES_STATUS_DELETED = 3;
-}
-
-enum PetifiesSessionStatus {
-    PETIFIES_SESSION_STATUS_UNKNOWN = 0;
-    PETIFIES_SESSION_STATUS_WAITING_FOR_PROPOSAL = 1;
-    PETIFIES_SESSION_STATUS_PROPOSAL_ACCEPTED = 2;
-    PETIFIES_SESSION_STATUS_ON_GOING = 3;
-    PETIFIES_SESSION_STATUS_ENDED = 4;
-}
-
-enum PetifiesProposalStatus {
-    PETIFIES_PROPOSAL_STATUS_UNKNOWN = 0;
-    PETIFIES_PROPOSAL_STATUS_WAITING_FOR_ACCEPTANCE = 1;
-    PETIFIES_PROPOSAL_STATUS_ACCEPTED = 2;
-    PETIFIES_PROPOSAL_STATUS_CANCELLED = 3;
-    PETIFIES_PROPOSAL_STATUS_REJECTED = 4;
-    PETIFIES_PROPOSAL_STATUS_SESSION_CLOSED = 5;
-}
 
 message Petifies {
     string id = 1 [(validate.rules).string.uuid = true];
@@ -96,6 +63,7 @@ message CreatePetifiesRequest {
 }
 
 message CreatePetifiesSessionRequest {
+    string creator_id = 1 [(validate.rules).string.uuid = true];
     string petifies_id = 2 [(validate.rules).string.uuid = true];
     google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
     google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
@@ -193,6 +161,12 @@ message ListProposalsBySessionIdRequest {
     string after_id = 3;
 }
 
+message ListProposalsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
 message ListProposalsByIdsRequest {
     repeated string petifies_proposal_ids = 1;
 }
@@ -213,6 +187,12 @@ message ListReviewsByPetifiesIdRequest {
     string after_id = 3;
 }
 
+message ListReviewsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
 message ListReviewsByIdsRequest {
     repeated string review_ids = 1;
 }
@@ -220,6 +200,39 @@ message ListReviewsByIdsRequest {
 message ManyReviews {
     repeated Review reviews = 1;
 }
+
+// ==== Session ====
+
+message AcceptProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the owner of the related petifies
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string session_id = 2 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message AcceptProposalResponse{}
+
+message RejectProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the owner of the related petifies
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string session_id = 2 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message RejectProposalResponse{}
+
+// ==== Proposal ====
+
+message CancelProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the author of the related proposal
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message CancelProposalResponse{}
 
 service PetifiesService {
     rpc CreatePetifies(CreatePetifiesRequest) returns (Petifies) {}
@@ -240,7 +253,13 @@ service PetifiesService {
     rpc GetProposalById(GetProposalByIdRequest) returns (PetifiesProposal) {}
     rpc ListProposalsByIds(ListProposalsByIdsRequest) returns (ManyPetifiesProposals) {}
     rpc ListProposalsBySessionId(ListProposalsBySessionIdRequest) returns (ManyPetifiesProposals) {}
+    rpc ListProposalsByUserId(ListProposalsByUserIdRequest) returns (ManyPetifiesProposals) {}
     rpc GetReviewById(GetReviewByIdRequest) returns (Review) {}
     rpc ListReviewsByIds(ListReviewsByIdsRequest) returns (ManyReviews) {}
     rpc ListReviewsByPetifiesId(ListReviewsByPetifiesIdRequest) returns (ManyReviews) {}
+    rpc ListReviewsByUserId(ListReviewsByUserIdRequest) returns (ManyReviews) {}
+
+    rpc AcceptProposal(AcceptProposalRequest) returns (AcceptProposalResponse) {}
+    rpc RejectProposal(RejectProposalRequest) returns (RejectProposalResponse) {}
+    rpc CancelProposal(CancelProposalRequest) returns (CancelProposalResponse) {}
 }

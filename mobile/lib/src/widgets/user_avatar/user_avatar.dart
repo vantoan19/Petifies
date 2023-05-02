@@ -13,7 +13,7 @@ class UserAvatar extends StatelessWidget {
     return Padding(
       padding:
           padding == null ? const EdgeInsets.fromLTRB(0, 0, 0, 0) : padding!,
-      child: (userAvatar != null)
+      child: (userAvatar != null && userAvatar != "")
           ? CircleAvatar(
               backgroundImage: NetworkImage(userAvatar!),
               radius: 20,

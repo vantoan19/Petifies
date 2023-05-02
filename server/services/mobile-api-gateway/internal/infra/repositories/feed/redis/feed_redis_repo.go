@@ -51,7 +51,12 @@ func (r *redisFeedCacheRepository) SetPostFeedIDs(ctx context.Context, userID uu
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, postFeedsStr, 0).Err()
+
+	tx := r.client.TxPipeline()
+
+	tx.Set(ctx, key, postFeedsStr, 0)
+
+	_, err = tx.Exec(ctx)
 	if err != nil {
 		return err
 	}

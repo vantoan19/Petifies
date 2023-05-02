@@ -165,18 +165,62 @@ func DecodeGetUserResponse(_ context.Context, response interface{}) (interface{}
 		return nil, MustBeProtoRespErr
 	}
 
-	id, err := uuid.Parse(resp.Id)
+	return decodeUser(resp)
+}
+
+func DecodeListUsersByIdsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*userProtoV1.ListUsersByIdsRequest)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	var ids []uuid.UUID
+	for _, id := range req.UserIds {
+		id_, err := uuid.Parse(id)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id_)
+	}
+
+	return &models.ListUsersByIdsReq{
+		Ids: ids,
+	}, nil
+}
+
+func DecodeListUsersByIdsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*userProtoV1.ListUsersByIdsResponse)
+	if !ok {
+		return nil, MustBeProtoRespErr
+	}
+
+	var users []*models.User
+	for _, u := range resp.Users {
+		user, err := decodeUser(u)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return &models.ListUsersByIdsResp{
+		Users: users,
+	}, nil
+}
+
+func decodeUser(user *commonProto.User) (*models.User, error) {
+	id, err := uuid.Parse(user.Id)
 	if err != nil {
 		return nil, err
 	}
 
 	return &models.User{
 		ID:          id,
-		Email:       resp.GetEmail(),
-		FirstName:   resp.GetFirstName(),
-		LastName:    resp.GetLastName(),
-		IsActivated: resp.GetIsActivated(),
-		CreatedAt:   resp.GetCreatedAt().AsTime(),
-		UpdatedAt:   resp.GetUpdatedAt().AsTime(),
+		Email:       user.GetEmail(),
+		FirstName:   user.GetFirstName(),
+		LastName:    user.GetLastName(),
+		IsActivated: user.GetIsActivated(),
+		CreatedAt:   user.GetCreatedAt().AsTime(),
+		UpdatedAt:   user.GetUpdatedAt().AsTime(),
 	}, nil
 }

@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package relation_service.v1;
 option go_package = "github.com/vantoan19/Petifies/proto/public-gateway/v1";
 
 import "common/common.proto";

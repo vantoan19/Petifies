@@ -14,12 +14,16 @@ import (
 )
 
 var (
-	ErrExceedProposalLimit          = status.Errorf(codes.AlreadyExists, "a user can only create a proposal")
-	ErrDifferentSessionID           = status.Errorf(codes.InvalidArgument, "proposal's sessionID is different than the id of session")
-	ErrInvalidNewlyCreatedStatus    = status.Errorf(codes.InvalidArgument, "newly created proposal's status have to be WAITING_FOR_ACCEPTANCE")
-	ErrNeedWaitForProposalsStatus   = status.Errorf(codes.InvalidArgument, "the session need to be in WAITING_FOR_PROPOSALS status")
-	ErrNeedProposalAcceptanceStatus = status.Errorf(codes.InvalidArgument, "the session need to be in PROPOSAL_ACCEPTED status")
-	ErrNeedOnGoingStatus            = status.Errorf(codes.InvalidArgument, "the session need to be in ON_GOING status")
+	ErrExceedProposalLimit           = status.Errorf(codes.AlreadyExists, "a user can only create a proposal")
+	ErrDifferentSessionID            = status.Errorf(codes.InvalidArgument, "proposal's sessionID is different than the id of session")
+	ErrInvalidNewlyCreatedStatus     = status.Errorf(codes.InvalidArgument, "newly created proposal's status have to be WAITING_FOR_ACCEPTANCE")
+	ErrNeedWaitForProposalsStatus    = status.Errorf(codes.InvalidArgument, "the session need to be in WAITING_FOR_PROPOSALS status")
+	ErrNeedProposalAcceptanceStatus  = status.Errorf(codes.InvalidArgument, "the session need to be in PROPOSAL_ACCEPTED status")
+	ErrNeedOnGoingStatus             = status.Errorf(codes.InvalidArgument, "the session need to be in ON_GOING status")
+	ErrStatusAlreadyWaitForProposal  = status.Errorf(codes.Aborted, "status is already WAIT_FOR_PROPOSAL")
+	ErrStatusAlreadyProposalAccepted = status.Errorf(codes.Aborted, "status is already PROPOSAL_ACCEPTED")
+	ErrStatusAlreadyOnGoing          = status.Errorf(codes.Aborted, "status is already ON_GOING")
+	ErrStatusAlreadyEnded            = status.Errorf(codes.Aborted, "status is already ENDED")
 )
 
 type PetifiesSessionAggre struct {
@@ -59,6 +63,9 @@ func (p *PetifiesSessionAggre) ToProposalAcceptedStatus() error {
 	if p.session.Status != valueobjects.PetifiesSessionStatusWaitingForProposal {
 		return ErrNeedWaitForProposalsStatus
 	}
+	if p.session.Status == valueobjects.PetifiesSessionStatusProposalAccepted {
+		return ErrStatusAlreadyProposalAccepted
+	}
 
 	p.session.Status = valueobjects.PetifiesSessionStatusProposalAccepted
 	return nil
@@ -67,6 +74,9 @@ func (p *PetifiesSessionAggre) ToProposalAcceptedStatus() error {
 func (p *PetifiesSessionAggre) ToOnGoingStatus() error {
 	if p.session.Status != valueobjects.PetifiesSessionStatusProposalAccepted {
 		return ErrNeedProposalAcceptanceStatus
+	}
+	if p.session.Status == valueobjects.PetifiesSessionStatusOnGoing {
+		return ErrStatusAlreadyOnGoing
 	}
 
 	p.session.Status = valueobjects.PetifiesSessionStatusOnGoing
@@ -77,12 +87,18 @@ func (p *PetifiesSessionAggre) ToWaitForProposalsStatus() error {
 	if p.session.Status != valueobjects.PetifiesSessionStatusProposalAccepted {
 		return ErrNeedProposalAcceptanceStatus
 	}
+	if p.session.Status == valueobjects.PetifiesSessionStatusWaitingForProposal {
+		return ErrStatusAlreadyWaitForProposal
+	}
 
 	p.session.Status = valueobjects.PetifiesSessionStatusWaitingForProposal
 	return nil
 }
 
 func (p *PetifiesSessionAggre) ToEndedStaus() error {
+	if p.session.Status == valueobjects.PetifiesSessionStatusEnded {
+		return ErrStatusAlreadyEnded
+	}
 	p.session.Status = valueobjects.PetifiesSessionStatusEnded
 	return nil
 }

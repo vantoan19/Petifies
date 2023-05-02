@@ -32,6 +32,7 @@ type UserService interface {
 	RefreshToken(ctx context.Context, req *commonProto.RefreshTokenRequest) (*commonProto.RefreshTokenResponse, error)
 	GetMyInfo(ctx context.Context) (*models.User, error)
 	GetUser(ctx context.Context, userID uuid.UUID) (*models.User, error)
+	ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*models.User, error)
 }
 
 func NewUserService(userClientConn *grpc.ClientConn, cfgs ...UserConfiguration) (UserService, error) {
@@ -47,9 +48,9 @@ func NewUserService(userClientConn *grpc.ClientConn, cfgs ...UserConfiguration) 
 	return us, nil
 }
 
-func WithRedisUserCacheRepository(client *redis.Client) UserConfiguration {
+func WithRedisUserCacheRepository(client *redis.Client, userClient userclient.UserClient) UserConfiguration {
 	return func(us *userService) error {
-		repo := redisUserCache.NewRedisUserCacheRepository(client)
+		repo := redisUserCache.NewRedisUserCacheRepository(client, userClient)
 		us.userCacheRepo = repo
 		return nil
 	}
@@ -131,34 +132,10 @@ func (s *userService) GetMyInfo(ctx context.Context) (*models.User, error) {
 		return nil, err
 	}
 
-	var user *models.User
-	// Get from cache
-	if exist, err := s.userCacheRepo.ExistsUser(ctx, userID); exist {
-		logger.Info("Executing UserService.GetMyInfo: getting user info from cache")
-		user_, err := s.userCacheRepo.GetUser(ctx, userID)
-		if err != nil {
-			logger.ErrorData("Finished UserService.GetMyInfo: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		user = user_
-	} else if err != nil {
+	user, err := s.userCacheRepo.GetUser(ctx, userID)
+	if err != nil {
 		logger.ErrorData("Finished UserService.GetMyInfo: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
-	} else { // Get from user service
-		logger.Info("Executing UserService.GetMyInfo: forwarding the request to UserService")
-		resp, err := s.userClient.GetUser(ctx, userID)
-		if err != nil {
-			logger.ErrorData("Finished UserService.GetMyInfo: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		// save to cache
-		go func() {
-			err := s.userCacheRepo.SetUser(context.Background(), userID, *resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		user = resp
 	}
 
 	logger.Info("Finished UserService.GetMyInfo: SUCCESSFUL")
@@ -168,36 +145,25 @@ func (s *userService) GetMyInfo(ctx context.Context) (*models.User, error) {
 func (s *userService) GetUser(ctx context.Context, userID uuid.UUID) (*models.User, error) {
 	logger.Info("Start GetUser")
 
-	var user *models.User
-	// Get from cache
-	if exist, err := s.userCacheRepo.ExistsUser(ctx, userID); exist {
-		logger.Info("Executing GetUser: getting user info from cache")
-		user_, err := s.userCacheRepo.GetUser(ctx, userID)
-		if err != nil {
-			logger.ErrorData("Finished GetUser: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		user = user_
-	} else if err != nil {
-		logger.ErrorData("Finished GetUser: FAILED", logging.Data{"error": err.Error()})
+	user, err := s.userCacheRepo.GetUser(ctx, userID)
+	if err != nil {
+		logger.ErrorData("Finished UserService.GetMyInfo: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
-	} else { // Get from user service
-		logger.Info("Executing GetUser: forwarding the request to UserService")
-		resp, err := s.userClient.GetUser(ctx, userID)
-		if err != nil {
-			logger.ErrorData("Finished GetUser: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		// save to cache
-		go func() {
-			err := s.userCacheRepo.SetUser(context.Background(), userID, *resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-		user = resp
 	}
 
 	logger.Info("Finished GetUser: SUCCESSFUL")
 	return user, nil
+}
+
+func (s *userService) ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*models.User, error) {
+	logger.Info("Start ListUsersByIds")
+
+	users, err := s.userCacheRepo.ListUsers(ctx, ids)
+	if err != nil {
+		logger.ErrorData("Finished ListUsersByIds: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finished ListUsersByIds: SUCCESSFUL")
+	return users, nil
 }

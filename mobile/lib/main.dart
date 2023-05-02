@@ -42,7 +42,7 @@ class Petifies extends ConsumerWidget {
             )
           : userInfo == null
               ? IntroductionScreens()
-              : HomeScreeen(),
+              : IntroductionScreens(),
       // home: SignInScreen(),
       onGenerateRoute: onGenerateRoute,
     );

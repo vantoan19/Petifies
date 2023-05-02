@@ -10,7 +10,7 @@ import (
 
 type PetifiesOnASessionEvent models.PetifiesEvent
 
-func NewPetifiesOnASessionEvent(petifies *petifiesaggre.PetifiesAggre) PetifiesOnASessionEvent {
+func NewPetifiesAvailableEvent(petifies *petifiesaggre.PetifiesAggre) PetifiesOnASessionEvent {
 	return PetifiesOnASessionEvent{
 		ID:          petifies.GetID(),
 		OwnerID:     petifies.GetOwnerID(),
@@ -19,7 +19,7 @@ func NewPetifiesOnASessionEvent(petifies *petifiesaggre.PetifiesAggre) PetifiesO
 		Description: petifies.GetDescription(),
 		Longitude:   petifies.GetAddress().Coordinates.GetLongitude(),
 		Latitude:    petifies.GetAddress().Coordinates.GetLatitude(),
-		Status:      string(valueobjects.PetifiesOnASession),
+		Status:      string(valueobjects.PetifiesAvailable),
 		EventType:   models.PETIFIES_STATUS_CHANGED,
 		CreatedAt:   time.Now(),
 	}

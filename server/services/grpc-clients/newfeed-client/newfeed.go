@@ -15,6 +15,8 @@ import (
 
 var logger = logging.New("NewfeedClient")
 
+const newfeedService = "newfeed_service.v1.NewfeedService"
+
 type newfeedClient struct {
 	listPostFeeds endpoint.Endpoint
 }
@@ -27,7 +29,7 @@ func New(conn *grpc.ClientConn) NewfeedClient {
 	return &newfeedClient{
 		listPostFeeds: grpctransport.NewClient(
 			conn,
-			"NewfeedService",
+			newfeedService,
 			"ListPostFeeds",
 			translators.EncodeListPostFeedsRequest,
 			translators.DecodeListPostFeedsResponse,

@@ -55,6 +55,24 @@ func (rr *reviewMongoRepository) GetByPetifiesID(ctx context.Context, petifiesID
 	return reviews, nil
 }
 
+func (rr *reviewMongoRepository) GetByUserId(ctx context.Context, userId uuid.UUID, pageSize int, afterId uuid.UUID) ([]*reviewaggre.ReviewAggre, error) {
+	var reviews []*reviewaggre.ReviewAggre
+
+	err := dbutils.ExecWithSession(ctx, rr.client, func(ssCtx mongo.SessionContext) error {
+		reviews_, err := rr.GetByUserIdWithSession(ssCtx, userId, pageSize, afterId)
+		if err != nil {
+			return err
+		}
+		reviews = reviews_
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
 func (rr *reviewMongoRepository) GetByID(ctx context.Context, id uuid.UUID) (*reviewaggre.ReviewAggre, error) {
 	var review *reviewaggre.ReviewAggre
 
@@ -142,6 +160,43 @@ func (rr *reviewMongoRepository) GetByPetifiesIDWithSession(ctx context.Context,
 	var result []*reviewaggre.ReviewAggre
 	var reviews []models.Review
 	filter := bson.D{{Key: "petifies_id", Value: petifiesID}, {Key: "created_at", Value: bson.D{{Key: "$lt", Value: createdAt}}}}
+	opts := options.Find().SetLimit(int64(pageSize)).SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	cursor, err := rr.reviewCollection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	if err := cursor.All(ctx, &reviews); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	for _, r := range reviews {
+		review, err := mappers.DbModelToReviewAggregate(&r)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+		result = append(result, review)
+	}
+
+	return result, nil
+}
+
+func (rr *reviewMongoRepository) GetByUserIdWithSession(ctx context.Context, userId uuid.UUID, pageSize int, afterId uuid.UUID) ([]*reviewaggre.ReviewAggre, error) {
+	var createdAt time.Time
+
+	if afterId == uuid.Nil {
+		createdAt = time.Now()
+	} else {
+		review, err := rr.GetByIDWithSession(ctx, afterId)
+		if err != nil {
+			return nil, err
+		}
+		createdAt = review.GetCreatedAt()
+	}
+
+	var result []*reviewaggre.ReviewAggre
+	var reviews []models.Review
+	filter := bson.D{{Key: "author_id", Value: userId}, {Key: "created_at", Value: bson.D{{Key: "$lt", Value: createdAt}}}}
 	opts := options.Find().SetLimit(int64(pageSize)).SetSort(bson.D{{Key: "created_at", Value: -1}})
 
 	cursor, err := rr.reviewCollection.Find(ctx, filter, opts)

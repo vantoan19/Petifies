@@ -29,6 +29,8 @@ func DecodeListNearByLocationByTypeRequest(_ context.Context, request interface{
 		Longitude:    req.Longitude,
 		Latitude:     req.Latitude,
 		Radius:       req.Radius,
+		PageSize:     int(req.PageSize),
+		Offset:       int(req.Offset),
 	}, nil
 }
 
@@ -47,7 +49,9 @@ func DecodeListNearByLocationByTypeResponse(_ context.Context, response interfac
 		locations = append(locations, location)
 	}
 
-	return locations, nil
+	return &models.ListNearByLocationsByTypeResp{
+		Locations: locations,
+	}, nil
 }
 
 func decodeLocationProtoModel(location *locationProtoV1.Location) (*models.Location, error) {

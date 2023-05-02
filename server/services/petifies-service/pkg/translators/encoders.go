@@ -20,7 +20,7 @@ func EncodeCreatePetifiesRequest(_ context.Context, request interface{}) (interf
 
 	return &petifiesProtoV1.CreatePetifiesRequest{
 		OwnerId:     req.OwnerID.String(),
-		Type:        getPetifiesType(req.Type),
+		Type:        GetPetifiesType(req.Type),
 		Title:       req.Title,
 		Description: req.Description,
 		PetName:     req.PetName,
@@ -47,6 +47,7 @@ func EncodeCreatePetifiesSessionRequest(_ context.Context, request interface{}) 
 	}
 
 	return &petifiesProtoV1.CreatePetifiesSessionRequest{
+		CreatorId:  req.CreatorID.String(),
 		PetifiesId: req.PetifiesID.String(),
 		FromTime:   timestamppb.New(req.FromTime),
 		ToTime:     timestamppb.New(req.ToTime),
@@ -352,11 +353,103 @@ func EncodeManyReviewsResponse(_ context.Context, response interface{}) (interfa
 	}, nil
 }
 
+func EncodeAcceptProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.AcceptProposalReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &petifiesProtoV1.AcceptProposalRequest{
+		UserId:     req.UserId.String(),
+		SessionId:  req.SessionId.String(),
+		ProposalId: req.ProposalId.String(),
+	}, nil
+}
+
+func EncodeAcceptProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*models.AcceptProposalResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &petifiesProtoV1.AcceptProposalResponse{}, nil
+}
+
+func EncodeRejectProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.RejectProposalReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &petifiesProtoV1.RejectProposalRequest{
+		UserId:     req.UserId.String(),
+		SessionId:  req.SessionId.String(),
+		ProposalId: req.ProposalId.String(),
+	}, nil
+}
+
+func EncodeRejectProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*models.RejectProposalResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &petifiesProtoV1.RejectProposalResponse{}, nil
+}
+
+func EncodeCancelProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.RejectProposalReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &petifiesProtoV1.RejectProposalRequest{
+		UserId:     req.UserId.String(),
+		SessionId:  req.SessionId.String(),
+		ProposalId: req.ProposalId.String(),
+	}, nil
+}
+
+func EncodeCancelProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*models.RejectProposalResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &petifiesProtoV1.RejectProposalResponse{}, nil
+}
+
+func EncodeListReviewsByUserIdRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.ListReviewsByUserIdReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &petifiesProtoV1.ListReviewsByUserIdRequest{
+		UserId:   req.UserId.String(),
+		PageSize: int32(req.PageSize),
+		AfterId:  req.AfterID.String(),
+	}, nil
+}
+
+func EncodeListProposalsByUserIdRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*models.ListProposalsByUserIdReq)
+	if !ok {
+		return nil, MustBeEndpointReqErr
+	}
+
+	return &petifiesProtoV1.ListProposalsByUserIdRequest{
+		UserId:   req.UserId.String(),
+		PageSize: int32(req.PageSize),
+		AfterId:  req.AfterID.String(),
+	}, nil
+}
+
 func encodePetifiesModel(petifies *models.Petifies) *petifiesProtoV1.Petifies {
 	return &petifiesProtoV1.Petifies{
 		Id:          petifies.ID.String(),
 		OwnerId:     petifies.OwnerID.String(),
-		Type:        getPetifiesType(petifies.Type),
+		Type:        GetPetifiesType(petifies.Type),
 		Title:       petifies.Title,
 		Description: petifies.Description,
 		PetName:     petifies.PetName,
@@ -364,7 +457,7 @@ func encodePetifiesModel(petifies *models.Petifies) *petifiesProtoV1.Petifies {
 			return &commonProto.Image{Uri: i.URI, Description: i.Description}
 		}),
 		Address:   encodeAddressModel(&petifies.Address),
-		Status:    getPetifiesStatus(petifies.Status),
+		Status:    GetPetifiesStatus(petifies.Status),
 		CreatedAt: timestamppb.New(petifies.CreatedAt),
 		UpdatedAt: timestamppb.New(petifies.UpdatedAt),
 	}
@@ -376,7 +469,7 @@ func encodePetifiesSessionModel(session *models.PetifiesSession) *petifiesProtoV
 		PetifiesId: session.PetifiesID.String(),
 		FromTime:   timestamppb.New(session.FromTime),
 		ToTime:     timestamppb.New(session.ToTime),
-		Status:     getPetifiesSessionStatus(session.Status),
+		Status:     GetPetifiesSessionStatus(session.Status),
 		CreatedAt:  timestamppb.New(session.CreatedAt),
 		UpdatedAt:  timestamppb.New(session.UpdatedAt),
 	}
@@ -388,7 +481,7 @@ func encodePetifiesProposalModel(proposal *models.PetifiesProposal) *petifiesPro
 		UserId:            proposal.UserID.String(),
 		PetifiesSessionId: proposal.PetifiesSessionID.String(),
 		Proposal:          proposal.Proposal,
-		Status:            getPetifiesProposalStatus(proposal.Status),
+		Status:            GetPetifiesProposalStatus(proposal.Status),
 		CreatedAt:         timestamppb.New(proposal.CreatedAt),
 		UpdatedAt:         timestamppb.New(proposal.UpdatedAt),
 	}
@@ -421,66 +514,66 @@ func encodeAddressModel(address *models.Address) *commonProto.Address {
 	}
 }
 
-func getPetifiesType(petifiesType string) petifiesProtoV1.PetifiesType {
+func GetPetifiesType(petifiesType string) commonProto.PetifiesType {
 	switch petifiesType {
-	case "DOG_WALKING":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_DOG_WALKING
-	case "CAT_PLAYING":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_CAT_PLAYING
-	case "DOG_SITTING":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_DOG_SITTING
-	case "CAT_SITTING":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_CAT_SITTING
-	case "DOG_ADOPTION":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_DOG_ADOPTION
-	case "CAT_ADOPTION":
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_CAT_ADOPTION
+	case "PETIFIES_TYPE_DOG_WALKING":
+		return commonProto.PetifiesType_PETIFIES_TYPE_DOG_WALKING
+	case "PETIFIES_TYPE_CAT_PLAYING":
+		return commonProto.PetifiesType_PETIFIES_TYPE_CAT_PLAYING
+	case "PETIFIES_TYPE_DOG_SITTING":
+		return commonProto.PetifiesType_PETIFIES_TYPE_DOG_SITTING
+	case "PETIFIES_TYPE_CAT_SITTING":
+		return commonProto.PetifiesType_PETIFIES_TYPE_CAT_SITTING
+	case "PETIFIES_TYPE_DOG_ADOPTION":
+		return commonProto.PetifiesType_PETIFIES_TYPE_DOG_ADOPTION
+	case "PETIFIES_TYPE_CAT_ADOPTION":
+		return commonProto.PetifiesType_PETIFIES_TYPE_CAT_ADOPTION
 	default:
-		return petifiesProtoV1.PetifiesType_PETIFIES_TYPE_UNKNOWN
+		return commonProto.PetifiesType_PETIFIES_TYPE_UNKNOWN
 	}
 }
 
-func getPetifiesStatus(petifiesStatus string) petifiesProtoV1.PetifiesStatus {
+func GetPetifiesStatus(petifiesStatus string) commonProto.PetifiesStatus {
 	switch petifiesStatus {
-	case "UNAVAILABLE":
-		return petifiesProtoV1.PetifiesStatus_PETIFIES_STATUS_UNAVAILABLE
-	case "ON_A_SESSION":
-		return petifiesProtoV1.PetifiesStatus_PETIFIES_STATUS_ON_A_SESSION
-	case "DELETED":
-		return petifiesProtoV1.PetifiesStatus_PETIFIES_STATUS_DELETED
+	case "PETIFIES_STATUS_UNAVAILABLE":
+		return commonProto.PetifiesStatus_PETIFIES_STATUS_UNAVAILABLE
+	case "PETIFIES_STATUS_ON_A_SESSION":
+		return commonProto.PetifiesStatus_PETIFIES_STATUS_AVAILABLE
+	case "PETIFIES_STATUS_DELETED":
+		return commonProto.PetifiesStatus_PETIFIES_STATUS_DELETED
 	default:
-		return petifiesProtoV1.PetifiesStatus_PETIFIES_STATUS_UNKNOWN
+		return commonProto.PetifiesStatus_PETIFIES_STATUS_UNKNOWN
 	}
 }
 
-func getPetifiesSessionStatus(petifiesSessionStatus string) petifiesProtoV1.PetifiesSessionStatus {
+func GetPetifiesSessionStatus(petifiesSessionStatus string) commonProto.PetifiesSessionStatus {
 	switch petifiesSessionStatus {
-	case "WAITING_FOR_PROPOSAL":
-		return petifiesProtoV1.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_WAITING_FOR_PROPOSAL
-	case "PROPOSAL_ACCEPTED":
-		return petifiesProtoV1.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_PROPOSAL_ACCEPTED
-	case "ON_GOING":
-		return petifiesProtoV1.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_ON_GOING
-	case "ENDED":
-		return petifiesProtoV1.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_ENDED
+	case "PETIFIES_SESSION_STATUS_WAITING_FOR_PROPOSAL":
+		return commonProto.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_WAITING_FOR_PROPOSAL
+	case "PETIFIES_SESSION_STATUS_PROPOSAL_ACCEPTED":
+		return commonProto.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_PROPOSAL_ACCEPTED
+	case "PETIFIES_SESSION_STATUS_ON_GOING":
+		return commonProto.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_ON_GOING
+	case "PETIFIES_SESSION_STATUS_ENDED":
+		return commonProto.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_ENDED
 	default:
-		return petifiesProtoV1.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_UNKNOWN
+		return commonProto.PetifiesSessionStatus_PETIFIES_SESSION_STATUS_UNKNOWN
 	}
 }
 
-func getPetifiesProposalStatus(petifiesProposal string) petifiesProtoV1.PetifiesProposalStatus {
+func GetPetifiesProposalStatus(petifiesProposal string) commonProto.PetifiesProposalStatus {
 	switch petifiesProposal {
-	case "WAITING_FOR_ACCEPTANCE":
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_WAITING_FOR_ACCEPTANCE
-	case "ACCEPTED":
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_ACCEPTED
-	case "CANCELLED":
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_CANCELLED
-	case "REJECTED":
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_REJECTED
-	case "SESSION_CLOSED":
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_SESSION_CLOSED
+	case "PETIFIES_PROPOSAL_STATUS_WAITING_FOR_ACCEPTANCE":
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_WAITING_FOR_ACCEPTANCE
+	case "PETIFIES_PROPOSAL_STATUS_ACCEPTED":
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_ACCEPTED
+	case "PETIFIES_PROPOSAL_STATUS_CANCELLED":
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_CANCELLED
+	case "PETIFIES_PROPOSAL_STATUS_REJECTED":
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_REJECTED
+	case "PETIFIES_PROPOSAL_STATUS_SESSION_CLOSED":
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_SESSION_CLOSED
 	default:
-		return petifiesProtoV1.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_UNKNOWN
+		return commonProto.PetifiesProposalStatus_PETIFIES_PROPOSAL_STATUS_UNKNOWN
 	}
 }

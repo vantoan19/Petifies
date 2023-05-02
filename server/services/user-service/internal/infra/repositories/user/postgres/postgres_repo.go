@@ -109,6 +109,41 @@ func (pr *UserRepository) GetByEmail(ctx context.Context, email string) (*userAg
 	return user, nil
 }
 
+func (pr *UserRepository) ListByIds(ctx context.Context, ids []uuid.UUID) ([]*userAggre.User, error) {
+	logger.Info("Start ListByIds")
+
+	tCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	var users []*userAggre.User
+	err := pr.execTx(tCtx, func(q *sqlc.Queries) error {
+		usersDb, err := q.ListUsersByIds(ctx, ids)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return status.Errorf(codes.NotFound, UserNotExistErr.Error())
+			}
+			return status.Errorf(codes.Internal, fmt.Sprintf("db err: %s", err.Error()))
+		}
+
+		for _, u := range usersDb {
+			user, err := mapper.DbModelsToUserAggregate(&u, &[]sqlc.Session{})
+			if err != nil {
+				return status.Errorf(codes.Internal, err.Error())
+			}
+
+			users = append(users, user)
+		}
+		return nil
+	})
+	if err != nil {
+		logger.ErrorData("Finish ListByIds: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListByIds")
+	return users, nil
+}
+
 func (pr *UserRepository) SaveUser(ctx context.Context, user userAggre.User) (*userAggre.User, error) {
 	logger.Info("Start SaveUser")
 

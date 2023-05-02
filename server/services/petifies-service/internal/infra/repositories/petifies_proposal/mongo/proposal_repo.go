@@ -90,11 +90,11 @@ func (pr *petifiesProposalMongoRepository) GetBySessionID(ctx context.Context, s
 	return proposals, nil
 }
 
-func (pr *petifiesProposalMongoRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error) {
+func (pr *petifiesProposalMongoRepository) GetByUserID(ctx context.Context, userID uuid.UUID, pageSize int, afterID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error) {
 	var proposals []*petifiesproposalaggre.PetifiesProposalAggre
 
 	err := dbutils.ExecWithSession(ctx, pr.client, func(ssCtx mongo.SessionContext) error {
-		proposals_, err := pr.GetByUserIDWithSession(ssCtx, userID)
+		proposals_, err := pr.GetByUserIDWithSession(ssCtx, userID, pageSize, afterID)
 		if err != nil {
 			return err
 		}
@@ -251,13 +251,24 @@ func (pr *petifiesProposalMongoRepository) GetBySessionIDWithSession(ctx context
 	return result, nil
 }
 
-func (pr *petifiesProposalMongoRepository) GetByUserIDWithSession(ctx context.Context, userID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error) {
+func (pr *petifiesProposalMongoRepository) GetByUserIDWithSession(ctx context.Context, userID uuid.UUID, pageSize int, afterID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error) {
+	var createdAt time.Time
+
+	if afterID == uuid.Nil {
+		createdAt = time.Now()
+	} else {
+		petifies, err := pr.GetByIDWithSession(ctx, afterID)
+		if err != nil {
+			return nil, err
+		}
+		createdAt = petifies.GetCreatedAt()
+	}
+
 	var result []*petifiesproposalaggre.PetifiesProposalAggre
 	var proposals []models.PetifiesProposal
-	cursor, err := pr.proposalCollection.Find(
-		ctx,
-		bson.D{{Key: "user_id", Value: userID}},
-	)
+	filter := bson.D{{Key: "user_id", Value: userID}, {Key: "created_at", Value: bson.D{{Key: "$lt", Value: createdAt}}}}
+	opts := options.Find().SetLimit(int64(pageSize)).SetSort(bson.D{{Key: "created_at", Value: -1}})
+	cursor, err := pr.proposalCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

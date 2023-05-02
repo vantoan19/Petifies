@@ -38,7 +38,15 @@ func (l *Location) Validate() (errs common.MultiError) {
 	if l.EntityID == uuid.Nil {
 		errs = append(errs, ErrEmptyEntityID)
 	}
-	if l.EntityType != valueobjects.Petifies {
+	switch l.EntityType {
+	case valueobjects.PetifiesCatAdoption,
+		valueobjects.PetifiesCatSitting,
+		valueobjects.PetifiesDogSitting,
+		valueobjects.PetifiesCatPlaying,
+		valueobjects.PetifiesDogAdoption,
+		valueobjects.PetifiesDogWalking:
+		// no dothing
+	default:
 		errs = append(errs, ErrUnknownEntityType)
 	}
 	if l.Status != valueobjects.LocationAvailable &&

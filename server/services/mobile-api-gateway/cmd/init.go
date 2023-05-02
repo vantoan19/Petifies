@@ -12,10 +12,13 @@ var initFuncs = []func() error{
 	initMediaServiceClient,
 	initRelationshipServiceClient,
 	initNewfeedServiceClient,
+	initPetifiesServiceClient,
+	initLocationServiceClient,
 	initUserService,
 	initRelationshipService,
 	initPostService,
 	initFeedService,
+	initPetifiesSerivce,
 }
 
 func Initialize() {

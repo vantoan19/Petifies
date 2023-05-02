@@ -8,34 +8,47 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
+	postclient "github.com/vantoan19/Petifies/server/services/grpc-clients/post-client"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/domain/repositories"
 	"github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 )
 
 type redisLoveCacheRepository struct {
-	client *redis.Client
+	client     *redis.Client
+	postClient postclient.PostClient
 }
 
-func NewRedisLoveCacheRepository(client *redis.Client) repositories.LoveCacheRepository {
-	return &redisLoveCacheRepository{client: client}
+func NewRedisLoveCacheRepository(client *redis.Client, postClient postclient.PostClient) repositories.LoveCacheRepository {
+	return &redisLoveCacheRepository{client: client, postClient: postClient}
 }
 
 func (r *redisLoveCacheRepository) GetLove(ctx context.Context, authorID, targetID uuid.UUID) (*models.Love, error) {
 	key := fmt.Sprintf("love:%s_%s", authorID.String(), targetID.String())
 	loveStr, err := r.client.Get(ctx, key).Result()
 	if err == redis.Nil {
-		return nil, nil
+		love, err := r.postClient.GetLove(ctx, &models.GetLoveReq{
+			AuthorID: authorID,
+			TargetID: targetID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		go func() {
+			r.SetLove(ctx, authorID, targetID, *love)
+		}()
+
+		return love, err
 	} else if err != nil {
 		return nil, err
+	} else {
+		var love models.Love
+		err = json.Unmarshal([]byte(loveStr), &love)
+		if err != nil {
+			return nil, err
+		}
+		return &love, nil
 	}
-
-	var love models.Love
-	err = json.Unmarshal([]byte(loveStr), &love)
-	if err != nil {
-		return nil, err
-	}
-
-	return &love, nil
 }
 
 func (r *redisLoveCacheRepository) SetLove(ctx context.Context, authorID, targetID uuid.UUID, love models.Love) error {
@@ -45,7 +58,12 @@ func (r *redisLoveCacheRepository) SetLove(ctx context.Context, authorID, target
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, key, loveStr, 0).Err()
+
+	tx := r.client.TxPipeline()
+
+	tx.Set(ctx, key, loveStr, 0)
+
+	_, err = tx.Exec(ctx)
 	if err != nil {
 		return err
 	}

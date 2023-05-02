@@ -75,6 +75,7 @@ func registerServices(grpcServer *grpc.Server) {
 
 	userEndpoints := endpointsV1.NewUserEndpoints(cmd.UserService)
 	postEndpoints := endpointsV1.NewPostEndpoints(cmd.PostService)
+	petifiesEndpoints := endpointsV1.NewPetifiesEndpoints(cmd.PetifiesService)
 	publicProtoV1.RegisterPublicGatewayServer(grpcServer, grpcServers.NewPublicServer(userEndpoints))
 	authProtoV1.RegisterAuthGatewayServer(grpcServer, grpcServers.NewAuthServer(
 		cmd.MediaServiceConn,
@@ -83,6 +84,7 @@ func registerServices(grpcServer *grpc.Server) {
 		cmd.FeedService,
 		userEndpoints,
 		postEndpoints,
+		petifiesEndpoints,
 	))
 
 	logger.Info("Finished registerServices: SUCCESSFUL")

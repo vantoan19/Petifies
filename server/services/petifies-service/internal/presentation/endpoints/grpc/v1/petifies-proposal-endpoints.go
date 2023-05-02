@@ -17,6 +17,8 @@ type PetifiesProposalEndpoints struct {
 	GetProposalById          endpoint.Endpoint
 	ListProposalsByIds       endpoint.Endpoint
 	ListProposalsBySessionId endpoint.Endpoint
+	CancelProposal           endpoint.Endpoint
+	ListProposalsByUserId    endpoint.Endpoint
 }
 
 func NewPetifiesProposalEndpoints(ps petifiesproposalservice.PetifesProposalService) PetifiesProposalEndpoints {
@@ -26,6 +28,8 @@ func NewPetifiesProposalEndpoints(ps petifiesproposalservice.PetifesProposalServ
 		GetProposalById:          makeGetProposalByIdEndpoint(ps),
 		ListProposalsByIds:       makeListProposalsByIdsEndpoint(ps),
 		ListProposalsBySessionId: makeListProposalsBySessionIdEndpoint(ps),
+		CancelProposal:           makeCancelProposalEndpoint(ps),
+		ListProposalsByUserId:    makeListProposalsByUserIdEndpoint(ps),
 	}
 }
 
@@ -96,6 +100,34 @@ func makeListProposalsBySessionIdEndpoint(ps petifiesproposalservice.PetifesProp
 				return mapPetifiesProposalAggregateToPetifiesProposalModel(p)
 			}),
 		}, nil
+	}
+}
+
+func makeListProposalsByUserIdEndpoint(ps petifiesproposalservice.PetifesProposalService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.ListProposalsByUserIdReq)
+		results, err := ps.ListPetifiesProposalsByUserId(ctx, req.UserId, req.PageSize, req.AfterID)
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.ManyPetifiesProposals{
+			PetifiesProposals: commonutils.Map2(results, func(p *petifiesproposalaggre.PetifiesProposalAggre) *models.PetifiesProposal {
+				return mapPetifiesProposalAggregateToPetifiesProposalModel(p)
+			}),
+		}, nil
+	}
+}
+
+func makeCancelProposalEndpoint(ps petifiesproposalservice.PetifesProposalService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.CancelProposalReq)
+		err = ps.CancelPetifiesProposal(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.CancelProposalResp{}, nil
 	}
 }
 

@@ -17,6 +17,8 @@ type PetifiesSessionEndpoints struct {
 	GetSessionById           endpoint.Endpoint
 	ListSessionsByIds        endpoint.Endpoint
 	ListSessionsByPetifiesId endpoint.Endpoint
+	AcceptProposal           endpoint.Endpoint
+	RejectProposal           endpoint.Endpoint
 }
 
 func NewPetifiesSessionEndpoints(ps petifiessessionservice.PetifesSessionService) PetifiesSessionEndpoints {
@@ -26,6 +28,8 @@ func NewPetifiesSessionEndpoints(ps petifiessessionservice.PetifesSessionService
 		GetSessionById:           makeGetSessionByIdEndpoint(ps),
 		ListSessionsByIds:        makeListSessionsByIdsEndpoint(ps),
 		ListSessionsByPetifiesId: makeListSessionsByPetifiesIdEndpoint(ps),
+		AcceptProposal:           makeAcceptProposalEndpoint(ps),
+		RejectProposal:           makeRejectProposalEndpoint(ps),
 	}
 }
 
@@ -96,6 +100,30 @@ func makeListSessionsByPetifiesIdEndpoint(ps petifiessessionservice.PetifesSessi
 				return mapPetifiesSessionAggregateToPetifiesSessionModel(p)
 			}),
 		}, nil
+	}
+}
+
+func makeAcceptProposalEndpoint(ps petifiessessionservice.PetifesSessionService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.AcceptProposalReq)
+		err = ps.AcceptProposal(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.AcceptProposalResp{}, nil
+	}
+}
+
+func makeRejectProposalEndpoint(ps petifiessessionservice.PetifesSessionService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*models.RejectProposalReq)
+		err = ps.RejectProposal(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.RejectProposalResp{}, nil
 	}
 }
 

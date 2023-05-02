@@ -17,6 +17,8 @@ import (
 
 var logger = logging.New("RelationshipClient")
 
+const relationshipService = "relation_service.v1.RelationshipService"
+
 type relationshipClient struct {
 	addRelationship    endpoint.Endpoint
 	removeRelationship endpoint.Endpoint
@@ -35,7 +37,7 @@ func New(conn *grpc.ClientConn) RelationshipClient {
 	return &relationshipClient{
 		addRelationship: grpctransport.NewClient(
 			conn,
-			"RelationshipService",
+			relationshipService,
 			"AddRelationship",
 			translator.EncodeAddRelationshipRequest,
 			translator.DecodeAddRelationshipResponse,
@@ -43,7 +45,7 @@ func New(conn *grpc.ClientConn) RelationshipClient {
 		).Endpoint(),
 		removeRelationship: grpctransport.NewClient(
 			conn,
-			"RelationshipService",
+			relationshipService,
 			"RemoveRelationship",
 			translator.EncodeRemoveRelationshipRequest,
 			translator.DecodeRemoveRelationshipResponse,
@@ -51,7 +53,7 @@ func New(conn *grpc.ClientConn) RelationshipClient {
 		).Endpoint(),
 		listFollowers: grpctransport.NewClient(
 			conn,
-			"RelationshipService",
+			relationshipService,
 			"ListFollowers",
 			translator.EncodeListFollowersRequest,
 			translator.DecodeListFollowersResponse,
@@ -59,7 +61,7 @@ func New(conn *grpc.ClientConn) RelationshipClient {
 		).Endpoint(),
 		listFollowings: grpctransport.NewClient(
 			conn,
-			"RelationshipService",
+			relationshipService,
 			"ListFollowings",
 			translator.EncodeListFollowingsRequest,
 			translator.DecodeListFollowingsResponse,

@@ -46,9 +46,6 @@ func (r *Review) Validate() (errs commonutils.MultiError) {
 	if len(r.Review) > 5000 {
 		errs = append(errs, ErrReviewExceedsLimit)
 	}
-	if errs_ := r.Image.Validate(); errs_ != nil {
-		errs = append(errs, errs_...)
-	}
 
 	return errs
 }

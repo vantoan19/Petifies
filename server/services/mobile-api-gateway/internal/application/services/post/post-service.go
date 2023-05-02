@@ -2,6 +2,7 @@ package postservice
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -82,25 +83,25 @@ func NewPostService(postClientConn *grpc.ClientConn, userClientConn *grpc.Client
 	return ps, nil
 }
 
-func WithRedisPostCacheRepository(client *redis.Client) PostConfiguration {
+func WithRedisPostCacheRepository(client *redis.Client, postClient postclient.PostClient) PostConfiguration {
 	return func(ps *postService) error {
-		repo := redisPostCache.NewRedisPostCacheRepository(client)
+		repo := redisPostCache.NewRedisPostCacheRepository(client, postClient)
 		ps.postCacheRepo = repo
 		return nil
 	}
 }
 
-func WithRedisCommentCacheRepository(client *redis.Client) PostConfiguration {
+func WithRedisCommentCacheRepository(client *redis.Client, postClient postclient.PostClient) PostConfiguration {
 	return func(ps *postService) error {
-		repo := redisCommentCache.NewRedisCommentCacheRepository(client)
+		repo := redisCommentCache.NewRedisCommentCacheRepository(client, postClient)
 		ps.commentCacheRepo = repo
 		return nil
 	}
 }
 
-func WithRedisLoveCacheRepository(client *redis.Client) PostConfiguration {
+func WithRedisLoveCacheRepository(client *redis.Client, postClient postclient.PostClient) PostConfiguration {
 	return func(ps *postService) error {
-		repo := redisLoveCache.NewRedisLoveCacheRepository(client)
+		repo := redisLoveCache.NewRedisLoveCacheRepository(client, postClient)
 		ps.loveCacheRepo = repo
 		return nil
 	}
@@ -180,34 +181,13 @@ func (ps *postService) CreateComment(ctx context.Context, req *models.UserCreate
 func (ps *postService) GetPostContent(ctx context.Context, postID uuid.UUID) (*postModels.Post, error) {
 	logger.Info("Start GetPostContent")
 
-	// Get from cache
-	if exist, _ := ps.postCacheRepo.ExistsPostContent(ctx, postID); exist {
-		logger.Info("Executing GetPostContent: getting post content info from cache")
-		post, err := ps.postCacheRepo.GetPostContent(ctx, postID)
-		if err != nil {
-			logger.WarningData("Executing GetPostContent: failed to get post content from cache", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-		return post, nil
-	}
-
-	// Get from user service
-	logger.Info("Executing GetPostContent: forwarding the request to Post Service")
-	resp, err := ps.postClient.GetPost(ctx, &postModels.GetPostReq{PostID: postID})
+	post, err := ps.postCacheRepo.GetPostContent(ctx, postID)
 	if err != nil {
-		logger.ErrorData("Finished GetPostContent: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	// save to cache
-	go func() {
-		err := ps.postCacheRepo.SetPostContent(context.Background(), postID, *resp)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-	}()
 
 	logger.Info("Finished GetPostContent: SUCCESSFUL")
-	return resp, nil
+	return post, nil
 }
 
 func (ps *postService) GetPostLoveCount(ctx context.Context, postID uuid.UUID) (int, error) {
@@ -243,16 +223,14 @@ func (ps *postService) GetPostCommentCount(ctx context.Context, postID uuid.UUID
 func (ps *postService) GetCommentContent(ctx context.Context, commentID uuid.UUID) (*postModels.Comment, error) {
 	logger.Info("Start GetCommentContent")
 
-	// Get from post service
-	logger.Info("Executing GetCommentContent: forwarding the request to Post Service")
-	resp, err := ps.postClient.GetComment(ctx, &postModels.GetCommentReq{CommentID: commentID})
+	comment, err := ps.commentCacheRepo.GetCommentContent(ctx, commentID)
 	if err != nil {
 		logger.ErrorData("Finished GetCommentContent: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	logger.Info("Finished GetCommentContent: SUCCESSFUL")
-	return resp, nil
+	return comment, nil
 }
 
 func (ps *postService) GetCommentLoveCount(ctx context.Context, commentID uuid.UUID) (int, error) {
@@ -288,33 +266,14 @@ func (ps *postService) GetCommentSubCommentCount(ctx context.Context, commendID 
 func (ps *postService) GetLove(ctx context.Context, authorID, targetID uuid.UUID) (*postModels.Love, error) {
 	logger.Info("Start GetLove")
 
-	// Get from cache
-	if exist, _ := ps.loveCacheRepo.ExistsLove(ctx, authorID, targetID); exist {
-		logger.Info("Executing GetLove: getting love info from cache")
-		love, err := ps.loveCacheRepo.GetLove(ctx, authorID, targetID)
-		if err != nil {
-			logger.WarningData("Executing GetLove: failed to get love", logging.Data{"error": err.Error()})
-		}
-		return love, nil
-	}
-
-	// Get from post service
-	logger.Info("Executing GetLove: forwarding the request to Post Service")
-	resp, err := ps.postClient.GetLove(ctx, &postModels.GetLoveReq{AuthorID: authorID, TargetID: targetID})
+	love, err := ps.loveCacheRepo.GetLove(ctx, authorID, targetID)
 	if err != nil {
 		logger.ErrorData("Finished GetLove: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
-	// save to cache
-	go func() {
-		err := ps.loveCacheRepo.SetLove(context.Background(), authorID, targetID, *resp)
-		if err != nil {
-			logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-		}
-	}()
 
 	logger.Info("Finished GetLove: SUCCESSFUL")
-	return resp, nil
+	return love, nil
 }
 
 func (ps *postService) ExistsLove(ctx context.Context, authorID, targetID uuid.UUID) (bool, error) {
@@ -626,86 +585,208 @@ func (ps *postService) ListPostsWithUserInfos(ctx context.Context, postIDs []uui
 	logger.Info("Start ListPostsWithUserInfos")
 
 	var wg sync.WaitGroup
-	resultsChan := make(chan *models.PostWithUserInfo, len(postIDs))
-	errsChan := make(chan error, len(postIDs))
-	postMap := make(map[uuid.UUID]*models.PostWithUserInfo)
+	var posts []*postModels.Post
+	var loveCountMutex sync.Mutex
+	loveCounts := make(map[uuid.UUID]int)
+	var commentCountMutex sync.Mutex
+	commentCounts := make(map[uuid.UUID]int)
+	var hasReactedMutex sync.Mutex
+	hasReacted := make(map[uuid.UUID]bool)
+	errsChan := make(chan error, len(postIDs)*5)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		posts_, err := ps.postCacheRepo.ListPostContents(ctx, postIDs)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		posts = posts_
+	}()
 
 	for _, id := range postIDs {
 		wg.Add(1)
 		go func(id uuid.UUID) {
 			defer wg.Done()
-			post, err := ps.GetPostWithUserInfo(ctx, id)
-			if e, ok := status.FromError(err); ok {
-				if e.Code() == codes.NotFound {
-					return
-				}
-			}
+			loveCount, err := ps.GetPostLoveCount(ctx, id)
 			if err != nil {
 				errsChan <- err
 				return
 			}
-			resultsChan <- post
+			loveCountMutex.Lock()
+			loveCounts[id] = loveCount
+			loveCountMutex.Unlock()
+		}(id)
+
+		wg.Add(1)
+		go func(id uuid.UUID) {
+			defer wg.Done()
+			commentCount, err := ps.GetPostCommentCount(ctx, id)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			commentCountMutex.Lock()
+			commentCounts[id] = commentCount
+			commentCountMutex.Unlock()
+		}(id)
+
+		wg.Add(1)
+		go func(id uuid.UUID) {
+			defer wg.Done()
+			userID, err := commonutils.GetUserID(ctx)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			hasReacted_, err := ps.ExistsLove(ctx, userID, id)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			hasReactedMutex.Lock()
+			hasReacted[id] = hasReacted_
+			hasReactedMutex.Unlock()
 		}(id)
 	}
 
 	wg.Wait()
+
+	var mutex sync.Mutex
+	result := make(map[uuid.UUID]*models.PostWithUserInfo)
+	for _, p := range posts {
+		wg.Add(1)
+		go func(p *postModels.Post) {
+			defer wg.Done()
+			user, err := ps.userService.GetUser(ctx, p.AuthorID)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+
+			post := aggregatePostWithUserInfo(p, user, loveCounts[p.ID], commentCounts[p.ID], hasReacted[p.ID])
+			mutex.Lock()
+			result[p.ID] = post
+			mutex.Unlock()
+		}(p)
+	}
+
+	wg.Wait()
 	close(errsChan)
-	close(resultsChan)
 	errs := commonutils.ToSlice(errsChan)
-	results := commonutils.ToSlice(resultsChan)
 	if len(errs) > 0 {
 		logger.ErrorData("Finish ListPostsWithUserInfos: Failed", logging.Data{"error": errs[0].Error()})
 		return nil, errs[0]
 	}
-	for _, p := range results {
-		postMap[p.ID] = p
+
+	finalResult := make([]*models.PostWithUserInfo, 0)
+	for _, id := range postIDs {
+		finalResult = append(finalResult, result[id])
 	}
 
-	logger.Info("Finish ListPostsWithUserInfos: Successful")
-	return commonutils.Map2(postIDs, func(pId uuid.UUID) *models.PostWithUserInfo { return postMap[pId] }), nil
+	return finalResult, nil
 }
 
 func (ps *postService) ListCommentsWithUserInfos(ctx context.Context, commentIDs []uuid.UUID) ([]*models.CommentWithUserInfo, error) {
 	logger.Info("Start ListCommentsWithUserInfos")
 
 	var wg sync.WaitGroup
-	resultsChan := make(chan *models.CommentWithUserInfo, len(commentIDs))
-	errsChan := make(chan error, len(commentIDs))
-	commentMap := make(map[uuid.UUID]*models.CommentWithUserInfo)
+	var comments []*postModels.Comment
+	var loveCountMutex sync.Mutex
+	loveCounts := make(map[uuid.UUID]int)
+	var commentCountMutex sync.Mutex
+	commentCounts := make(map[uuid.UUID]int)
+	var hasReactedMutex sync.Mutex
+	hasReacted := make(map[uuid.UUID]bool)
+	errsChan := make(chan error, len(commentIDs)*5)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		comments_, err := ps.commentCacheRepo.ListCommentContents(ctx, commentIDs)
+		if err != nil {
+			errsChan <- err
+			return
+		}
+		comments = comments_
+	}()
 
 	for _, id := range commentIDs {
 		wg.Add(1)
-		go func(id uuid.UUID) {
+		go func() {
 			defer wg.Done()
-			comment, err := ps.GetCommentWithUserInfo(ctx, id)
-			if e, ok := status.FromError(err); ok {
-				if e.Code() == codes.NotFound {
-					return
-				}
-			}
+			loveCount, err := ps.GetCommentLoveCount(ctx, id)
 			if err != nil {
 				errsChan <- err
 				return
 			}
-			resultsChan <- comment
-		}(id)
+			loveCountMutex.Lock()
+			loveCounts[id] = loveCount
+			loveCountMutex.Unlock()
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			commentCount, err := ps.GetCommentSubCommentCount(ctx, id)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			commentCountMutex.Lock()
+			commentCounts[id] = commentCount
+			commentCountMutex.Unlock()
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			userID, err := commonutils.GetUserID(ctx)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			hasReacted_, err := ps.ExistsLove(ctx, userID, id)
+			if err != nil {
+				errsChan <- err
+				return
+			}
+			hasReactedMutex.Lock()
+			hasReacted[id] = hasReacted_
+			hasReactedMutex.Unlock()
+		}()
+	}
+
+	wg.Wait()
+
+	result := make([]*models.CommentWithUserInfo, 0)
+	var mutex sync.Mutex
+	for _, c := range comments {
+		wg.Add(1)
+		go func(c *postModels.Comment) {
+			defer wg.Done()
+			user, err := ps.userService.GetUser(ctx, c.AuthorID)
+			if err != nil {
+				errsChan <- err
+			}
+
+			comment := aggregateCommentWithUserInfo(c, user, loveCounts[c.ID], commentCounts[c.ID], hasReacted[c.ID])
+			mutex.Lock()
+			result = append(result, comment)
+			mutex.Unlock()
+		}(c)
 	}
 
 	wg.Wait()
 	close(errsChan)
-	close(resultsChan)
 	errs := commonutils.ToSlice(errsChan)
-	results := commonutils.ToSlice(resultsChan)
 	if len(errs) > 0 {
-		logger.ErrorData("Finish ListCommentsWithUserInfos: Failed", logging.Data{"error": errs[0].Error()})
+		logger.ErrorData("Finish ListPostsWithUserInfos: Failed", logging.Data{"error": errs[0].Error()})
 		return nil, errs[0]
 	}
-	for _, c := range results {
-		commentMap[c.ID] = c
-	}
 
-	logger.Info("Finish ListPostsWithUserInfos: Successful")
-	return commonutils.Map2(commentIDs, func(cId uuid.UUID) *models.CommentWithUserInfo { return commentMap[cId] }), nil
+	return result, nil
 }
 
 func (ps *postService) ToggleLoveReactPost(ctx context.Context, req *models.UserToggleLoveReq) (*models.UserToggleLoveResp, error) {
@@ -780,12 +861,14 @@ func (ps *postService) ListCommentsWithUserInfosByParentID(ctx context.Context, 
 		PageSize:       pageSize,
 		AfterCommentID: afterCommentID,
 	})
+	fmt.Println(listResp)
 	if err != nil {
 		logger.ErrorData("Finished ListCommentsWithUserInfosByParentID: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
 	}
 
 	comments, err := ps.ListCommentsWithUserInfos(ctx, listResp.CommentIDs)
+	fmt.Println(comments)
 	if err != nil {
 		logger.ErrorData("Finished ListCommentsWithUserInfosByParentID: FAILED", logging.Data{"error": err.Error()})
 		return nil, err

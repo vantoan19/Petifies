@@ -45,9 +45,9 @@ func NewRelationshipService(relationshipClientConn *grpc.ClientConn, userService
 	return rs, nil
 }
 
-func WithRedisRelationshipCacheRepository(client *redis.Client) RelationshipConfiguration {
+func WithRedisRelationshipCacheRepository(client *redis.Client, relationshipClient relationshipclient.RelationshipClient) RelationshipConfiguration {
 	return func(rs *relationshipService) error {
-		repo := redisRelationshipCache.NewRedisRelationshipCacheRepository(client)
+		repo := redisRelationshipCache.NewRedisRelationshipCacheRepository(client, relationshipClient)
 		rs.relationshipCacheRepo = repo
 		return nil
 	}
@@ -122,37 +122,10 @@ func (rs *relationshipService) RemoveRelationship(ctx context.Context, req *mode
 func (rs *relationshipService) ListFollowers(ctx context.Context, req *models.ListFollowersReq) (*models.ListFollowersResp, error) {
 	logger.Info("Start ListFollowers")
 
-	var followers *models.ListFollowersResp
-	// Get from cache
-	if exist, err := rs.relationshipCacheRepo.ExistsFollowersInfo(ctx, req.UserID); exist {
-		logger.Info("Executing ListFollowers: getting followers info from cache")
-		followers_, err := rs.relationshipCacheRepo.GetFollowersInfo(ctx, req.UserID)
-		if err != nil {
-			logger.ErrorData("Finished ListFollowers: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-
-		followers = followers_
-	} else if err != nil {
+	followers, err := rs.relationshipCacheRepo.GetFollowersInfo(ctx, req.UserID)
+	if err != nil {
 		logger.ErrorData("Finished ListFollowers: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
-	} else { // Get from relationship service
-		logger.Info("Executing ListFollowers: forwarding the request to Relationship Service")
-		resp, err := rs.relationshipClient.ListFollowers(ctx, req.UserID)
-		if err != nil {
-			logger.ErrorData("Finished ListFollowers: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-
-		// save to cache
-		go func() {
-			err := rs.relationshipCacheRepo.SetFollowersInfo(context.Background(), req.UserID, resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-
-		followers = resp
 	}
 
 	logger.Info("Finish ListFollowers: Successful")
@@ -162,37 +135,10 @@ func (rs *relationshipService) ListFollowers(ctx context.Context, req *models.Li
 func (rs *relationshipService) ListFollowings(ctx context.Context, req *models.ListFollowingsReq) (*models.ListFollowingsResp, error) {
 	logger.Info("Start ListFollowings")
 
-	var followings *models.ListFollowingsResp
-	// Get from cache
-	if exist, err := rs.relationshipCacheRepo.ExistsFollowersInfo(ctx, req.UserID); exist {
-		logger.Info("Executing ListFollowings: getting followings count info from cache")
-		followings_, err := rs.relationshipCacheRepo.GetFollowingsInfo(ctx, req.UserID)
-		if err != nil {
-			logger.ErrorData("Finished ListFollowings: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-
-		followings = followings_
-	} else if err != nil {
+	followings, err := rs.relationshipCacheRepo.GetFollowingsInfo(ctx, req.UserID)
+	if err != nil {
 		logger.ErrorData("Finished ListFollowings: FAILED", logging.Data{"error": err.Error()})
 		return nil, err
-	} else { // Get from relationship service
-		logger.Info("Executing ListFollowings: forwarding the request to Relationship Service")
-		resp, err := rs.relationshipClient.ListFollowings(ctx, req.UserID)
-		if err != nil {
-			logger.ErrorData("Finished ListFollowings: FAILED", logging.Data{"error": err.Error()})
-			return nil, err
-		}
-
-		// save to cache
-		go func() {
-			err := rs.relationshipCacheRepo.SetFollowingsInfo(context.Background(), req.UserID, resp)
-			if err != nil {
-				logger.WarningData("Error at setting cache", logging.Data{"error": err.Error()})
-			}
-		}()
-
-		followings = resp
 	}
 
 	logger.Info("Finish ListFollowings: Successful")

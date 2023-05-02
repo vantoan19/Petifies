@@ -45,6 +45,18 @@ type gRPCAuthServer struct {
 	userEditComment     grpctransport.Handler
 	removeFileByURI     grpctransport.Handler
 	userToggleLoveReact grpctransport.Handler
+
+	userCreatePetifies       grpctransport.Handler
+	userCreateSession        grpctransport.Handler
+	userCreateProposal       grpctransport.Handler
+	userCreateReview         grpctransport.Handler
+	listNearByPetifies       grpctransport.Handler
+	listPetifiesByUserId     grpctransport.Handler
+	listSessionsByPetifiesId grpctransport.Handler
+	listProposalsBySessionId grpctransport.Handler
+	listProposalsByUserId    grpctransport.Handler
+	listReviewsByPetifiesId  grpctransport.Handler
+	listReviewsByUserId      grpctransport.Handler
 }
 
 func NewAuthServer(
@@ -54,6 +66,7 @@ func NewAuthServer(
 	feedService feedservice.FeedService,
 	userEndpoints endpoints.UserEndpoints,
 	postEndpoints endpoints.PostEndpoints,
+	petifiesEndpoints endpoints.PetifiesEndpoint,
 ) authProtoV1.AuthGatewayServer {
 	mediaClient := mediaclient.New(mediaConn)
 	return &gRPCAuthServer{
@@ -95,6 +108,61 @@ func NewAuthServer(
 			postEndpoints.UserToggleLoveReact,
 			translator.DecodeUserToggleLoveRequest,
 			translator.EncodeUserToggleLoveResponse,
+		),
+		userCreatePetifies: grpctransport.NewServer(
+			petifiesEndpoints.CreatePetifies,
+			translator.DecodeUserCreatePetifiesRequest,
+			translator.EncodePetifiesWithUserInfoResponse,
+		),
+		userCreateSession: grpctransport.NewServer(
+			petifiesEndpoints.CreatePetifiesSession,
+			translator.DecodeUserCreatePetifiesSessionRequest,
+			translator.EncodePetifiesSessionResponse,
+		),
+		userCreateProposal: grpctransport.NewServer(
+			petifiesEndpoints.CreatePetifiesProposal,
+			translator.DecodeUserCreatePetifiesProposalRequest,
+			translator.EncodePetifiesProposalWithUserInfoResponse,
+		),
+		userCreateReview: grpctransport.NewServer(
+			petifiesEndpoints.CreateReview,
+			translator.DecodeUserCreateReviewRequest,
+			translator.EncodeReviewWithUserInfoResponse,
+		),
+		listNearByPetifies: grpctransport.NewServer(
+			petifiesEndpoints.ListNearByPetifies,
+			translator.DecodeListNearByPetifiesRequest,
+			translator.EncodeListNearByPetifiesResponse,
+		),
+		listPetifiesByUserId: grpctransport.NewServer(
+			petifiesEndpoints.ListPetifiesByUserId,
+			translator.DecodeListPetifiesByUserIdRequest,
+			translator.EncodeListPetifiesByUserIdResponse,
+		),
+		listSessionsByPetifiesId: grpctransport.NewServer(
+			petifiesEndpoints.ListSessionsByPetifiesId,
+			translator.DecodeListSessionsByPetifiesIdRequest,
+			translator.EncodeListSessionsByPetifiesIdResponse,
+		),
+		listProposalsBySessionId: grpctransport.NewServer(
+			petifiesEndpoints.ListProposalsBySessionId,
+			translator.DecodeListProposalsBySessionIdRequest,
+			translator.EncodeListProposalsBySessionIdResponse,
+		),
+		listProposalsByUserId: grpctransport.NewServer(
+			petifiesEndpoints.ListProposalsByUserId,
+			translator.DecodeListProposalsByUserIdRequest,
+			translator.EncodeListProposalsByUserIdResponse,
+		),
+		listReviewsByPetifiesId: grpctransport.NewServer(
+			petifiesEndpoints.ListReviewsByPetifiesId,
+			translator.DecodeListReviewsByPetifiesIdRequest,
+			translator.EncodeListReviewsByPetifiesIdResponse,
+		),
+		listReviewsByUserId: grpctransport.NewServer(
+			petifiesEndpoints.ListReviewsByUserId,
+			translator.DecodeListReviewsByUserIdRequest,
+			translator.EncodeListReviewsByUserIdResponse,
 		),
 	}
 }
@@ -170,6 +238,94 @@ func (s *gRPCAuthServer) UserToggleLoveReact(ctx context.Context, req *authProto
 		return nil, err
 	}
 	return resp.(*authProtoV1.UserToggleLoveResponse), nil
+}
+
+func (s *gRPCAuthServer) UserCreatePetifies(ctx context.Context, req *authProtoV1.UserCreatePetifiesRequest) (*authProtoV1.PetifiesWithUserInfo, error) {
+	_, resp, err := s.userCreatePetifies.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.PetifiesWithUserInfo), nil
+}
+
+func (s *gRPCAuthServer) UserCreatePetifiesSession(ctx context.Context, req *authProtoV1.UserCreatePetifiesSessionRequest) (*authProtoV1.UserPetifiesSession, error) {
+	_, resp, err := s.userCreateSession.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.UserPetifiesSession), nil
+}
+
+func (s *gRPCAuthServer) UserCreatePetifiesProposal(ctx context.Context, req *authProtoV1.UserCreatePetifiesProposalRequest) (*authProtoV1.PetifiesProposalWithUserInfo, error) {
+	_, resp, err := s.userCreateProposal.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.PetifiesProposalWithUserInfo), nil
+}
+
+func (s *gRPCAuthServer) UserCreateReview(ctx context.Context, req *authProtoV1.UserCreateReviewRequest) (*authProtoV1.ReviewWithUserInfo, error) {
+	_, resp, err := s.userCreateReview.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ReviewWithUserInfo), nil
+}
+
+func (s *gRPCAuthServer) ListNearByPetifies(ctx context.Context, req *authProtoV1.ListNearByPetifiesRequest) (*authProtoV1.ListNearByPetifiesResponse, error) {
+	_, resp, err := s.listNearByPetifies.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListNearByPetifiesResponse), nil
+}
+
+func (s *gRPCAuthServer) ListPetifiesByUserId(ctx context.Context, req *authProtoV1.ListPetifiesByUserIdRequest) (*authProtoV1.ListPetifiesByUserIdResponse, error) {
+	_, resp, err := s.listPetifiesByUserId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListPetifiesByUserIdResponse), nil
+}
+
+func (s *gRPCAuthServer) ListSessionsByPetifiesId(ctx context.Context, req *authProtoV1.ListSessionsByPetifiesIdRequest) (*authProtoV1.ListSessionsByPetifiesIdResponse, error) {
+	_, resp, err := s.listSessionsByPetifiesId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListSessionsByPetifiesIdResponse), nil
+}
+
+func (s *gRPCAuthServer) ListProposalsBySessionId(ctx context.Context, req *authProtoV1.ListProposalsBySessionIdRequest) (*authProtoV1.ListProposalsBySessionIdResponse, error) {
+	_, resp, err := s.listProposalsBySessionId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListProposalsBySessionIdResponse), nil
+}
+
+func (s *gRPCAuthServer) ListProposalsByUserId(ctx context.Context, req *authProtoV1.ListProposalsByUserIdRequest) (*authProtoV1.ListProposalsByUserIdResponse, error) {
+	_, resp, err := s.listProposalsByUserId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListProposalsByUserIdResponse), nil
+}
+
+func (s *gRPCAuthServer) ListReviewsByPetifiesId(ctx context.Context, req *authProtoV1.ListReviewsByPetifiesIdRequest) (*authProtoV1.ListReviewsByPetifiesIdResponse, error) {
+	_, resp, err := s.listReviewsByPetifiesId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListReviewsByPetifiesIdResponse), nil
+}
+
+func (s *gRPCAuthServer) ListReviewsByUserId(ctx context.Context, req *authProtoV1.ListReviewsByUserIdRequest) (*authProtoV1.ListReviewsByUserIdResponse, error) {
+	_, resp, err := s.listReviewsByUserId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*authProtoV1.ListReviewsByUserIdResponse), nil
 }
 
 // ============ Stream Endpoints ================

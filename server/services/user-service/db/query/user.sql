@@ -9,6 +9,10 @@ WHERE email = $1 LIMIT 1;
 -- name: ListUsers :many
 SELECT * FROM users;
 
+-- name: ListUsersByIds :many
+SELECT * FROM users
+WHERE id = ANY($1::uuid[]);
+
 -- name: CreateUser :one
 INSERT INTO users (
   id, email, password, first_name, last_name, is_activated

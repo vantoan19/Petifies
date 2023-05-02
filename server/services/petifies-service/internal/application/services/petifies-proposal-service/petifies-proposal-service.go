@@ -13,6 +13,7 @@ import (
 	eventModels "github.com/vantoan19/Petifies/server/infrastructure/kafka/models"
 	"github.com/vantoan19/Petifies/server/infrastructure/kafka/producer"
 	outbox_repo "github.com/vantoan19/Petifies/server/infrastructure/outbox/repository"
+	"github.com/vantoan19/Petifies/server/libs/dbutils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	petifiesaggre "github.com/vantoan19/Petifies/server/services/petifies-service/internal/domain/aggregates/petifies"
 	petifiesproposalaggre "github.com/vantoan19/Petifies/server/services/petifies-service/internal/domain/aggregates/petifies_proposal"
@@ -22,6 +23,7 @@ import (
 	"github.com/vantoan19/Petifies/server/services/petifies-service/internal/domain/events"
 	"github.com/vantoan19/Petifies/server/services/petifies-service/internal/domain/publishers"
 	petifiesproposaleventkafka "github.com/vantoan19/Petifies/server/services/petifies-service/internal/infra/publishers/petifies_proposal_event/kafka"
+	petifiessessioneventkafka "github.com/vantoan19/Petifies/server/services/petifies-service/internal/infra/publishers/petifies_session_event/kafka"
 	petifiesmongo "github.com/vantoan19/Petifies/server/services/petifies-service/internal/infra/repositories/petifies/mongo"
 	petifiesproposalmongo "github.com/vantoan19/Petifies/server/services/petifies-service/internal/infra/repositories/petifies_proposal/mongo"
 	petifiessessionmongo "github.com/vantoan19/Petifies/server/services/petifies-service/internal/infra/repositories/petifies_session/mongo"
@@ -38,6 +40,7 @@ type petifiesProposalService struct {
 	petifiesProposalRepo           petifiesproposalaggre.PetifiesProposalRepository
 	reviewRepo                     reviewaggre.ReviewRepository
 	petifiesProposalEventPublisher publishers.PetifiesProposalEventMessagePublisher
+	petifiesSessionEventPublisher  publishers.PetifiesSessionEventMessagePublisher
 }
 
 type PetifiesProposalConfiguration func(ps *petifiesProposalService) error
@@ -48,6 +51,8 @@ type PetifesProposalService interface {
 	GetPetifiesProposalById(ctx context.Context, id uuid.UUID) (*petifiesproposalaggre.PetifiesProposalAggre, error)
 	ListPetifiesProposalsByIds(ctx context.Context, ids []uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error)
 	ListPetifiesProposalsBySessionId(ctx context.Context, sessionID uuid.UUID, pageSize int, afterID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error)
+	ListPetifiesProposalsByUserId(ctx context.Context, userId uuid.UUID, pageSize int, afterID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error)
+	CancelPetifiesProposal(ctx context.Context, req *models.CancelProposalReq) error
 }
 
 func NewPetifiesProposalService(cfgs ...PetifiesProposalConfiguration) (PetifesProposalService, error) {
@@ -96,6 +101,14 @@ func WithKafkaPetifiesProposalPublisher(producer *producer.KafkaProducer, repo o
 	return func(ps *petifiesProposalService) error {
 		publisher := petifiesproposaleventkafka.NewPetifiesProposalEventPublisher(producer, repo)
 		ps.petifiesProposalEventPublisher = publisher
+		return nil
+	}
+}
+
+func WithKafkaPetifiesSessionEventPublisher(producer *producer.KafkaProducer, repo outbox_repo.EventRepository) PetifiesProposalConfiguration {
+	return func(ps *petifiesProposalService) error {
+		publisher := petifiessessioneventkafka.NewPetifiesSessionEventPublisher(producer, repo)
+		ps.petifiesSessionEventPublisher = publisher
 		return nil
 	}
 }
@@ -210,4 +223,89 @@ func (ps *petifiesProposalService) ListPetifiesProposalsBySessionId(ctx context.
 
 	logger.Info("Finish ListPetifiesProposalsBySessionId: Successful")
 	return proposals, nil
+}
+
+func (ps *petifiesProposalService) ListPetifiesProposalsByUserId(ctx context.Context, userId uuid.UUID, pageSize int, afterID uuid.UUID) ([]*petifiesproposalaggre.PetifiesProposalAggre, error) {
+	logger.Info("Start ListPetifiesProposalsByUserId")
+
+	proposals, err := ps.petifiesProposalRepo.GetByUserID(ctx, userId, pageSize, afterID)
+	if err != nil {
+		logger.ErrorData("Finish ListPetifiesProposalsByUserId: Failed", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finish ListPetifiesProposalsByUserId: Successful")
+	return proposals, nil
+}
+
+func (ps *petifiesProposalService) CancelPetifiesProposal(ctx context.Context, req *models.CancelProposalReq) error {
+	logger.Info("Start CancelPetifiesProposal")
+	err := dbutils.ExecWithSession(ctx, ps.mongoClient, func(ssCtx mongo.SessionContext) error {
+		proposal, err := ps.petifiesProposalRepo.GetByIDWithSession(ssCtx, req.ProposalId)
+		if err != nil {
+			return err
+		}
+		if proposal.GetUserID() != req.UserId {
+			return status.Errorf(codes.PermissionDenied, "user does not have permission to cancel the proposal")
+		}
+
+		session, err := ps.petifiesSessionRepo.GetByIDWithSession(ssCtx, proposal.GetPetifiesSessionID())
+		if err != nil {
+			return err
+		}
+
+		sessionStatusChanged := false
+		var sessionNextStatus valueobjects.PetifiesSessionStatus
+		if proposal.GetStatus() == valueobjects.PetifiesProposalStatusAccepted {
+			err = session.ToWaitForProposalsStatus()
+			if err != nil {
+				return err
+			}
+			sessionStatusChanged = true
+			sessionNextStatus = valueobjects.PetifiesSessionStatusWaitingForProposal
+		}
+		err = proposal.ToCancelledStatus()
+		if err != nil {
+			return err
+		}
+
+		updatedProposal, err := ps.petifiesProposalRepo.Update(ssCtx, *proposal)
+		if err != nil {
+			return err
+		}
+		if updatedProposal.GetStatus() != valueobjects.PetifiesProposalStatusRejected {
+			return status.Errorf(codes.Internal, "failed to change proposal's status")
+		}
+
+		err = ps.petifiesProposalEventPublisher.Publish(ssCtx, eventModels.PetifiesProposalEvent(
+			events.NewPetifiesProposalAcceptedEvent(updatedProposal)))
+		if err != nil {
+			return err
+		}
+
+		if sessionStatusChanged {
+			updatedSession, err := ps.petifiesSessionRepo.Update(ssCtx, *session)
+			if err != nil {
+				return err
+			}
+			if updatedSession.GetStatus() != sessionNextStatus {
+				return status.Errorf(codes.Internal, "failed to change session's status")
+			}
+
+			err = ps.petifiesSessionEventPublisher.Publish(ssCtx, eventModels.PetifiesSessionEvent(
+				events.NewPetifiesSessionWaitingForProposalsEvent(updatedSession)))
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		logger.ErrorData("Finish CancelPetifiesProposal: Failed", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finish CancelPetifiesProposal: Successful")
+	return nil
 }

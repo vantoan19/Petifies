@@ -57,12 +57,17 @@ func DecodeCreatePetifiesSessionRequest(_ context.Context, request interface{}) 
 		return nil, MustBeProtoReqErr
 	}
 
+	creatorId, err := uuid.Parse(req.GetCreatorId())
+	if err != nil {
+		return nil, err
+	}
 	petifiesId, err := uuid.Parse(req.GetPetifiesId())
 	if err != nil {
 		return nil, err
 	}
 
 	return &models.CreatePetifiesSessionReq{
+		CreatorID:  creatorId,
 		PetifiesID: petifiesId,
 		FromTime:   req.FromTime.AsTime(),
 		ToTime:     req.ToTime.AsTime(),
@@ -128,6 +133,10 @@ func DecodeCreateReviewRequest(_ context.Context, request interface{}) (interfac
 		AuthorID:   authorID,
 		PetifiesID: petifiesID,
 		Review:     req.Review,
+		Image: models.Image{
+			URI:         req.Image.Uri,
+			Description: req.Image.Description,
+		},
 	}, nil
 }
 
@@ -446,6 +455,50 @@ func DecodeListReviewsByPetifiesIdRequest(_ context.Context, request interface{}
 	}, nil
 }
 
+func DecodeListProposalsByUserIdRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*petifiesProtoV1.ListProposalsByUserIdRequest)
+	if !ok {
+		return nil, MustBeProtoReqErr
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	afterID, err := uuid.Parse(req.AfterId)
+	if err != nil {
+		afterID = uuid.Nil
+	}
+
+	return &models.ListProposalsByUserIdReq{
+		UserId:   userId,
+		PageSize: int(req.PageSize),
+		AfterID:  afterID,
+	}, nil
+}
+
+func DecodeListReviewsByUserIdRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*petifiesProtoV1.ListReviewsByUserIdRequest)
+	if !ok {
+		return nil, MustBeProtoReqErr
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	afterID, err := uuid.Parse(req.AfterId)
+	if err != nil {
+		afterID = uuid.Nil
+	}
+
+	return &models.ListReviewsByUserIdReq{
+		UserId:   userId,
+		PageSize: int(req.PageSize),
+		AfterID:  afterID,
+	}, nil
+}
+
 func DecodeManyPetifesResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(*petifiesProtoV1.ManyPetifies)
 	if !ok {
@@ -524,6 +577,106 @@ func DecodeManyReviewsResponse(_ context.Context, response interface{}) (interfa
 	return &models.ManyReviews{
 		Reviews: reviews,
 	}, nil
+}
+
+func DecodeAcceptProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*petifiesProtoV1.AcceptProposalRequest)
+	if !ok {
+		return nil, MustBeProtoReqErr
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	sessionId, err := uuid.Parse(req.SessionId)
+	if err != nil {
+		return nil, err
+	}
+	proposalId, err := uuid.Parse(req.ProposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.AcceptProposalReq{
+		UserId:     userId,
+		SessionId:  sessionId,
+		ProposalId: proposalId,
+	}, nil
+}
+
+func DecodeAcceptProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*petifiesProtoV1.AcceptProposalResponse)
+	if !ok {
+		return nil, MustBeProtoRespErr
+	}
+
+	return &models.AcceptProposalResp{}, nil
+}
+
+func DecodeRejectProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*petifiesProtoV1.RejectProposalRequest)
+	if !ok {
+		return nil, MustBeProtoReqErr
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	sessionId, err := uuid.Parse(req.SessionId)
+	if err != nil {
+		return nil, err
+	}
+	proposalId, err := uuid.Parse(req.ProposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.RejectProposalReq{
+		UserId:     userId,
+		SessionId:  sessionId,
+		ProposalId: proposalId,
+	}, nil
+}
+
+func DecodeRejectProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*petifiesProtoV1.RejectProposalResponse)
+	if !ok {
+		return nil, MustBeProtoRespErr
+	}
+
+	return &models.RejectProposalResp{}, nil
+}
+
+func DecodeCancelProposalRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(*petifiesProtoV1.CancelProposalRequest)
+	if !ok {
+		return nil, MustBeProtoReqErr
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	proposalId, err := uuid.Parse(req.ProposalId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.CancelProposalReq{
+		UserId:     userId,
+		ProposalId: proposalId,
+	}, nil
+}
+
+func DecodeCancelProposalResponse(_ context.Context, response interface{}) (interface{}, error) {
+	_, ok := response.(*petifiesProtoV1.CancelProposalResponse)
+	if !ok {
+		return nil, MustBeProtoRespErr
+	}
+
+	return &models.RejectProposalResp{}, nil
 }
 
 func decodePetifiesProtoModel(petifies *petifiesProtoV1.Petifies) (*models.Petifies, error) {

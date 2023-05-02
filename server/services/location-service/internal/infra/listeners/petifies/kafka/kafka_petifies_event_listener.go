@@ -36,7 +36,7 @@ func (pl *petifiesEventListener) Receive(ctx context.Context, event models.Petif
 			event.ID,
 			event.Longitude,
 			event.Latitude,
-			valueobjects.Petifies,
+			convertPetifiesTypeToLocationEntityType(event.Type),
 			valueobjects.LocationUnavailable,
 			time.Now(),
 			time.Now(),
@@ -88,5 +88,24 @@ func (pl *petifiesEventListener) Receive(ctx context.Context, event models.Petif
 	default:
 		logger.Info("Finish Receive: Unknown PetifiesEvent")
 		return status.Errorf(codes.Unknown, "Unknown PetifiesEvent")
+	}
+}
+
+func convertPetifiesTypeToLocationEntityType(t string) valueobjects.EntityType {
+	switch t {
+	case "PETIFIES_TYPE_DOG_WALKING":
+		return valueobjects.PetifiesDogWalking
+	case "PETIFIES_TYPE_CAT_PLAYING":
+		return valueobjects.PetifiesCatPlaying
+	case "PETIFIES_TYPE_DOG_SITTING":
+		return valueobjects.PetifiesDogSitting
+	case "PETIFIES_TYPE_CAT_SITTING":
+		return valueobjects.PetifiesCatSitting
+	case "PETIFIES_TYPE_DOG_ADOPTION":
+		return valueobjects.PetifiesDogAdoption
+	case "PETIFIES_TYPE_CAT_ADOPTION":
+		return valueobjects.PetifiesCatAdoption
+	default:
+		return valueobjects.UnknownType
 	}
 }

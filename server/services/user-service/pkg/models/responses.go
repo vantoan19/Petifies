@@ -23,3 +23,7 @@ type RefreshTokenResp struct {
 	AccessToken          string
 	AccessTokenExpiresAt time.Time
 }
+
+type ListUsersByIdsResp struct {
+	Users []*User
+}

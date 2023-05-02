@@ -73,11 +73,6 @@ class _SignInBodyState extends ConsumerState<_SignInBody> {
 
     final loginResult = ref.watch(loginControllerProvider);
 
-    final errorMsg = loginResult.maybeWhen(
-      error: (error, stackTrace) => error.toString(),
-      orElse: () => "nothing",
-    );
-
     final isLoading = loginResult.maybeWhen(
       data: (_) => loginResult.isRefreshing,
       loading: () => true,
@@ -89,7 +84,6 @@ class _SignInBodyState extends ConsumerState<_SignInBody> {
         Constants.signInImagePath,
         width: width,
       ),
-      Text(errorMsg),
       Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,

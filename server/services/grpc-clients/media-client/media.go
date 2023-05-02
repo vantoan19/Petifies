@@ -18,6 +18,8 @@ import (
 
 var logger = logging.New("Clients.MediaClient")
 
+const mediaService = "media_service.v1.MediaService"
+
 type mediaClient struct {
 	client                 mediaProtoV1.MediaServiceClient
 	removeFileByURIForward endpoint.Endpoint
@@ -38,7 +40,7 @@ func New(conn *grpc.ClientConn) MediaClient {
 		client: mediaProtoV1.NewMediaServiceClient(conn),
 		removeFileByURIForward: grpctransport.NewClient(
 			conn,
-			"MediaService",
+			mediaService,
 			"RemoveFileByURI",
 			commonutils.CreateClientForwardEncodeRequestFunc[*common.RemoveFileByURIRequest](),
 			commonutils.CreateClientForwardDecodeResponseFunc[*common.RemoveFileByURIResponse](),

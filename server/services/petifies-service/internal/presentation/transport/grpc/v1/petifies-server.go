@@ -32,6 +32,12 @@ type gRPCPetifiesServer struct {
 	listSessionsByPetifiesId grpctransport.Handler
 	listProposalsBySessionId grpctransport.Handler
 	listReviewsByPetifiesId  grpctransport.Handler
+	listProposalsByUserId    grpctransport.Handler
+	listReviewsByUserId      grpctransport.Handler
+
+	acceptProposal grpctransport.Handler
+	rejectProposal grpctransport.Handler
+	cancelProposal grpctransport.Handler
 }
 
 func NewPetifiesServer(
@@ -139,6 +145,31 @@ func NewPetifiesServer(
 		listReviewsByPetifiesId: grpctransport.NewServer(
 			reviewEndpoints.ListReviewsByPetifiesId,
 			translators.DecodeListReviewsByPetifiesIdRequest,
+			translators.EncodeManyReviewsResponse,
+		),
+		acceptProposal: grpctransport.NewServer(
+			petifiesSessionEndpoints.AcceptProposal,
+			translators.DecodeAcceptProposalRequest,
+			translators.EncodeAcceptProposalResponse,
+		),
+		rejectProposal: grpctransport.NewServer(
+			petifiesSessionEndpoints.RejectProposal,
+			translators.DecodeRejectProposalRequest,
+			translators.EncodeRejectProposalResponse,
+		),
+		cancelProposal: grpctransport.NewServer(
+			petifiesProposalEndpoints.CancelProposal,
+			translators.DecodeCancelProposalRequest,
+			translators.EncodeCancelProposalResponse,
+		),
+		listProposalsByUserId: grpctransport.NewServer(
+			petifiesProposalEndpoints.ListProposalsByUserId,
+			translators.DecodeListProposalsByUserIdRequest,
+			translators.EncodeManyPetifiesProposalsResponse,
+		),
+		listReviewsByUserId: grpctransport.NewServer(
+			reviewEndpoints.ListReviewsByUserId,
+			translators.DecodeListReviewsByUserIdRequest,
 			translators.EncodeManyReviewsResponse,
 		),
 	}
@@ -287,7 +318,7 @@ func (s *gRPCPetifiesServer) ListSessionsByPetifiesId(
 	ctx context.Context,
 	req *petifiesProtoV1.ListSessionsByPetifiesIdRequest,
 ) (*petifiesProtoV1.ManyPetifiesSessions, error) {
-	_, resp, err := s.listPetifiesByOwnerId.ServeGRPC(ctx, req)
+	_, resp, err := s.listSessionsByPetifiesId.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +341,61 @@ func (s *gRPCPetifiesServer) ListReviewsByPetifiesId(
 	req *petifiesProtoV1.ListReviewsByPetifiesIdRequest,
 ) (*petifiesProtoV1.ManyReviews, error) {
 	_, resp, err := s.listReviewsByPetifiesId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*petifiesProtoV1.ManyReviews), nil
+}
+
+func (s *gRPCPetifiesServer) AcceptProposal(
+	ctx context.Context,
+	req *petifiesProtoV1.AcceptProposalRequest,
+) (*petifiesProtoV1.AcceptProposalResponse, error) {
+	_, resp, err := s.acceptProposal.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*petifiesProtoV1.AcceptProposalResponse), nil
+}
+
+func (s *gRPCPetifiesServer) RejectProposal(
+	ctx context.Context,
+	req *petifiesProtoV1.RejectProposalRequest,
+) (*petifiesProtoV1.RejectProposalResponse, error) {
+	_, resp, err := s.rejectProposal.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*petifiesProtoV1.RejectProposalResponse), nil
+}
+
+func (s *gRPCPetifiesServer) CancelProposal(
+	ctx context.Context,
+	req *petifiesProtoV1.CancelProposalRequest,
+) (*petifiesProtoV1.CancelProposalResponse, error) {
+	_, resp, err := s.cancelProposal.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*petifiesProtoV1.CancelProposalResponse), nil
+}
+
+func (s *gRPCPetifiesServer) ListProposalsByUserId(
+	ctx context.Context,
+	req *petifiesProtoV1.ListProposalsByUserIdRequest,
+) (*petifiesProtoV1.ManyPetifiesProposals, error) {
+	_, resp, err := s.listProposalsByUserId.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.(*petifiesProtoV1.ManyPetifiesProposals), nil
+}
+
+func (s *gRPCPetifiesServer) ListReviewsByUserId(
+	ctx context.Context,
+	req *petifiesProtoV1.ListReviewsByUserIdRequest,
+) (*petifiesProtoV1.ManyReviews, error) {
+	_, resp, err := s.listReviewsByUserId.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}

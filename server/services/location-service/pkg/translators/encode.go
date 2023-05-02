@@ -3,6 +3,7 @@ package translators
 import (
 	"context"
 
+	commonProto "github.com/vantoan19/Petifies/proto/common"
 	locationProtoV1 "github.com/vantoan19/Petifies/proto/location-service/v1"
 	"github.com/vantoan19/Petifies/server/services/location-service/pkg/models"
 )
@@ -18,6 +19,8 @@ func EncodeListNearByLocationsByTypeRequest(_ context.Context, request interface
 		Longitude:    req.Longitude,
 		Latitude:     req.Latitude,
 		Radius:       req.Radius,
+		PageSize:     int32(req.PageSize),
+		Offset:       int32(req.Offset),
 	}, nil
 }
 
@@ -46,11 +49,21 @@ func encodeLocationModel(location *models.Location) *locationProtoV1.Location {
 	}
 }
 
-func getLocationType(locationType string) locationProtoV1.LocationType {
+func getLocationType(locationType string) commonProto.LocationType {
 	switch locationType {
-	case "PETIFIES":
-		return locationProtoV1.LocationType_LOCATION_TYPE_PETIFIES
+	case "LOCATION_TYPE_PETIFIES_DOG_WALKING":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_DOG_WALKING
+	case "LOCATION_TYPE_PETIFIES_CAT_PLAYING":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_CAT_PLAYING
+	case "LOCATION_TYPE_PETIFIES_DOG_SITTING":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_DOG_SITTING
+	case "LOCATION_TYPE_PETIFIES_CAT_SITTING":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_CAT_SITTING
+	case "LOCATION_TYPE_PETIFIES_DOG_ADOPTION":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_DOG_ADOPTION
+	case "LOCATION_TYPE_PETIFIES_CAT_ADOPTION":
+		return commonProto.LocationType_LOCATION_TYPE_PETIFIES_CAT_ADOPTION
 	default:
-		return locationProtoV1.LocationType_LOCATION_UNKNOWN
+		return commonProto.LocationType_LOCATION_UNKNOWN
 	}
 }

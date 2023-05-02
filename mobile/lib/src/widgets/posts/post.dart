@@ -49,10 +49,13 @@ class Post extends ConsumerWidget {
                 spaceBetweenTextAndMedia: 8,
               ),
             ),
-            const PostFooter(
-              iconSize: 20,
-              textSize: 14,
-              spaceBetween: 6,
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: const PostFooter(
+                iconSize: 20,
+                textSize: 14,
+                spaceBetween: 6,
+              ),
             ),
           ],
         ),

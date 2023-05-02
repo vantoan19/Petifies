@@ -13,8 +13,13 @@ import (
 )
 
 var (
-	ErrNeedWaitForAcceptanceStatus = status.Errorf(codes.InvalidArgument, "the proposal needs to be in WAITING_FOR_ACCEPTANCE status")
-	ErrInvalidPrecedeStatus        = status.Errorf(codes.InvalidArgument, "the proposal have invalid precede status")
+	ErrNeedWaitForAcceptanceStatus    = status.Errorf(codes.InvalidArgument, "the proposal needs to be in WAITING_FOR_ACCEPTANCE status")
+	ErrInvalidPrecedeStatus           = status.Errorf(codes.InvalidArgument, "the proposal has invalid preceding status")
+	ErrStatusAlreadyWaitForAcceptance = status.Errorf(codes.Aborted, "status is already WAITING_FOR_ACCEPTANCE")
+	ErrStatusAlreadyAccepted          = status.Errorf(codes.Aborted, "status is already ACCEPTED")
+	ErrStatusAlreadyCancelled         = status.Errorf(codes.Aborted, "status is already CANCELLED")
+	ErrStatusAlreadyRejected          = status.Errorf(codes.Aborted, "status is already REJECTED")
+	ErrStatusAlreadySessionClosed     = status.Errorf(codes.Aborted, "status is already SESSION_CLOSED")
 )
 
 type PetifiesProposalAggre struct {
@@ -53,6 +58,9 @@ func (p *PetifiesProposalAggre) ToAcceptedStatus() error {
 	if p.proposal.Status != valueobjects.PetifiesProposalStatusWaitingForAcceptance {
 		return ErrNeedWaitForAcceptanceStatus
 	}
+	if p.proposal.Status == valueobjects.PetifiesProposalStatusAccepted {
+		return ErrStatusAlreadyAccepted
+	}
 
 	p.proposal.Status = valueobjects.PetifiesProposalStatusAccepted
 	return nil
@@ -64,6 +72,8 @@ func (p *PetifiesProposalAggre) ToCancelledStatus() error {
 		valueobjects.PetifiesProposalStatusWaitingForAcceptance:
 		p.proposal.Status = valueobjects.PetifiesProposalStatusCancelled
 		return nil
+	case valueobjects.PetifiesProposalStatusCancelled:
+		return ErrStatusAlreadyCancelled
 	default:
 		return ErrInvalidPrecedeStatus
 	}
@@ -75,6 +85,8 @@ func (p *PetifiesProposalAggre) ToWaitingForAcceptanceStatus() error {
 		valueobjects.PetifiesProposalStatusRejected:
 		p.proposal.Status = valueobjects.PetifiesProposalStatusWaitingForAcceptance
 		return nil
+	case valueobjects.PetifiesProposalStatusWaitingForAcceptance:
+		return ErrStatusAlreadyWaitForAcceptance
 	default:
 		return ErrInvalidPrecedeStatus
 	}
@@ -86,6 +98,8 @@ func (p *PetifiesProposalAggre) ToRejectedStatus() error {
 		valueobjects.PetifiesProposalStatusAccepted:
 		p.proposal.Status = valueobjects.PetifiesProposalStatusRejected
 		return nil
+	case valueobjects.PetifiesProposalStatusRejected:
+		return ErrStatusAlreadyRejected
 	default:
 		return ErrInvalidPrecedeStatus
 	}
@@ -96,6 +110,8 @@ func (p *PetifiesProposalAggre) ToSessionClosedStatus() error {
 	case valueobjects.PetifiesProposalStatusWaitingForAcceptance:
 		p.proposal.Status = valueobjects.PetifiesProposalStatusSessionClosed
 		return nil
+	case valueobjects.PetifiesProposalStatusSessionClosed:
+		return ErrStatusAlreadySessionClosed
 	default:
 		return ErrInvalidPrecedeStatus
 	}

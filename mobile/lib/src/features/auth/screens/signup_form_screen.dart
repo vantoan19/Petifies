@@ -67,7 +67,6 @@ class _SignUpFormBodyState extends ConsumerState<SignUpFormBody> {
     return Column(
       children: [
         const _GreetingHeader(),
-        Text(errorMsg),
         Form(
           key: _formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,

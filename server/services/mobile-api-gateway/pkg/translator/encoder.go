@@ -7,6 +7,8 @@ import (
 	commonProto "github.com/vantoan19/Petifies/proto/common"
 	commonutils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/mobile-api-gateway/pkg/models"
+	petifiesModels "github.com/vantoan19/Petifies/server/services/petifies-service/pkg/models"
+	petifiesTranslator "github.com/vantoan19/Petifies/server/services/petifies-service/pkg/translators"
 	postModels "github.com/vantoan19/Petifies/server/services/post-service/pkg/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -49,6 +51,133 @@ func EncodeUserToggleLoveResponse(_ context.Context, response interface{}) (inte
 		HasReacted: &wrapperspb.BoolValue{
 			Value: resp.HasReacted,
 		},
+	}, nil
+}
+
+func EncodePetifiesWithUserInfoResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.PetifiesWithUserInfo)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return EncodePetifiesWithUserInfoHelper(resp), nil
+}
+
+func EncodePetifiesProposalWithUserInfoResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.PetifiesProposalWithUserInfo)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return EncodePetifiesProposalWithUserInfoHelper(resp), nil
+}
+
+func EncodePetifiesSessionResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.PetifiesSession)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return EncodePetifiesSessionHelper(resp), nil
+}
+
+func EncodeReviewWithUserInfoResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ReviewWithUserInfo)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return EncodeReviewWithUserInfoHelper(resp), nil
+}
+
+func EncodeListNearByPetifiesResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListNearByPetifiesResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListNearByPetifiesResponse{
+		Petifies: commonutils.Map2(resp.Petifies, func(p *models.PetifiesWithUserInfo) *authProtoV1.PetifiesWithUserInfo {
+			return EncodePetifiesWithUserInfoHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListPetifiesByUserIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListPetifiesByUserIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListPetifiesByUserIdResponse{
+		Petifies: commonutils.Map2(resp.Petifies, func(p *models.PetifiesWithUserInfo) *authProtoV1.PetifiesWithUserInfo {
+			return EncodePetifiesWithUserInfoHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListSessionsByPetifiesIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListSessionsByPetifiesIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListSessionsByPetifiesIdResponse{
+		Sessions: commonutils.Map2(resp.Sessions, func(p *models.PetifiesSession) *authProtoV1.UserPetifiesSession {
+			return EncodePetifiesSessionHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListProposalsBySessionIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListProposalsBySessionIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListProposalsBySessionIdResponse{
+		Proposals: commonutils.Map2(resp.Proposals, func(p *models.PetifiesProposalWithUserInfo) *authProtoV1.PetifiesProposalWithUserInfo {
+			return EncodePetifiesProposalWithUserInfoHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListProposalsByUserIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListProposalsByUserIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListProposalsByUserIdResponse{
+		Proposals: commonutils.Map2(resp.Proposals, func(p *models.PetifiesProposalWithUserInfo) *authProtoV1.PetifiesProposalWithUserInfo {
+			return EncodePetifiesProposalWithUserInfoHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListReviewsByPetifiesIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListReviewsByPetifiesIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListReviewsByPetifiesIdResponse{
+		Reviews: commonutils.Map2(resp.Reviews, func(p *models.ReviewWithUserInfo) *authProtoV1.ReviewWithUserInfo {
+			return EncodeReviewWithUserInfoHelper(p)
+		}),
+	}, nil
+}
+
+func EncodeListReviewsByUserIdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(*models.ListReviewsByUserIdResp)
+	if !ok {
+		return nil, MustBeEndpointRespErr
+	}
+
+	return &authProtoV1.ListReviewsByUserIdResponse{
+		Reviews: commonutils.Map2(resp.Reviews, func(p *models.ReviewWithUserInfo) *authProtoV1.ReviewWithUserInfo {
+			return EncodeReviewWithUserInfoHelper(p)
+		}),
 	}, nil
 }
 
@@ -110,5 +239,70 @@ func EncodeLoveWithUserInfoHelper(love *models.LoveWithUserInfo) *authProtoV1.Lo
 		IsPostTarget: love.IsPostTarget,
 		Author:       EncodeBasicUserInfoHelper(&love.Author),
 		CreatedAt:    timestamppb.New(love.CreatedAt),
+	}
+}
+
+func EncodePetifiesWithUserInfoHelper(petifies *models.PetifiesWithUserInfo) *authProtoV1.PetifiesWithUserInfo {
+	return &authProtoV1.PetifiesWithUserInfo{
+		Id:          petifies.Id.String(),
+		Owner:       EncodeBasicUserInfoHelper(&petifies.Owner),
+		Type:        petifiesTranslator.GetPetifiesType(petifies.Type),
+		Title:       petifies.Title,
+		Description: petifies.Description,
+		PetName:     petifies.PetName,
+		Images: commonutils.Map2(petifies.Images, func(i petifiesModels.Image) *commonProto.Image {
+			return &commonProto.Image{Uri: i.URI, Description: i.Description}
+		}),
+		Status: petifiesTranslator.GetPetifiesStatus(petifies.Status),
+		Address: &commonProto.Address{
+			AddressLineOne: petifies.Address.AddressLineOne,
+			AddressLineTwo: petifies.Address.AddressLineTwo,
+			Street:         petifies.Address.Street,
+			District:       petifies.Address.District,
+			City:           petifies.Address.City,
+			Region:         petifies.Address.Region,
+			PostalCode:     petifies.Address.PostalCode,
+			Country:        petifies.Address.Country,
+			Longitude:      petifies.Address.Longitude,
+			Latitude:       petifies.Address.Latitude,
+		},
+		CreatedAt: timestamppb.New(petifies.CreatedAt),
+		UpdatedAt: timestamppb.New(petifies.UpdatedAt),
+	}
+}
+
+func EncodePetifiesSessionHelper(session *models.PetifiesSession) *authProtoV1.UserPetifiesSession {
+	return &authProtoV1.UserPetifiesSession{
+		Id:         session.Id.String(),
+		PetifiesId: session.PetifiesId.String(),
+		FromTime:   timestamppb.New(session.FromTime),
+		ToTime:     timestamppb.New(session.ToTime),
+		Status:     petifiesTranslator.GetPetifiesSessionStatus(session.Status),
+		CreatedAt:  timestamppb.New(session.CreatedAt),
+		UpdatedAt:  timestamppb.New(session.UpdatedAt),
+	}
+}
+
+func EncodePetifiesProposalWithUserInfoHelper(proposal *models.PetifiesProposalWithUserInfo) *authProtoV1.PetifiesProposalWithUserInfo {
+	return &authProtoV1.PetifiesProposalWithUserInfo{
+		Id:                proposal.Id.String(),
+		User:              EncodeBasicUserInfoHelper(&proposal.User),
+		PetifiesSessionId: proposal.PetifiesSessionId.String(),
+		Proposal:          proposal.Proposal,
+		Status:            petifiesTranslator.GetPetifiesProposalStatus(proposal.Status),
+		CreatedAt:         timestamppb.New(proposal.CreatedAt),
+		UpdatedAt:         timestamppb.New(proposal.UpdatedAt),
+	}
+}
+
+func EncodeReviewWithUserInfoHelper(review *models.ReviewWithUserInfo) *authProtoV1.ReviewWithUserInfo {
+	return &authProtoV1.ReviewWithUserInfo{
+		Id:         review.Id.String(),
+		Author:     EncodeBasicUserInfoHelper(&review.Author),
+		PetifiesId: review.PetifiesId.String(),
+		Review:     review.Review,
+		Image:      &commonProto.Image{Uri: review.Image.URI, Description: review.Image.Description},
+		CreatedAt:  timestamppb.New(review.CreatedAt),
+		UpdatedAt:  timestamppb.New(review.UpdatedAt),
 	}
 }

@@ -48,7 +48,9 @@ class ImageCard extends ConsumerWidget {
         : Image.network(
             imageUrl,
             loadingBuilder: (context, child, loadingProgress) =>
-                (loadingProgress == null) ? child : CircularProgressIndicator(),
+                (loadingProgress == null)
+                    ? child
+                    : Center(child: CircularProgressIndicator()),
             fit: BoxFit.cover,
           );
 

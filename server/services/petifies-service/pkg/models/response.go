@@ -65,3 +65,9 @@ type ManyPetifiesProposals struct {
 type ManyReviews struct {
 	Reviews []*Review
 }
+
+type AcceptProposalResp struct{}
+
+type RejectProposalResp struct{}
+
+type CancelProposalResp struct{}

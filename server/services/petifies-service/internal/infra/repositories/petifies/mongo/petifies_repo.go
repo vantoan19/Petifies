@@ -189,7 +189,7 @@ func (pr *petifiesMongoRepository) ListByIDsWithSession(ctx context.Context, ids
 		return nil, err
 	}
 	var petifiesDB []models.Petifies
-	if err := cursor.All(ctx, petifiesDB); err != nil {
+	if err := cursor.All(ctx, &petifiesDB); err != nil {
 		return nil, err
 	}
 

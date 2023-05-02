@@ -61,28 +61,28 @@ class PostFeeds extends _$PostFeeds {
 class FeedScreen extends ConsumerWidget {
   const FeedScreen();
 
-  Widget get _stories {
-    return SizedBox(
-      height: 100,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-          StoryCircle(),
-        ],
-      ),
-    );
-  }
+  // Widget get _stories {
+  //   return SizedBox(
+  //     height: 100,
+  //     child: ListView(
+  //       scrollDirection: Axis.horizontal,
+  //       children: [
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //         StoryCircle(),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -119,15 +119,7 @@ class FeedScreen extends ConsumerWidget {
               ),
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return Column(
-                    children: [
-                      Divider(
-                        thickness: 5,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
-                      _stories,
-                    ],
-                  );
+                  return SizedBox.shrink();
                 }
                 if (newlyCreatedPost.length > 0 &&
                     index <= newlyCreatedPost.length) {
@@ -155,28 +147,6 @@ class FeedScreen extends ConsumerWidget {
             ),
           ),
           if (isFeedLoading) CircularProgressIndicator(),
-          // Comment(
-          //   commentInfo: CommentModel(
-          //     id: "id",
-          //     owner: BasicUserInfoModel(
-          //       id: "user_id",
-          //       email: "vantoan.hk14@gmail.com",
-          //       userAvatar: null,
-          //       firstName: "Toan",
-          //       lastName: "Tran",
-          //     ),
-          //     createdAt: DateTime.now(),
-          //     textContent: "Hello, how are you?",
-          //     image: NetworkImageModel(
-          //       uri:
-          //           "https://storage.googleapis.com/petifies-storage/2d9e369b-7a68-4a5a-8ed8-29d46866cc59-image_picker_36866E47-A1B5-4C13-A422-D8F0F2CEF9AE-70167-000013514860E757.jpg",
-          //       description: "",
-          //     ),
-          //     hasReacted: false,
-          //     loveCount: 0,
-          //     subcommentCount: 0,
-          //   ),
-          // ),
         ],
       ),
     );

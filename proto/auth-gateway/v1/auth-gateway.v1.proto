@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package auth_gateway.v1;
 option go_package = "github.com/vantoan19/Petifies/proto/auth-gateway/v1";
 
 import "common/common.proto";
@@ -86,6 +87,50 @@ message LoveWithUserInfo {
     google.protobuf.Timestamp created_at = 5;
 }
 
+message PetifiesWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser owner = 2;
+    PetifiesType type = 3;
+    string title = 4;
+    string description = 5;
+    string pet_name = 6;
+    repeated Image images = 7;
+    PetifiesStatus status = 8;
+    Address address = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
+}
+
+message PetifiesProposalWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser user = 2;
+    string petifies_session_id = 3 [(validate.rules).string.uuid = true];
+    string proposal = 4;
+    PetifiesProposalStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message ReviewWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    BasicUser author = 3; 
+    string review = 4;
+    Image image = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message UserPetifiesSession {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+    PetifiesSessionStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
 message ListNewFeedsRequest {
     string after_post_id = 1;
 }
@@ -147,6 +192,105 @@ message UserListCommentsByParentIDResponse {
 //     PostWithUserInfo post = 1;
 // }
 
+message UserCreatePetifiesRequest {
+    PetifiesType type = 1;
+    string title = 2;
+    string description = 3;
+    string pet_name = 4;
+    repeated Image images = 5;
+    Address address = 6;
+}
+
+message UserCreatePetifiesSessionRequest {
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+}
+
+message UserCreatePetifiesProposalRequest {
+    string petifies_session_id = 1 [(validate.rules).string.uuid = true];
+    string proposal = 2; 
+}
+
+message UserCreateReviewRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    string review = 3;
+    Image image = 4;
+}
+
+message ListNearByPetifiesRequest {
+    PetifiesType type = 1;
+    double longitude = 2;
+    double latitude = 3;
+    double radius = 4;
+    int32 page_size = 5;
+    int32 offset = 6;
+}
+
+message ListNearByPetifiesResponse {
+    repeated PetifiesWithUserInfo petifies = 1;
+}
+
+message ListPetifiesByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListPetifiesByUserIdResponse {
+    repeated PetifiesWithUserInfo petifies = 1;
+}
+
+message ListSessionsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListSessionsByPetifiesIdResponse  {
+    repeated UserPetifiesSession sessions = 1;
+}
+
+message ListProposalsBySessionIdRequest {
+    string session_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsBySessionIdResponse  {
+    repeated PetifiesProposalWithUserInfo proposals = 1;
+}
+
+message ListProposalsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsByUserIdResponse  {
+    repeated PetifiesProposalWithUserInfo proposals = 1;
+}
+
+message ListReviewsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByPetifiesIdResponse  {
+    repeated ReviewWithUserInfo reviews = 1;
+}
+
+message ListReviewsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByUserIdResponse  {
+    repeated ReviewWithUserInfo reviews = 1;
+}
+
 service AuthGateway {
     rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
     rpc UserCreatePost(UserCreatePostRequest) returns (PostWithUserInfo) {}
@@ -162,4 +306,15 @@ service AuthGateway {
     rpc UserListCommentsByParentID(stream UserListCommentsByParentIDRequest) returns (stream UserListCommentsByParentIDResponse) {}
     // rpc UserGetPostByID(UserGetPostByIDRequest) returns (UserGetPostByIDResponse) {}
     // rpc UserListCommentAncestors(UserListCommentAncestorsRequest) returns (UserListCommentAncestorsResponse) {}
+    rpc UserCreatePetifies(UserCreatePetifiesRequest) returns (PetifiesWithUserInfo) {}
+    rpc UserCreatePetifiesSession(UserCreatePetifiesSessionRequest) returns (UserPetifiesSession) {}
+    rpc UserCreatePetifiesProposal(UserCreatePetifiesProposalRequest) returns (PetifiesProposalWithUserInfo) {}
+    rpc UserCreateReview(UserCreateReviewRequest) returns (ReviewWithUserInfo) {}
+    rpc ListNearByPetifies(ListNearByPetifiesRequest) returns (ListNearByPetifiesResponse) {}
+    rpc ListPetifiesByUserId(ListPetifiesByUserIdRequest) returns (ListPetifiesByUserIdResponse) {}
+    rpc ListSessionsByPetifiesId(ListSessionsByPetifiesIdRequest) returns (ListSessionsByPetifiesIdResponse) {}
+    rpc ListProposalsBySessionId(ListProposalsBySessionIdRequest) returns (ListProposalsBySessionIdResponse) {}
+    rpc ListProposalsByUserId(ListProposalsByUserIdRequest) returns (ListProposalsByUserIdResponse) {}
+    rpc ListReviewsByPetifiesId(ListReviewsByPetifiesIdRequest) returns (ListReviewsByPetifiesIdResponse) {}
+    rpc ListReviewsByUserId(ListReviewsByUserIdRequest) returns (ListReviewsByUserIdResponse) {}
 }

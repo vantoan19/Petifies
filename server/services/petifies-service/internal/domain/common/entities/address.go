@@ -31,18 +31,18 @@ type Address struct {
 }
 
 func (a *Address) Validate() (errs commonutils.MultiError) {
-	if a.AddressLineOne == "" {
-		errs = append(errs, ErrEmptyAddressLineOne)
-	}
+	// if a.AddressLineOne == "" {
+	// 	errs = append(errs, ErrEmptyAddressLineOne)
+	// }
 	if a.Street == "" {
 		errs = append(errs, ErrEmptyStreet)
 	}
 	if a.City == "" {
 		errs = append(errs, ErrEmptyCity)
 	}
-	if a.Region == "" {
-		errs = append(errs, ErrEmptyRegion)
-	}
+	// if a.Region == "" {
+	// 	errs = append(errs, ErrEmptyRegion)
+	// }
 	if a.Country == "" {
 		errs = append(errs, ErrEmptyCountry)
 	}

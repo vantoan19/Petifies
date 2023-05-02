@@ -94,12 +94,14 @@ func servePetifiesConsumer() {
 			var petifiesEvent models.PetifiesEvent
 			err := petifiesEvent.Deserialize(message.Value)
 			if err != nil {
+				consumerLogger.WarningData("Error while consuming the event", logging.Data{"error": err.Error()})
 				return err
 			}
 
 			consumerLogger.InfoData("Received a new Petifies Event", logging.Data{"event": petifiesEvent})
 			err = listener.Receive(ctx, petifiesEvent)
 			if err != nil {
+				consumerLogger.WarningData("Error while consuming the event", logging.Data{"error": err.Error()})
 				return err
 			}
 

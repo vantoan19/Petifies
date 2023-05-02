@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	grpcAuth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
@@ -51,7 +52,8 @@ func (m *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 	}
 
 	// Bypass authenticate for public apis (apis that do not require auth)
-	if callingService == "PublicGateway" {
+	fmt.Println(callingService)
+	if callingService == "public_gateway.v1.PublicGateway" {
 		logger.Info("Finished authenticate: SUCCESSFUL")
 		return ctx, nil
 	}

@@ -16,6 +16,8 @@ import (
 
 var logger = logging.New("PostClient")
 
+const postService = "post_service.v1.PostService"
+
 type postClient struct {
 	createPost               endpoint.Endpoint
 	createComment            endpoint.Endpoint
@@ -56,7 +58,7 @@ func New(conn *grpc.ClientConn) PostClient {
 	return &postClient{
 		createPost: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"CreatePost",
 			translators.EncodeCreatePostRequest,
 			translators.DecodePostResponse,
@@ -64,7 +66,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		createComment: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"CreateComment",
 			translators.EncodeCreateCommentRequest,
 			translators.DecodeCommentResponse,
@@ -72,7 +74,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		loveReact: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"LoveReact",
 			translators.EncodeLoveReactRequest,
 			translators.DecodeLoveResponse,
@@ -80,7 +82,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		editPost: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"EditPost",
 			translators.EncodeEditPostRequest,
 			translators.DecodePostResponse,
@@ -88,7 +90,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		editComment: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"EditComment",
 			translators.EncodeEditCommentRequest,
 			translators.DecodeCommentResponse,
@@ -96,7 +98,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		listPosts: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"ListPosts",
 			translators.EncodeListPostsRequest,
 			translators.DecodeListPostsResponse,
@@ -104,7 +106,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		listComments: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"ListComments",
 			translators.EncodeListCommentsRequest,
 			translators.DecodeListCommentsResponse,
@@ -112,7 +114,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		getLoveCount: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"GetLoveCount",
 			translators.EncodeGetLoveCountRequest,
 			translators.DecodeGetLoveCountResponse,
@@ -120,7 +122,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		getCommentCount: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"GetCommentCount",
 			translators.EncodeGetCommentCountRequest,
 			translators.DecodeGetCommentCountResponse,
@@ -128,7 +130,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		getPost: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"GetPost",
 			translators.EncodeGetPostRequest,
 			translators.DecodePostResponse,
@@ -136,7 +138,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		getComment: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"GetComment",
 			translators.EncodeGetCommentRequest,
 			translators.DecodeCommentResponse,
@@ -144,7 +146,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		removeLoveReact: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"RemoveLoveReact",
 			translators.EncodeRemoveLoveReactRequest,
 			translators.DecodeRemoveLoveReactResponse,
@@ -152,7 +154,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		getLove: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"GetLove",
 			translators.EncodeGetLoveRequest,
 			translators.DecodeLoveResponse,
@@ -160,7 +162,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		listCommentIDsByParentID: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"ListCommentIDsByParentID",
 			translators.EncodeListCommentIDsByParentIDRequest,
 			translators.DecodeListCommentIDsByParentIDResponse,
@@ -168,7 +170,7 @@ func New(conn *grpc.ClientConn) PostClient {
 		).Endpoint(),
 		listCommentAncestors: grpctransport.NewClient(
 			conn,
-			"PostService",
+			postService,
 			"ListCommentAncestors",
 			translators.EncodeListCommentAncestorsRequest,
 			translators.DecodeListCommentAncestorsResponse,

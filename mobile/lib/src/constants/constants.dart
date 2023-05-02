@@ -15,6 +15,10 @@ class Constants {
   static const defaultAvatarPng = 'assets/images/default_avatar.png';
   static const emptyBoxPng = 'assets/images/empty_box.png';
   static const caCertPath = 'assets/cert/ca.crt';
+  static const mapStylePath = 'assets/mapstyle/mapstyle.txt';
+  static const darkMapStylePath = 'assets/mapstyle/darkmapstyle.txt';
+  static const mapPin = 'assets/images/pin.png';
 
-  static const horizontalScreenPadding = 16.0;
+  static const horizontalScreenPadding = 20.0;
+  static const petifiesExpoloreHorizontalPadding = 24.0;
 }

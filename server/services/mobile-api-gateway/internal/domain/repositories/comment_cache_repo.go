@@ -9,6 +9,7 @@ import (
 
 type CommentCacheRepository interface {
 	GetCommentContent(ctx context.Context, commentID uuid.UUID) (*models.Comment, error)
+	ListCommentContents(ctx context.Context, commentIDs []uuid.UUID) ([]*models.Comment, error)
 	SetCommentContent(ctx context.Context, commentID uuid.UUID, comment models.Comment) error
 	ExistsCommentContent(ctx context.Context, commentID uuid.UUID) (bool, error)
 }

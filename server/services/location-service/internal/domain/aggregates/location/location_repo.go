@@ -8,7 +8,8 @@ import (
 )
 
 type LocationRepository interface {
-	FindNearbyLocationsByEntityType(ctx context.Context, longitude, latitude float64, maxDistance float64, entityType valueobjects.EntityType) ([]*LocationAggre, error)
+	FindNearbyLocationsByEntityType(ctx context.Context, longitude, latitude float64, maxDistance float64, entityType valueobjects.EntityType,
+		pageSize int, offset int) ([]*LocationAggre, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*LocationAggre, error)
 	GetByEntityID(ctx context.Context, entityID uuid.UUID) (*LocationAggre, error)
 	Save(ctx context.Context, location LocationAggre) (*LocationAggre, error)

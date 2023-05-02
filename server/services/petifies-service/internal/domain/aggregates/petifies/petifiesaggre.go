@@ -204,7 +204,7 @@ func (p *PetifiesAggre) GetStatus() valueobjects.PetifiesStatus {
 func (p *PetifiesAggre) SetStatus(status valueobjects.PetifiesStatus) error {
 	switch p.petifies.Status {
 	case valueobjects.PetifiesDeleted,
-		valueobjects.PetifiesOnASession,
+		valueobjects.PetifiesAvailable,
 		valueobjects.PetifiesUnavailable:
 		p.petifies.Status = status
 		return nil

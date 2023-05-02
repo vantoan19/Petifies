@@ -4,6 +4,6 @@ type PetifiesStatus string
 
 const (
 	PetifiesUnavailable PetifiesStatus = "PETIFIES_STATUS_UNAVAILABLE"
-	PetifiesOnASession  PetifiesStatus = "PETIFIES_STATUS_ON_A_SESSION"
+	PetifiesAvailable   PetifiesStatus = "PETIFIES_STATUS_AVAILABLE"
 	PetifiesDeleted     PetifiesStatus = "PETIFIES_STATUS_DELETED"
 )

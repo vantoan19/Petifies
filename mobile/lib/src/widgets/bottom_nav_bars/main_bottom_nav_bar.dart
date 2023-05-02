@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:mobile/src/theme/themes.dart';
+import 'package:mobile/src/utils/navigation.dart';
 
 class MainButtomNavBar extends StatelessWidget {
   final int curPage;
@@ -49,7 +50,9 @@ class MainButtomNavBar extends StatelessWidget {
                 color: Themes.blueColor,
                 child: InkWell(
                   splashColor: Theme.of(context).colorScheme.inversePrimary,
-                  onTap: () {},
+                  onTap: () {
+                    NavigatorUtil.toPetifiesHome(context);
+                  },
                   child: SizedBox(
                     width: 50,
                     height: 50,

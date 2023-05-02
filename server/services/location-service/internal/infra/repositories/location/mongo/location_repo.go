@@ -43,12 +43,20 @@ func New(client *mongo.Client) locationaggre.LocationRepository {
 	}
 }
 
-func (lr *locationRepository) FindNearbyLocationsByEntityType(ctx context.Context, longitude, latitude float64, maxDistance float64, entityType valueobjects.EntityType) ([]*locationaggre.LocationAggre, error) {
+func (lr *locationRepository) FindNearbyLocationsByEntityType(
+	ctx context.Context,
+	longitude,
+	latitude float64,
+	maxDistance float64,
+	entityType valueobjects.EntityType,
+	pageSize int,
+	offset int,
+) ([]*locationaggre.LocationAggre, error) {
 	logger.Info("Start FindNearbyLocationsByEntityType")
 	var locations []*locationaggre.LocationAggre
 
 	err := lr.execSession(ctx, func(ssCtx mongo.SessionContext) error {
-		locations_, err := lr.FindNearbyLocationsByEntityTypeWithSession(ssCtx, longitude, latitude, maxDistance, entityType)
+		locations_, err := lr.FindNearbyLocationsByEntityTypeWithSession(ssCtx, longitude, latitude, maxDistance, entityType, pageSize, offset)
 		if err != nil {
 			return err
 		}
@@ -193,7 +201,15 @@ func (lr *locationRepository) DeleteByEntityID(ctx context.Context, entityID uui
 	return nil
 }
 
-func (lr *locationRepository) FindNearbyLocationsByEntityTypeWithSession(ctx context.Context, longitude, latitude float64, maxDistance float64, entityType valueobjects.EntityType) ([]*locationaggre.LocationAggre, error) {
+func (lr *locationRepository) FindNearbyLocationsByEntityTypeWithSession(
+	ctx context.Context,
+	longitude,
+	latitude float64,
+	maxDistance float64,
+	entityType valueobjects.EntityType,
+	pageSize int,
+	offset int,
+) ([]*locationaggre.LocationAggre, error) {
 	var results []*locationaggre.LocationAggre
 
 	center := bson.D{{Key: "type", Value: "Point"}, {Key: "coordinates", Value: []float64{longitude, latitude}}}
@@ -202,7 +218,7 @@ func (lr *locationRepository) FindNearbyLocationsByEntityTypeWithSession(ctx con
 			Key: "location",
 			Value: bson.D{
 				{
-					Key: "$near",
+					Key: "$nearSphere",
 					Value: bson.D{
 						{
 							Key:   "$geometry",
@@ -221,9 +237,10 @@ func (lr *locationRepository) FindNearbyLocationsByEntityTypeWithSession(ctx con
 			Value: string(entityType),
 		},
 	}
+	opts := options.Find().SetLimit(int64(pageSize)).SetSkip(int64(offset))
 
 	var locations []models.Location
-	cursor, err := lr.locationCollection.Find(ctx, filter)
+	cursor, err := lr.locationCollection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

@@ -87,7 +87,7 @@ func (p *Petifies) Validate() (errs commonutils.MultiError) {
 	}
 	switch p.Status {
 	case valueobjects.PetifiesUnavailable,
-		valueobjects.PetifiesOnASession,
+		valueobjects.PetifiesAvailable,
 		valueobjects.PetifiesDeleted:
 		// do nothing
 	default:

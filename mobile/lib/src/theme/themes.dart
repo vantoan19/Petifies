@@ -11,12 +11,14 @@ class Themes {
   static const darkGreyColorTransparent = Color.fromRGBO(90, 90, 90, 0.3);
   static const drawerColor = Color.fromRGBO(18, 18, 18, 1);
   static const whiteColor = Colors.white;
-  static const blueColor = Color.fromRGBO(60, 185, 255, 1);
+  static const blueColor = Color(0xFF3CB9FF);
+  static const blueColor90 = Color(0xE43CB9FF);
   static const redColor = Colors.red;
   static const yellowColor = Colors.yellow;
   static const splashBlueColor = Color.fromRGBO(118, 206, 255, 1);
+  static const greenColor = Colors.green;
 
-  static final textTheme = const TextTheme().apply(fontFamily: 'Roboto');
+  static final textTheme = const TextTheme();
 
   // Themes
   static var darkModeAppTheme = ThemeData.dark().copyWith(
@@ -39,7 +41,6 @@ class Themes {
       tertiary: blackColor,
     ),
     primaryColor: blueColor,
-    primaryTextTheme: textTheme.apply(displayColor: whiteColor),
   );
 
   static var lightModeAppTheme = ThemeData.light().copyWith(

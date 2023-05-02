@@ -1,7 +1,12 @@
 package cmd
 
 import (
+	petifiesclient "github.com/vantoan19/Petifies/server/services/grpc-clients/petifies-client"
+	postclient "github.com/vantoan19/Petifies/server/services/grpc-clients/post-client"
+	relationshipclient "github.com/vantoan19/Petifies/server/services/grpc-clients/relationship-client"
+	userclient "github.com/vantoan19/Petifies/server/services/grpc-clients/user-client"
 	feedservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/feed"
+	petifiesservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/petifies"
 	postservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/post"
 	relationshipservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/relationship"
 	userservice "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
@@ -11,13 +16,14 @@ var PostService postservice.PostService
 var RelationshipService relationshipservice.RelationshipService
 var UserService userservice.UserService
 var FeedService feedservice.FeedService
+var PetifiesService petifiesservice.PetifiesService
 
 func initUserService() error {
 	logger.Info("Start initUserService")
 
 	service, err := userservice.NewUserService(
 		UserServiceConn,
-		userservice.WithRedisUserCacheRepository(RedisClient),
+		userservice.WithRedisUserCacheRepository(RedisClient, userclient.New(UserServiceConn)),
 	)
 	if err != nil {
 		return err
@@ -34,7 +40,7 @@ func initRelationshipService() error {
 	service, err := relationshipservice.NewRelationshipService(
 		RelationshipServiceConn,
 		UserService,
-		relationshipservice.WithRedisRelationshipCacheRepository(RedisClient),
+		relationshipservice.WithRedisRelationshipCacheRepository(RedisClient, relationshipclient.New(UserServiceConn)),
 	)
 	if err != nil {
 		return err
@@ -52,9 +58,9 @@ func initPostService() error {
 		PostServiceConn,
 		UserServiceConn,
 		UserService,
-		postservice.WithRedisPostCacheRepository(RedisClient),
-		postservice.WithRedisCommentCacheRepository(RedisClient),
-		postservice.WithRedisLoveCacheRepository(RedisClient),
+		postservice.WithRedisPostCacheRepository(RedisClient, postclient.New(PostServiceConn)),
+		postservice.WithRedisCommentCacheRepository(RedisClient, postclient.New(PostServiceConn)),
+		postservice.WithRedisLoveCacheRepository(RedisClient, postclient.New(PostServiceConn)),
 	)
 	if err != nil {
 		return err
@@ -79,5 +85,27 @@ func initFeedService() error {
 
 	logger.Info("Finished initPostService: SUCCESSFUL")
 	FeedService = service
+	return nil
+}
+
+func initPetifiesSerivce() error {
+	logger.Info("Start initPetifiesSerivce")
+
+	service, err := petifiesservice.NewPetifiesService(
+		PetifiesServiceConn,
+		UserServiceConn,
+		LocationServiceConn,
+		UserService,
+		petifiesservice.WithRedisPetifiesCacheRepository(RedisClient, petifiesclient.New(PetifiesServiceConn)),
+		petifiesservice.WithRedisPetifiesProposalCacheRepository(RedisClient, petifiesclient.New(PetifiesServiceConn)),
+		petifiesservice.WithRedisPetifiesSessionCacheRepository(RedisClient, petifiesclient.New(PetifiesServiceConn)),
+		petifiesservice.WithRedisReviewCacheRepository(RedisClient, petifiesclient.New(PetifiesServiceConn)),
+	)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Finished initPetifiesSerivce: SUCCESSFUL")
+	PetifiesService = service
 	return nil
 }

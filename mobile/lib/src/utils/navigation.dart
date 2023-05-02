@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/comment/screens/create_comment_screen.dart';
 import 'package:mobile/src/features/home/screens/home_screen.dart';
 import 'package:mobile/src/features/media/screens/media_full_page_screen.dart';
+import 'package:mobile/src/features/petifies/screens/petifies_create_session_screen.dart';
 import 'package:mobile/src/models/basic_user_info.dart';
 import 'package:mobile/src/providers/comment_providers.dart';
 import 'package:mobile/src/providers/context_providers.dart';
@@ -33,9 +34,23 @@ class NavigatorUtil {
     Navigator.of(context, rootNavigator: true).pushNamed('/create-post');
   }
 
+  static void toPetifiesHome(context) {
+    Navigator.of(context).pushNamed('/petifies-home');
+  }
+
+  static void toPetifiesCreate(context) {
+    Navigator.of(context, rootNavigator: true).pushNamed('/create-petifies');
+  }
+
   static void goBack(context) {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
+    }
+  }
+
+  static void goBackRootNavigater(context) {
+    if (Navigator.of(context, rootNavigator: true).canPop()) {
+      Navigator.of(context, rootNavigator: true).pop();
     }
   }
 
@@ -73,6 +88,15 @@ class NavigatorUtil {
           commentInfoProvider.overrideWithValue(ref.read(commentInfoProvider)),
       ],
       child: CreateCommentScreen(),
+    );
+  }
+
+  static Widget showCreatePetifiesSessionBottomSheet({
+    required WidgetRef ref,
+    required String petifiesId,
+  }) {
+    return PetifiesCreateSessionScreen(
+      petifiesId: petifiesId,
     );
   }
 }
