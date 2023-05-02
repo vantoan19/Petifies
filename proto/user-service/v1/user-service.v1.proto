@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package user_service.v1;
 option go_package = "github.com/vantoan19/Petifies/proto/user-service/v1";
 
 import "common/common.proto";
@@ -13,8 +14,17 @@ message GetUserRequest {
 
 }
 
+message ListUsersByIdsRequest {
+    repeated string user_ids = 1;
+}
+
+message ListUsersByIdsResponse {
+    repeated User users = 1;
+}
+
 service UserService {
     rpc CreateUser(CreateUserRequest) returns (User) {}
     rpc Login(LoginRequest) returns (LoginResponse) {}
     rpc GetUser(GetUserRequest) returns (User) {}
+    rpc ListUsersByIds(ListUsersByIdsRequest) returns (ListUsersByIdsResponse) {}
 }

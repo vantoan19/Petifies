@@ -1,0 +1,125 @@
+[
+    {
+        "createUser": "admin",
+        "pwd": "{{.DB_PASSWORD}}",
+        "roles": [
+            {
+                "role": "readWrite",
+                "db": "petifiesServiceDatabase"
+            }
+        ]
+    },
+    {
+        "createIndexes": "petifies",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true
+            },
+            {
+                "key": {
+                    "user_id": 1,
+                    "created_at": 1
+                },
+                "name": "user_id_sorted_by_created_at",
+                "background": true  
+            }
+        ]
+    },
+    {
+        "createIndexes": "petifies_sessions",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true 
+            },
+            {
+                "key": {
+                    "petifies_id": 1,
+                    "created_at": 1
+                },
+                "name": "petifies_id_sorted_by_created_at",
+                "background": true  
+            }
+        ]
+    },
+    {
+        "createIndexes": "petifies_proposals",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true 
+            },
+            {
+                "key": {
+                    "petifies_session_id": 1,
+                    "created_at": 1
+                },
+                "name": "petifies_session_id_sorted_by_created_at",
+                "background": true  
+            },
+            {
+                "key": {
+                    "user_id": 1,
+                    "created_at": 1
+                },
+                "name": "user_id_sorted_by_created_at",
+                "background": true  
+            }
+        ]
+    },
+    {
+        "createIndexes": "reviews",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true 
+            },
+            {
+                "key": {
+                    "petifies_id": 1,
+                    "created_at": 1
+                },
+                "name": "petifies_id_sorted_by_created_at",
+                "background": true  
+            },
+            {
+                "key": {
+                    "author_id": 1,
+                    "created_at": 1
+                },
+                "name": "author_id_sorted_by_created_at",
+                "background": true  
+            }
+        ]
+    },
+    {
+        "createIndexes": "petifies_events",
+        "indexes": [
+            {
+                "key": {
+                    "id": 1
+                },
+                "name": "unique_id",
+                "unique": true,
+                "background": true 
+            }
+        ]
+    }
+]

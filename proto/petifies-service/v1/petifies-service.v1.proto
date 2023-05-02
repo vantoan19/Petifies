@@ -1,0 +1,265 @@
+syntax = "proto3";
+
+package petifies_service.v1;
+option go_package = "github.com/vantoan19/Petifies/proto/petifies-service/v1";
+
+import "common/common.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message Petifies {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string owner_id = 2 [(validate.rules).string.uuid = true];
+    PetifiesType type = 3;
+    string title = 4;
+    string description = 5;
+    string pet_name = 6;
+    repeated Image images = 7;
+    PetifiesStatus status = 8;
+    Address address = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
+}
+
+message Review {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    string author_id = 3 [(validate.rules).string.uuid = true]; 
+    string review = 4;
+    Image image = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message PetifiesSession {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+    PetifiesSessionStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message PetifiesProposal {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string user_id = 2 [(validate.rules).string.uuid = true];
+    string petifies_session_id = 3 [(validate.rules).string.uuid = true];
+    string proposal = 4;
+    PetifiesProposalStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message CreatePetifiesRequest {
+    string owner_id = 1 [(validate.rules).string.uuid = true];
+    PetifiesType type = 2;
+    string title = 3;
+    string description = 4;
+    string pet_name = 5;
+    repeated Image images = 6;
+    Address address = 7;
+}
+
+message CreatePetifiesSessionRequest {
+    string creator_id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+}
+
+message CreatePetifiesProposalRequest {
+    string user_id = 2 [(validate.rules).string.uuid = true];
+    string petifies_session_id = 3 [(validate.rules).string.uuid = true];
+    string proposal = 4;
+}
+
+message CreateReviewRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    string author_id = 2 [(validate.rules).string.uuid = true];
+    string review = 3;
+    Image image = 4;
+}
+
+message EditPetifiesRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    // PetifiesType type = 2;
+    string title = 3;
+    string description = 4;
+    string pet_name = 5;
+    repeated Image images = 6;
+    Address address = 7;
+}
+
+message EditPetifiesSessionRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 2 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 3 [(validate.rules).timestamp.required = true];
+}
+
+message EditPetifiesProposalRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string proposal = 2;
+}
+
+message EditReviewRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string review = 2;
+    Image image = 3;
+}
+
+// ====== Petifies ======
+
+message GetPetifiesByIdRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message ListPetifiesByIdsRequest {
+    repeated string petifies_ids = 1;
+}
+
+message ListPetifiesByOwnerIdRequest {
+    string owner_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ManyPetifies {
+    repeated Petifies petifies = 1;
+}
+
+// ===== Sessions =======
+
+message GetSessionByIdRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message ListSessionsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListSessionsByIdsRequest {
+    repeated string petifies_session_ids = 1;
+}
+
+message ManyPetifiesSessions {
+    repeated PetifiesSession petifies_sessions = 1;
+}
+
+// ==== Proposals ====
+
+message GetProposalByIdRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message ListProposalsBySessionIdRequest {
+    string petifies_session_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsByIdsRequest {
+    repeated string petifies_proposal_ids = 1;
+}
+
+message ManyPetifiesProposals {
+    repeated PetifiesProposal petifies_proposals = 1;
+}
+
+// ==== Reviews ====
+
+message GetReviewByIdRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message ListReviewsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByIdsRequest {
+    repeated string review_ids = 1;
+}
+
+message ManyReviews {
+    repeated Review reviews = 1;
+}
+
+// ==== Session ====
+
+message AcceptProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the owner of the related petifies
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string session_id = 2 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message AcceptProposalResponse{}
+
+message RejectProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the owner of the related petifies
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string session_id = 2 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message RejectProposalResponse{}
+
+// ==== Proposal ====
+
+message CancelProposalRequest {
+    // Id of user who sends this request
+    // The user have to be the author of the related proposal
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    string proposal_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message CancelProposalResponse{}
+
+service PetifiesService {
+    rpc CreatePetifies(CreatePetifiesRequest) returns (Petifies) {}
+    rpc CreatePetifiesSession(CreatePetifiesSessionRequest) returns (PetifiesSession) {}
+    rpc CreatePetifiesProposal(CreatePetifiesProposalRequest) returns (PetifiesProposal) {}
+    rpc CreateReview(CreateReviewRequest) returns (Review) {}
+    rpc EditPetifies(EditPetifiesRequest) returns (Petifies) {}
+    rpc EditPetifiesSession(EditPetifiesSessionRequest) returns (PetifiesSession) {}
+    rpc EditPetifiesProposal(EditPetifiesProposalRequest) returns (PetifiesProposal) {}
+    rpc EditReview(EditReviewRequest) returns (Review) {}
+
+    rpc GetPetifiesById(GetPetifiesByIdRequest) returns (Petifies) {}
+    rpc ListPetifiesByIds(ListPetifiesByIdsRequest) returns (ManyPetifies) {}
+    rpc ListPetifiesByOwnerId(ListPetifiesByOwnerIdRequest) returns (ManyPetifies) {}
+    rpc GetSessionById(GetSessionByIdRequest) returns (PetifiesSession) {}
+    rpc ListSessionsByIds(ListSessionsByIdsRequest) returns (ManyPetifiesSessions) {}
+    rpc ListSessionsByPetifiesId(ListSessionsByPetifiesIdRequest) returns (ManyPetifiesSessions) {}
+    rpc GetProposalById(GetProposalByIdRequest) returns (PetifiesProposal) {}
+    rpc ListProposalsByIds(ListProposalsByIdsRequest) returns (ManyPetifiesProposals) {}
+    rpc ListProposalsBySessionId(ListProposalsBySessionIdRequest) returns (ManyPetifiesProposals) {}
+    rpc ListProposalsByUserId(ListProposalsByUserIdRequest) returns (ManyPetifiesProposals) {}
+    rpc GetReviewById(GetReviewByIdRequest) returns (Review) {}
+    rpc ListReviewsByIds(ListReviewsByIdsRequest) returns (ManyReviews) {}
+    rpc ListReviewsByPetifiesId(ListReviewsByPetifiesIdRequest) returns (ManyReviews) {}
+    rpc ListReviewsByUserId(ListReviewsByUserIdRequest) returns (ManyReviews) {}
+
+    rpc AcceptProposal(AcceptProposalRequest) returns (AcceptProposalResponse) {}
+    rpc RejectProposal(RejectProposalRequest) returns (RejectProposalResponse) {}
+    rpc CancelProposal(CancelProposalRequest) returns (CancelProposalResponse) {}
+}

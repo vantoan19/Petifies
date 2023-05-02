@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package newfeed_service.v1;
+option go_package = "github.com/vantoan19/Petifies/proto/post-service/v1";
+
+import "common/common.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message ListPostFeedsRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_post_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message ListPostFeedsResponse {
+    repeated string post_ids = 1;
+}
+
+message ListStoryFeedsRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_story_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message ListStoryFeedsResponse {
+    repeated string story_ids = 1;
+}
+
+
+service NewfeedService {
+    rpc ListPostFeeds(ListPostFeedsRequest) returns (ListPostFeedsResponse) {}
+    rpc ListStoryFeeds(ListStoryFeedsRequest) returns (ListStoryFeedsResponse) {}
+}

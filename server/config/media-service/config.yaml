@@ -1,7 +1,10 @@
 GrpcPort: 8888
 Domain:
+CDNDomain: "https://storage.googleapis.com"
 TLSKeyPath: "/app/cert/tls.key"
 TLSCertPath: "/app/cert/tls.crt" 
 UserServiceHost: "user-service:8888"
 StorageRootDir: "/storage"
 MaxFileSize: 25000000
+BucketName: "petifies-storage"
+CredentialFile: "/app/cred/service_account.json"

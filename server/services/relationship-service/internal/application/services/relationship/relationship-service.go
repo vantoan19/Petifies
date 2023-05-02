@@ -128,7 +128,7 @@ func (rs *relationshipService) ListFollowers(ctx context.Context, req *models.Li
 	}
 
 	logger.InfoData("Finish ListFollowers: Failed", logging.Data{"user": req.UserID.String()})
-	return user.GetFollowers(), nil
+	return append(user.GetFollowers(), user.GetID()), nil
 }
 
 func (rs *relationshipService) ListFollowings(ctx context.Context, req *models.ListFollowingsReq) ([]uuid.UUID, error) {
@@ -140,5 +140,5 @@ func (rs *relationshipService) ListFollowings(ctx context.Context, req *models.L
 	}
 
 	logger.InfoData("Finish ListFollowings: Failed", logging.Data{"user": req.UserID.String()})
-	return user.GetFollowings(), nil
+	return append(user.GetFollowings(), user.GetID()), nil
 }

@@ -3,7 +3,6 @@ package cassandra
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
@@ -45,19 +44,16 @@ func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*useraggre
 func (ur *UserRepository) Save(ctx context.Context, user useraggre.UserAggre) (*useraggre.UserAggre, error) {
 	logger.Info("Start Save")
 
-	fmt.Println("HERE0")
 	userModel, err := mapper.UserAggregateToUserDb(&user)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("HERE1")
 
 	query := `INSERT INTO users(id, email) VALUES(?,?)`
 	if err := ur.session.Query(query, userModel.ID, userModel.Email).Exec(); err != nil {
 		logger.ErrorData("Finish Save: FAILED", logging.Data{"error": err.Error()})
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	fmt.Println("HERE2")
 
 	logger.Info("Finish Save: SUCCESSFUL")
 	return mapper.DbUserToUserAggregate(userModel)

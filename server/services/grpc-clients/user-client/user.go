@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	userService = "UserService"
-	authService = "AuthService"
+	userService = "user_service.v1.UserService"
+	authService = "auth_service.v1.AuthService"
 )
 
 var logger = logging.New("Clients.UserClient")
@@ -34,6 +34,7 @@ type userClient struct {
 	refreshToken        endpoint.Endpoint
 	refreshTokenForward endpoint.Endpoint
 	getUser             endpoint.Endpoint
+	listUsersByIds      endpoint.Endpoint
 }
 
 type UserClient interface {
@@ -46,6 +47,7 @@ type UserClient interface {
 	RefreshToken(ctx context.Context, token string) (string, time.Time, error)
 	RefreshTokenForward(ctx context.Context, req *commonProto.RefreshTokenRequest) (*commonProto.RefreshTokenResponse, error)
 	GetUser(ctx context.Context, id uuid.UUID) (*models.User, error)
+	ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*models.User, error)
 }
 
 func New(conn *grpc.ClientConn) UserClient {
@@ -120,6 +122,14 @@ func New(conn *grpc.ClientConn) UserClient {
 			"GetUser",
 			translator.EncodeGetUserRequest,
 			translator.DecodeGetUserResponse,
+			commonProto.User{},
+		).Endpoint(),
+		listUsersByIds: grpctransport.NewClient(
+			conn,
+			userService,
+			"ListUsersByIds",
+			translator.EncodeListUsersByIdsRequest,
+			translator.DecodeListUsersByIdsResponse,
 			commonProto.User{},
 		).Endpoint(),
 	}
@@ -263,4 +273,21 @@ func (c *userClient) GetUser(ctx context.Context, id uuid.UUID) (*models.User, e
 	logger.Info("Finished UserClient.GetMyInfo: SUCCESSFUL")
 	user := resp.(*models.User)
 	return user, nil
+}
+
+func (c *userClient) ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*models.User, error) {
+	logger.Info("Start UserClient.ListUsersByIds")
+
+	req := &models.ListUsersByIdsReq{
+		Ids: ids,
+	}
+	resp, err := c.listUsersByIds(ctx, req)
+	if err != nil {
+		logger.ErrorData("Finished UserClient.ListUsersByIds: FAILED", logging.Data{"error": err.Error()})
+		return nil, err
+	}
+
+	logger.Info("Finished UserClient.ListUsersByIds: SUCCESSFUL")
+	users := resp.(*models.ListUsersByIdsResp).Users
+	return users, nil
 }

@@ -1,6 +1,8 @@
 #!/bin/bash
 MODULE_PREFIX="github.com/vantoan19/Petifies/proto"
-FOLDERS=("auth-gateway/v1" "public-gateway/v1" "user-service/v1" "media-service/v1" "post-service/v1" "relationship-service/v1")
+FOLDERS=("auth-gateway/v1" "public-gateway/v1" "user-service/v1" "media-service/v1" 
+"post-service/v1" "relationship-service/v1" "newfeed-service/v1" "petifies-service/v1"
+"location-service/v1")
 
 protoc --proto_path=. common/common.proto \
     --go_out=paths=source_relative:. \

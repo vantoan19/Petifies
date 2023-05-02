@@ -15,11 +15,14 @@ import (
 var (
 	ErrEmptyID       = status.Errorf(codes.InvalidArgument, "id is empty")
 	ErrEmptyAuthorID = status.Errorf(codes.InvalidArgument, "author id is empty")
+	ErrEmptyActivity = status.Errorf(codes.InvalidArgument, "empty activity")
 )
 
 type Post struct {
 	ID          uuid.UUID
 	AuthorID    uuid.UUID
+	Visibility  valueobjects.Visibility
+	Activity    string
 	TextContent valueobjects.TextContent
 	Images      []valueobjects.ImageContent
 	Videos      []valueobjects.VideoContent
@@ -46,6 +49,9 @@ func (p *Post) Validate() (errs common.MultiError) {
 			errs = append(errs, vdErrs...)
 			break
 		}
+	}
+	if p.Activity == "" {
+		errs = append(errs, ErrEmptyActivity)
 	}
 	return errs
 }

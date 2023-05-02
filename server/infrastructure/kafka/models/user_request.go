@@ -11,6 +11,7 @@ type UserStatus string
 
 const (
 	USER_CREATED UserStatus = "USER_CREATED"
+	USER_UPDATED UserStatus = "USER_UPDATED"
 	USER_DELETED UserStatus = "USER_DELETED"
 )
 

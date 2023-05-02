@@ -34,3 +34,16 @@ type EventRepository interface {
 	UnlockEventsBeforeDatetime(t time.Time) error
 	DeleteEventsBeforeDatetime(t time.Time) error
 }
+
+func NewEventWithPayload(payload models.KafkaMessage) Event {
+	return Event{
+		ID:          uuid.New(),
+		Payload:     payload,
+		OutboxState: StartedState,
+		LockedBy:    nil,
+		LockedAt:    nil,
+		Error:       nil,
+		CompletedAt: nil,
+		CreatedAt:   time.Now(),
+	}
+}

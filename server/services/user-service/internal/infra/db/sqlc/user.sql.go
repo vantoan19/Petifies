@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -145,6 +146,43 @@ SELECT id, email, password, first_name, last_name, is_activated, created_at, upd
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	rows, err := q.db.QueryContext(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Password,
+			&i.FirstName,
+			&i.LastName,
+			&i.IsActivated,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersByIds = `-- name: ListUsersByIds :many
+SELECT id, email, password, first_name, last_name, is_activated, created_at, updated_at FROM users
+WHERE id = ANY($1::uuid[])
+`
+
+func (q *Queries) ListUsersByIds(ctx context.Context, dollar_1 []uuid.UUID) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersByIds, pq.Array(dollar_1))
 	if err != nil {
 		return nil, err
 	}

@@ -11,6 +11,7 @@ type PostStatus string
 
 const (
 	POST_CREATED PostStatus = "POST_CREATED"
+	POST_UPDATED PostStatus = "POST_UPDATED"
 	POST_DELETED PostStatus = "POST_DELETED"
 )
 

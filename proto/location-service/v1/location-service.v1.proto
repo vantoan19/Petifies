@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package location_service.v1;
+option go_package = "github.com/vantoan19/Petifies/proto/location-service/v1";
+
+import "common/common.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message Location {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string entity_id = 2 [(validate.rules).string.uuid = true];
+    LocationType location_type = 3;
+}
+
+message ListNearByLocationsByTypeRequest {
+    LocationType location_type = 1;
+    double longitude = 2;
+    double latitude = 3;
+    double radius = 4;
+    int32 page_size = 5;
+    int32 offset = 6;
+}
+
+message ListNearByLocationsByTypeResponse {
+    repeated Location locations = 1;
+}
+
+service LocationService {
+    rpc ListNearByLocationsByType(ListNearByLocationsByTypeRequest) returns (ListNearByLocationsByTypeResponse) {}
+}

@@ -1,9 +1,11 @@
 syntax = "proto3";
 
+package media_service.v1;
 option go_package = "github.com/vantoan19/Petifies/proto/media-service/v1";
 
 import "common/common.proto";
 
 service MediaService {
     rpc UploadFile(stream UploadFileRequest) returns (UploadFileResponse ) {}
+    rpc RemoveFileByURI(RemoveFileByURIRequest) returns (RemoveFileByURIResponse) {}
 }

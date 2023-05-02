@@ -7,7 +7,7 @@ import 'package:mobile/src/proto/common/common.pb.dart';
 import 'package:mobile/src/providers/service_providers.dart';
 import 'package:mobile/src/services/user_service.dart';
 
-final userRepositoryProvider = Provider(
+final userRepositoryProvider = Provider<IUserRepository>(
     (ref) => UserRepository(userService: ref.read(userServiceProvider)));
 
 abstract class IUserRepository {
@@ -41,12 +41,12 @@ class UserRepository implements IUserRepository {
           lastName: lastName);
 
       UserModel user = UserModel(
-          id: response.id,
-          email: response.email,
-          firstName: response.firstName,
-          lastName: response.lastName,
-          isAuthenticated: false,
-          isActivated: false);
+        id: response.id,
+        email: response.email,
+        firstName: response.firstName,
+        lastName: response.lastName,
+        isActivated: false,
+      );
 
       return right(user);
     } catch (e) {
@@ -62,12 +62,12 @@ class UserRepository implements IUserRepository {
       LoginResponse response =
           await _userService.login(email: email, password: password);
       final user = UserModel(
-          id: response.user.id,
-          email: response.user.email,
-          firstName: response.user.firstName,
-          lastName: response.user.lastName,
-          isAuthenticated: response.user.isActivated,
-          isActivated: response.user.isActivated);
+        id: response.user.id,
+        email: response.user.email,
+        firstName: response.user.firstName,
+        lastName: response.user.lastName,
+        isActivated: response.user.isActivated,
+      );
       final tokens = Tokens(
         sessionId: response.sessionId,
         accessToken: response.accessToken,
@@ -90,13 +90,15 @@ class UserRepository implements IUserRepository {
     try {
       final user = await _userService.getMyInfo();
       UserModel myUser = UserModel(
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isAuthenticated: true,
-        isActivated: user.isActivated,
-      );
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isActivated: user.isActivated,
+          followers: 0,
+          following: 0,
+          countPost: 0,
+          bio: "Tao bi gay");
       return right(myUser);
     } catch (e) {
       return left(Failure(e.toString()));

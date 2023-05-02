@@ -97,6 +97,7 @@ services:
 
   kafka-manager:
     image: hlebalbau/kafka-manager:stable
+    platform: linux/amd64
     restart: always
     ports:
       - "9000:9000"

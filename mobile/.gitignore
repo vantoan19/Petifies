@@ -47,3 +47,5 @@ app.*.map.json
 *pbenum.dart 
 *pbgrpc.dart
 *pbjson.dart
+
+*.g.dart

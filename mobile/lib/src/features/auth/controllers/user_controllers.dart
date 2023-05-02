@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/auth/repositories/user_repository.dart';
 import 'package:mobile/src/models/user_model.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final userCreateControllerProvider =
-    AsyncNotifierProvider.autoDispose<UserCreateController, UserModel?>(
-        UserCreateController.new);
+part 'user_controllers.g.dart';
 
-class UserCreateController extends AutoDisposeAsyncNotifier<UserModel?> {
+@Riverpod(keepAlive: false)
+class UserCreateController extends _$UserCreateController {
   @override
   FutureOr<UserModel?> build() {
     return null;

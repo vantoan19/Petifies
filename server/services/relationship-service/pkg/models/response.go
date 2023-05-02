@@ -11,9 +11,9 @@ type RemoveRelationshipResp struct {
 }
 
 type ListFollowersResp struct {
-	FollowerIDs []uuid.UUID
+	FollowerIDs []uuid.UUID `json:"follower_ids"`
 }
 
 type ListFollowingsResp struct {
-	FollowingIDs []uuid.UUID
+	FollowingIDs []uuid.UUID `json:"following_ids"`
 }

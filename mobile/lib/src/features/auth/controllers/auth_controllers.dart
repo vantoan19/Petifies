@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/src/features/auth/repositories/user_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final loginControllerProvider =
-    AsyncNotifierProvider.autoDispose<LoginController, Map<String, dynamic>?>(
-        LoginController.new);
+part 'auth_controllers.g.dart';
 
-class LoginController extends AutoDisposeAsyncNotifier<Map<String, dynamic>?> {
+@Riverpod(keepAlive: false)
+class LoginController extends _$LoginController {
   @override
   FutureOr<Map<String, dynamic>?> build() {
     return null;

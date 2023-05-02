@@ -43,22 +43,11 @@ func EntityCommentToDbComment(c *entities.Comment) *models.Comment {
 	}
 }
 
-func DbModelsToCommentAggregate(c *models.Comment, ls *[]models.Love, subcs *[]models.Comment) (*commentaggre.Comment, error) {
+func DbModelsToCommentAggregate(c *models.Comment) (*commentaggre.Comment, error) {
 	comment := &commentaggre.Comment{}
 
 	if err := comment.SetCommentEntity(*DbCommentToEntityComment(c)); err != nil {
 		return nil, err
-	}
-
-	for _, l := range *ls {
-		if err := comment.AddLoveByEntity(*DbLoveToEntityLove(&l)); err != nil {
-			return nil, err
-		}
-	}
-	for _, subc := range *subcs {
-		if err := comment.AddSubcommentByEntity(*DbCommentToEntityComment(&subc)); err != nil {
-			return nil, err
-		}
 	}
 
 	return comment, nil

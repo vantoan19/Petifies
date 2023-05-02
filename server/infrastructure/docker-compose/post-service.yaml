@@ -9,14 +9,14 @@ services:
     volumes:
       - ../../../build/server/postService:/app/postService
     ports:
-      - "82:8888"
+      - "92:8888"
     environment:
       - SERVER_MODE=development
       - DB_PASSWORD=123456
     networks:
       - petifies
 
-  mongo-express:
+  post-mongo-express:
     image: mongo-express
     restart: always
     ports:

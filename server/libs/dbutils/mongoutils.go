@@ -2,15 +2,26 @@ package dbutils
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var mongoLogger = logging.New("Libs.DBUtils.Mongo")
+
+var (
+	wc        = writeconcern.New(writeconcern.WMajority())
+	rc        = readconcern.Snapshot()
+	transOpts = options.Transaction().SetWriteConcern(wc).SetReadConcern(rc)
+)
 
 func ConnectToMongoDB(dbUrl string) (*mongo.Client, error) {
 	attempt := 0
@@ -54,4 +65,33 @@ func openMongoDB(dbUrl string) (*mongo.Client, error) {
 	}
 
 	return client, nil
+}
+
+type MongoOperation func(ssCtx mongo.SessionContext) error
+
+func ExecWithSession(ctx context.Context, client *mongo.Client, operations ...MongoOperation) error {
+	session, err := client.StartSession()
+	defer session.EndSession(ctx)
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+	err = session.StartTransaction(transOpts)
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+
+	sessionContext := mongo.NewSessionContext(ctx, session)
+	for _, ope := range operations {
+		if err = ope(sessionContext); err != nil {
+			if abErr := session.AbortTransaction(ctx); abErr != nil {
+				return status.Errorf(codes.Internal, fmt.Sprintf("session err: %v, abort err: %v", err, abErr))
+			}
+			if status.FromContextError(err).Code() == codes.NotFound {
+				return err
+			}
+			return status.Errorf(codes.Internal, err.Error())
+		}
+	}
+
+	return session.CommitTransaction(ctx)
 }

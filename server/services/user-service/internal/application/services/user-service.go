@@ -42,6 +42,7 @@ type UserService interface {
 	VerifyToken(ctx context.Context, token string) (string, error)
 	RefreshToken(ctx context.Context, token string) (string, time.Time, error)
 	GetUser(ctx context.Context, id uuid.UUID) (*userAggre.User, error)
+	ListUserByIds(ctx context.Context, ids []uuid.UUID) ([]*userAggre.User, error)
 }
 
 func NewUserService(cfgs ...UserConfiguration) (UserService, error) {
@@ -296,4 +297,18 @@ func (s *userService) GetUser(ctx context.Context, id uuid.UUID) (*userAggre.Use
 	}
 
 	return user, nil
+}
+
+func (s *userService) ListUserByIds(ctx context.Context, ids []uuid.UUID) ([]*userAggre.User, error) {
+	logger.Info("Start UserService.ListUserByIds")
+
+	users, err := s.userRepository.ListByIds(ctx, ids)
+	if err != nil {
+		logger.ErrorData("Finished UserService.ListUserByIds: FAILED", logging.Data{
+			"error": err.Error(),
+		})
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return users, nil
 }

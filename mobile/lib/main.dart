@@ -3,8 +3,8 @@ import 'package:flutter_gen/gen_l10n/petifies_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/routers.dart';
 import 'package:mobile/src/features/auth/screens/introduction_screens.dart';
-import 'package:mobile/src/features/feed/screens/home_screen.dart';
-import 'package:mobile/src/providers/model_providers.dart';
+import 'package:mobile/src/features/home/screens/home_screen.dart';
+import 'package:mobile/src/providers/user_model_providers.dart';
 import 'package:mobile/src/theme/themes.dart';
 
 void main() {
@@ -34,7 +34,7 @@ class Petifies extends ConsumerWidget {
       title: 'Petifies',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: Locale('vi', ''),
+      locale: Locale('en', ''),
       theme: Themes.darkModeAppTheme,
       home: isLoading
           ? Center(
@@ -42,7 +42,7 @@ class Petifies extends ConsumerWidget {
             )
           : userInfo == null
               ? IntroductionScreens()
-              : HomeScreeen(),
+              : IntroductionScreens(),
       // home: SignInScreen(),
       onGenerateRoute: onGenerateRoute,
     );

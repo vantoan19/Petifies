@@ -25,3 +25,7 @@ type RefreshTokenReq struct {
 type GetUserReq struct {
 	ID uuid.UUID
 }
+
+type ListUsersByIdsReq struct {
+	Ids []uuid.UUID
+}

@@ -52,7 +52,8 @@ func (m *AuthInterceptor) authenticate(ctx context.Context) (context.Context, er
 	}
 
 	// Bypass authenticate for public apis (apis that do not require auth)
-	if callingService == "PublicGateway" {
+	fmt.Println(callingService)
+	if callingService == "public_gateway.v1.PublicGateway" {
 		logger.Info("Finished authenticate: SUCCESSFUL")
 		return ctx, nil
 	}
@@ -80,7 +81,6 @@ func extractAuthMetadata(ctx context.Context) (string, error) {
 		return "", status.Errorf(codes.Unauthenticated, "metadata is missing")
 	}
 
-	fmt.Println(md)
 	values := md[authHeaderKey]
 	if len(values) != 1 {
 		return "", status.Errorf(codes.Unauthenticated, "no or more than 1 auth metadata in the request")

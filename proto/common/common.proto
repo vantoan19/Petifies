@@ -6,6 +6,50 @@ import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
+enum PetifiesType {
+    PETIFIES_TYPE_UNKNOWN = 0;
+    PETIFIES_TYPE_DOG_WALKING = 1;
+    PETIFIES_TYPE_CAT_PLAYING = 2;
+    PETIFIES_TYPE_DOG_SITTING = 3;
+    PETIFIES_TYPE_CAT_SITTING = 4;
+    PETIFIES_TYPE_DOG_ADOPTION = 5;
+    PETIFIES_TYPE_CAT_ADOPTION = 6;
+}
+
+enum PetifiesStatus {
+    PETIFIES_STATUS_UNKNOWN = 0;
+    PETIFIES_STATUS_UNAVAILABLE = 1;
+    PETIFIES_STATUS_AVAILABLE = 2;
+    PETIFIES_STATUS_DELETED = 3;
+}
+
+enum PetifiesSessionStatus {
+    PETIFIES_SESSION_STATUS_UNKNOWN = 0;
+    PETIFIES_SESSION_STATUS_WAITING_FOR_PROPOSAL = 1;
+    PETIFIES_SESSION_STATUS_PROPOSAL_ACCEPTED = 2;
+    PETIFIES_SESSION_STATUS_ON_GOING = 3;
+    PETIFIES_SESSION_STATUS_ENDED = 4;
+}
+
+enum PetifiesProposalStatus {
+    PETIFIES_PROPOSAL_STATUS_UNKNOWN = 0;
+    PETIFIES_PROPOSAL_STATUS_WAITING_FOR_ACCEPTANCE = 1;
+    PETIFIES_PROPOSAL_STATUS_ACCEPTED = 2;
+    PETIFIES_PROPOSAL_STATUS_CANCELLED = 3;
+    PETIFIES_PROPOSAL_STATUS_REJECTED = 4;
+    PETIFIES_PROPOSAL_STATUS_SESSION_CLOSED = 5;
+}
+
+enum LocationType {
+    LOCATION_UNKNOWN = 0;
+    LOCATION_TYPE_PETIFIES_DOG_WALKING = 1;
+    LOCATION_TYPE_PETIFIES_CAT_PLAYING = 2;
+    LOCATION_TYPE_PETIFIES_DOG_SITTING = 3;
+    LOCATION_TYPE_PETIFIES_CAT_SITTING = 4;
+    LOCATION_TYPE_PETIFIES_DOG_ADOPTION = 5;
+    LOCATION_TYPE_PETIFIES_CAT_ADOPTION = 6;
+}
+
 message User {
     string id = 1 [(validate.rules).string.uuid = true];
     string email = 2 [(validate.rules).string = {
@@ -24,6 +68,21 @@ message User {
     bool is_activated = 6;
     google.protobuf.Timestamp created_at = 7 [(validate.rules).timestamp.required = true];
     google.protobuf.Timestamp updated_at = 8 [(validate.rules).timestamp.required = true];
+}
+
+message BasicUser {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string email = 2 [(validate.rules).string = {
+        email: true,
+        max_len: 300
+    }];
+    string user_avatar = 3;
+    string first_name = 4 [(validate.rules).string = {
+        max_len: 50
+    }];
+    string last_name = 5 [(validate.rules).string = {
+        max_len: 50
+    }];
 }
 
 message FileMetadata {
@@ -46,10 +105,23 @@ message Video {
     string description = 2;
 }
 
+message Address {
+    string address_line_one = 1;
+    string address_line_two = 2;
+    string street = 3;
+    string district = 4;
+    string city = 5;
+    string region = 6;
+    string postal_code = 7;
+    string country = 8;
+    double longitude = 9;
+    double latitude = 10;
+}
+
 message Love {
     string id = 1 [(validate.rules).string.uuid = true];
-    string post_id = 2;
-    string comment_id = 3;
+    string target_id = 2 [(validate.rules).string.uuid = true];
+    bool is_post_target = 3;
     string author_id = 4 [(validate.rules).string.uuid = true];
     google.protobuf.Timestamp created_at = 5;
 }
@@ -60,10 +132,14 @@ message Post {
     string content = 3;
     repeated Image images = 4;
     repeated Video videos = 5;
-    repeated Love loves = 6;
-    repeated string comment_ids = 7;
-    google.protobuf.Timestamp created_at = 8 [(validate.rules).timestamp.required = true];
-    google.protobuf.Timestamp updated_at = 9 [(validate.rules).timestamp.required = true];
+    // repeated Love loves = 6;
+    // repeated string comment_ids = 7;
+    int32 love_count = 6;
+    int32 comment_count = 7;
+    string visibility = 8;
+    string activity = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
 }
 
 message Comment {
@@ -75,20 +151,18 @@ message Comment {
     string content = 6;
     Image image = 7;
     Video video = 8;
-    repeated Love loves = 9;
+    int32 love_count = 9;
     int32 subcomment_count = 10;
-    repeated string subcomment_ids = 11;
-    google.protobuf.Timestamp created_at = 12 [(validate.rules).timestamp.required = true];
-    google.protobuf.Timestamp updated_at = 13 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp created_at = 11 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 12 [(validate.rules).timestamp.required = true];
+}
+
+message MsgResponse {
+    string message = 1;
 }
 
 // ======== Post Service =========
 
-message LoveReactRequest {
-    string target_id = 1;
-    string author_id = 2;
-    bool is_target_post = 3;
-}
 
 // ========= Media Service ==========
 
@@ -104,6 +178,12 @@ message UploadFileResponse {
     string uri = 1;
     uint64 size = 2;
 }
+
+message RemoveFileByURIRequest {
+    string uri = 1;
+}
+
+message RemoveFileByURIResponse {}
 
 // ========= User Service =========
 

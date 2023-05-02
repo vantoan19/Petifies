@@ -7,7 +7,13 @@ import (
 )
 
 var (
-	UserServiceConn *grpc.ClientConn
+	UserServiceConn         *grpc.ClientConn
+	PostServiceConn         *grpc.ClientConn
+	MediaServiceConn        *grpc.ClientConn
+	RelationshipServiceConn *grpc.ClientConn
+	NewfeedServiceConn      *grpc.ClientConn
+	LocationServiceConn     *grpc.ClientConn
+	PetifiesServiceConn     *grpc.ClientConn
 )
 
 func initUserServiceClient() error {
@@ -25,5 +31,113 @@ func initUserServiceClient() error {
 
 	logger.Info("Finished initUserServiceClient: SUCCESSFUL")
 	UserServiceConn = conn
+	return nil
+}
+
+func initPostServiceClient() error {
+	logger.Info("Start initPostServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.PostServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initPostServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initPostServiceClient: SUCCESSFUL")
+	PostServiceConn = conn
+	return nil
+}
+
+func initMediaServiceClient() error {
+	logger.Info("Start initMediaServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.MediaServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initMediaServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initMediaServiceClient: SUCCESSFUL")
+	MediaServiceConn = conn
+	return nil
+}
+
+func initRelationshipServiceClient() error {
+	logger.Info("Start initRelationshipServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.RelationshipServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initRelationshipServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initRelationshipServiceClient: SUCCESSFUL")
+	RelationshipServiceConn = conn
+	return nil
+}
+
+func initNewfeedServiceClient() error {
+	logger.Info("Start initNewfeedServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.NewfeedServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initNewfeedServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initNewfeedServiceClient: SUCCESSFUL")
+	NewfeedServiceConn = conn
+	return nil
+}
+
+func initLocationServiceClient() error {
+	logger.Info("Start initLocationServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.LocationServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initLocationServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initLocationServiceClient: SUCCESSFUL")
+	LocationServiceConn = conn
+	return nil
+}
+
+func initPetifiesServiceClient() error {
+	logger.Info("Start initPetifiesServiceClient")
+
+	conn, err := grpcutils.NewInsecureGrpcClient(
+		Conf.PetifiesServiceHost,
+		10,
+		grpcutils.ClientInterceptors{},
+	)
+	if err != nil {
+		logger.ErrorData("Finished initPetifiesServiceClient: FAILED", logging.Data{"error": err.Error()})
+		return err
+	}
+
+	logger.Info("Finished initPetifiesServiceClient: SUCCESSFUL")
+	PetifiesServiceConn = conn
 	return nil
 }

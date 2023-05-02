@@ -1,8 +1,17 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:mobile/src/theme/themes.dart';
+import 'package:mobile/src/utils/navigation.dart';
 
 class MainButtomNavBar extends StatelessWidget {
-  const MainButtomNavBar({super.key});
+  final int curPage;
+  final Function(int) onTapFunc;
+
+  const MainButtomNavBar({
+    Key? key,
+    required this.curPage,
+    required this.onTapFunc,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +33,8 @@ class MainButtomNavBar extends StatelessWidget {
         selectedFontSize: 10,
         selectedItemColor: Themes.blueColor,
         type: BottomNavigationBarType.fixed,
+        currentIndex: curPage,
+        onTap: onTapFunc,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -39,7 +50,9 @@ class MainButtomNavBar extends StatelessWidget {
                 color: Themes.blueColor,
                 child: InkWell(
                   splashColor: Theme.of(context).colorScheme.inversePrimary,
-                  onTap: () {},
+                  onTap: () {
+                    NavigatorUtil.toPetifiesHome(context);
+                  },
                   child: SizedBox(
                     width: 50,
                     height: 50,

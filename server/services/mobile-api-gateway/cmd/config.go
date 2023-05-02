@@ -14,7 +14,18 @@ type Config struct {
 	TLSKeyPath  string `yaml:"TLSKeyPath,omitempty"`
 	TLSCertPath string `yaml:"TLSCertPath,omitempty"`
 
-	UserServiceHost string `yaml:"UserServiceHost"`
+	RedisURL      string `yaml:"RedisURL"`
+	RedisUser     string `yaml:"RedisUser"`
+	RedisPassword string `yaml:"RedisPassword"`
+	RedisDatabase int    `yaml:"RedisDatabase"`
+
+	UserServiceHost         string `yaml:"UserServiceHost"`
+	PostServiceHost         string `yaml:"PostServiceHost"`
+	MediaServiceHost        string `yaml:"MediaServiceHost"`
+	RelationshipServiceHost string `yaml:"RelationshipServiceHost"`
+	NewfeedServiceHost      string `yaml:"NewfeedServiceHost"`
+	PetifiesServiceHost     string `yaml:"PetifiesServiceHost"`
+	LocationServiceHost     string `yaml:"LocationServiceHost"`
 }
 
 var (

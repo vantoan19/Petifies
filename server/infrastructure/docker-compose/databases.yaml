@@ -43,8 +43,6 @@ services:
   post-mongo-2:
     image: mongo:6.0
     restart: always
-    # volumes: 
-    #   - ../db-data/post-mongo-2:/data/db
     command: mongod --bind_ip_all --replSet my-mongo-set
     networks:
       - petifies
@@ -52,8 +50,6 @@ services:
   post-mongo-3:
     image: mongo:6.0
     restart: always
-    # volumes: 
-    #   - ../db-data/post-mongo-3:/data/db
     command: mongod --bind_ip_all --replSet my-mongo-set
     networks:
       - petifies
@@ -92,4 +88,91 @@ services:
     networks:
       - petifies
 
+  central-cache:
+    image: redis:7
+    restart: "always"
+    ports: 
+      - "6379:6379"
+    volumes: 
+      - ../db-data/central-cache:/data
+    networks:
+      - petifies
+
+  petifies-mongo-1:
+    image: mongo:6.0
+    restart: always
+    volumes: 
+      - ../db-data/petifies-mongo-1:/data/db
+    command: mongod --bind_ip_all --replSet my-petifies-mongo-set
+    depends_on: 
+      - petifies-mongo-2 
+      - petifies-mongo-3
+    networks:
+      - petifies
+
+  petifies-mongo-2:
+    image: mongo:6.0
+    restart: always
+    command: mongod --bind_ip_all --replSet my-petifies-mongo-set
+    networks:
+      - petifies
+
+  petifies-mongo-3:
+    image: mongo:6.0
+    restart: always
+    command: mongod --bind_ip_all --replSet my-petifies-mongo-set
+    networks:
+      - petifies
+
+  petifies-mongoinit:
+    image: mongo:6.0
+    restart: "no"
+    depends_on:
+      - petifies-mongo-1
+      - petifies-mongo-2
+      - petifies-mongo-3
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/petifies-rs-init.sh"]
+    networks:
+      - petifies
+
+  location-mongo-1:
+    image: mongo:6.0
+    restart: always
+    volumes: 
+      - ../db-data/location-mongo-1:/data/db
+    command: mongod --bind_ip_all --replSet my-location-mongo-set
+    depends_on: 
+      - location-mongo-2 
+      - location-mongo-3
+    networks:
+      - petifies
+
+  location-mongo-2:
+    image: mongo:6.0
+    restart: always
+    command: mongod --bind_ip_all --replSet my-location-mongo-set
+    networks:
+      - petifies
+
+  location-mongo-3:
+    image: mongo:6.0
+    restart: always
+    command: mongod --bind_ip_all --replSet my-location-mongo-set
+    networks:
+      - petifies
+
+  location-mongoinit:
+    image: mongo:6.0
+    restart: "no"
+    depends_on:
+      - location-mongo-1
+      - location-mongo-2
+      - location-mongo-3
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/location-rs-init.sh"]
+    networks:
+      - petifies
   

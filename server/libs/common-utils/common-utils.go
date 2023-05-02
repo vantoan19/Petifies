@@ -135,6 +135,15 @@ func Map2[T, U any](data []T, f func(T) U) []U {
 	return res
 }
 
+func FindFirst[T any](data []T, f func(T) bool) int {
+	for idx, e := range data {
+		if f(e) {
+			return idx
+		}
+	}
+	return -1
+}
+
 func NullStringToString(s sql.NullString) *string {
 	if s.Valid {
 		return &s.String

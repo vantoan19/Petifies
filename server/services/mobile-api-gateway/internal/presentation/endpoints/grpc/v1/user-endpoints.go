@@ -6,7 +6,7 @@ import (
 	"github.com/go-kit/kit/endpoint"
 
 	commonProto "github.com/vantoan19/Petifies/proto/common"
-	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services"
+	services "github.com/vantoan19/Petifies/server/services/mobile-api-gateway/internal/application/services/user"
 )
 
 type UserEndpoints struct {
@@ -59,7 +59,7 @@ func makeRefreshTokenEndpoint(s services.UserService) endpoint.Endpoint {
 }
 
 func makeGetMyInfoEndpoint(s services.UserService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+	return func(ctx context.Context, _ interface{}) (response interface{}, err error) {
 		resp, err := s.GetMyInfo(ctx)
 		if err != nil {
 			return nil, err

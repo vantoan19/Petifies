@@ -13,10 +13,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	utils "github.com/vantoan19/Petifies/server/libs/common-utils"
 	"github.com/vantoan19/Petifies/server/services/post-service/cmd"
 	postaggre "github.com/vantoan19/Petifies/server/services/post-service/internal/domain/aggregates/post"
-	"github.com/vantoan19/Petifies/server/services/post-service/internal/domain/common/entities"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/mapper"
 	"github.com/vantoan19/Petifies/server/services/post-service/internal/infra/db/models"
 	mongo_comment "github.com/vantoan19/Petifies/server/services/post-service/internal/infra/repositories/comment/mongo"
@@ -124,25 +122,7 @@ func (pr *PostRepository) GetByUUIDWithSession(ctx context.Context, id uuid.UUID
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	var loves []models.Love
-	cursor, err := pr.loveCollection.Find(ctx, bson.D{{Key: "post_id", Value: id}})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if err := cursor.All(ctx, &loves); err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	var comments []models.Comment
-	cursor, err = pr.commentCollection.Find(ctx, bson.D{{Key: "parent_id", Value: id}})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if err := cursor.All(ctx, &comments); err != nil {
-		return nil, err
-	}
-
-	result, err := mapper.DbModelsToPostAggregate(&post, &loves, &comments)
+	result, err := mapper.DbModelsToPostAggregate(&post)
 	if err != nil {
 		return nil, err
 	}
@@ -154,16 +134,6 @@ func (pr *PostRepository) SavePostWithSession(ctx context.Context, post *postagg
 	_, err := pr.postCollection.InsertOne(ctx, mapper.EntityPostToDbPost(&postEntity))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	loves := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewInsertOneModel().SetDocument(mapper.EntityLoveToDbLove(&l))
-	})
-	if len(loves) > 0 {
-		_, err = pr.loveCollection.BulkWrite(ctx, loves)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	post_, err := pr.GetByUUIDWithSession(ctx, post.GetPostEntity().ID)
@@ -178,37 +148,6 @@ func (pr *PostRepository) UpdatePostWithSession(ctx context.Context, post *posta
 	_, err := pr.postCollection.ReplaceOne(ctx, bson.D{{Key: "id", Value: postEntity.ID}}, mapper.EntityPostToDbPost(&postEntity))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	// Get all loves
-	var allLoves []models.Love
-	cursor, err := pr.loveCollection.Find(ctx, bson.D{{Key: "post_id", Value: post.GetPostID()}})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if err := cursor.All(ctx, &allLoves); err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	// Mark loves which currently exist in the aggregate
-	existence := make(map[uuid.UUID]bool)
-	for _, l := range post.GetLoves() {
-		existence[l.ID] = true
-	}
-	lovesToDelete := utils.Filter(allLoves, func(l models.Love) bool { return !existence[l.ID] })
-
-	operations := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}}).SetUpsert(true).SetReplacement(mapper.EntityLoveToDbLove(&l))
-	})
-	operations = append(operations, utils.Map2(lovesToDelete, func(l models.Love) mongo.WriteModel {
-		return mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}})
-	})...)
-
-	if len(operations) > 0 {
-		_, err = pr.loveCollection.BulkWrite(ctx, operations)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	post_, err := pr.GetByUUIDWithSession(ctx, post.GetPostEntity().ID)
@@ -227,16 +166,6 @@ func (pr *PostRepository) DeleteByUUIDWithSession(ctx context.Context, id uuid.U
 	_, err = pr.postCollection.DeleteOne(ctx, bson.D{{Key: "id", Value: post.GetPostEntity().ID}})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	loves := utils.Map2(post.GetLoves(), func(l entities.Love) mongo.WriteModel {
-		return mongo.NewDeleteOneModel().SetFilter(bson.D{{Key: "id", Value: l.ID}})
-	})
-	if len(loves) > 0 {
-		_, err = pr.loveCollection.BulkWrite(ctx, loves)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 	}
 
 	cr := mongo_comment.New(pr.client)
@@ -264,6 +193,9 @@ func (pr *PostRepository) execSession(ctx context.Context, fn func(ssCtx mongo.S
 	if err = fn(mongo.NewSessionContext(ctx, session)); err != nil {
 		if abErr := session.AbortTransaction(ctx); abErr != nil {
 			return status.Errorf(codes.Internal, fmt.Sprintf("session err: %v, abort err: %v", err, abErr))
+		}
+		if err == ErrPostNotExist {
+			return err
 		}
 		return status.Errorf(codes.Internal, err.Error())
 	}

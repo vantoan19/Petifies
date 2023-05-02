@@ -1,13 +1,320 @@
 syntax = "proto3";
 
+package auth_gateway.v1;
 option go_package = "github.com/vantoan19/Petifies/proto/auth-gateway/v1";
 
 import "common/common.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 message GetMyInfoRequest {}
 
+message UserCreatePostRequest {
+    string content = 1;
+    string visibility = 2;
+    string activity = 3;
+    repeated Image images = 4;
+    repeated Video videos = 5;
+}
+
+message UserCreateCommentRequest {
+    string post_id = 2 [(validate.rules).string.uuid = true];
+    string parent_id = 4 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 5;
+    string content = 6;
+    Image image = 7;
+    Video video = 8;
+}
+
+message UserEditCommentRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string content = 2;
+    Image image = 3;
+    Video video = 4;
+}
+
+message UserEditPostRequest {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string content = 2;
+    string visibility = 3;
+    string activity = 4;
+    repeated Image images = 5;
+    repeated Video videos = 6;
+}
+
+message UserReactLoveRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_target_post = 2;
+}
+
+message PostWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser author = 2;
+    string content = 3;
+    repeated Image images = 4;
+    repeated Video videos = 5;
+    int32 love_count = 6;
+    int32 comment_count = 7;
+    string visibility = 8;
+    string activity = 9;
+    bool hasReacted = 10;
+    google.protobuf.Timestamp created_at = 11 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 12 [(validate.rules).timestamp.required = true];
+}
+
+message CommentWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string post_id = 2 [(validate.rules).string.uuid = true];
+    BasicUser author = 3;
+    string parent_id = 4 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 5;
+    string content = 6;
+    Image image = 7;
+    Video video = 8;
+    int32 love_count = 9;
+    int32 subcomment_count = 10;
+    bool hasReacted = 11;
+    google.protobuf.Timestamp created_at = 12 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 13 [(validate.rules).timestamp.required = true];
+}
+
+message LoveWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string target_id = 2 [(validate.rules).string.uuid = true];
+    bool is_post_target = 3;
+    BasicUser author = 4;
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message PetifiesWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser owner = 2;
+    PetifiesType type = 3;
+    string title = 4;
+    string description = 5;
+    string pet_name = 6;
+    repeated Image images = 7;
+    PetifiesStatus status = 8;
+    Address address = 9;
+    google.protobuf.Timestamp created_at = 10 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 11 [(validate.rules).timestamp.required = true];
+}
+
+message PetifiesProposalWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    BasicUser user = 2;
+    string petifies_session_id = 3 [(validate.rules).string.uuid = true];
+    string proposal = 4;
+    PetifiesProposalStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message ReviewWithUserInfo {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    BasicUser author = 3; 
+    string review = 4;
+    Image image = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message UserPetifiesSession {
+    string id = 1 [(validate.rules).string.uuid = true];
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+    PetifiesSessionStatus status = 5;
+    google.protobuf.Timestamp created_at = 6 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp updated_at = 7 [(validate.rules).timestamp.required = true];
+}
+
+message ListNewFeedsRequest {
+    string after_post_id = 1;
+}
+
+message ListNewFeedsResponse {
+    repeated PostWithUserInfo posts = 1;
+}
+
+message StreamLoveCountRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_target = 2;
+}
+
+message StreamLoveCountResponse {
+    google.protobuf.Int32Value love_count = 1;
+}
+
+message StreamCommentCountRequest {
+    string parent_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_parent = 2;
+}
+
+message StreamCommentCountResponse {
+    google.protobuf.Int32Value comment_count = 1;
+}
+
+message UserToggleLoveRequest {
+    string target_id = 1 [(validate.rules).string.uuid = true];
+    bool is_post_target = 2;
+}
+
+message UserToggleLoveResponse {
+    google.protobuf.BoolValue hasReacted = 1;
+}
+
+message UserListCommentsByParentIDRequest {
+    string parent_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_comment_id = 3;
+}
+
+message UserListCommentsByParentIDResponse {
+    repeated CommentWithUserInfo comments = 1;
+}
+
+// message UserListCommentAncestorsRequest {
+//     string comment_id = 1 [(validate.rules).string.uuid = true];
+// }
+
+// message UserListCommentAncestorsResponse {
+//     repeated CommentWithUserInfo comments = 1;
+// }
+
+// message UserGetPostByIDRequest {
+//     string post_id = 1 [(validate.rules).string.uuid = true];
+// }
+
+// message UserGetPostByIDResponse {
+//     PostWithUserInfo post = 1;
+// }
+
+message UserCreatePetifiesRequest {
+    PetifiesType type = 1;
+    string title = 2;
+    string description = 3;
+    string pet_name = 4;
+    repeated Image images = 5;
+    Address address = 6;
+}
+
+message UserCreatePetifiesSessionRequest {
+    string petifies_id = 2 [(validate.rules).string.uuid = true];
+    google.protobuf.Timestamp from_time = 3 [(validate.rules).timestamp.required = true];
+    google.protobuf.Timestamp to_time = 4 [(validate.rules).timestamp.required = true];
+}
+
+message UserCreatePetifiesProposalRequest {
+    string petifies_session_id = 1 [(validate.rules).string.uuid = true];
+    string proposal = 2; 
+}
+
+message UserCreateReviewRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    string review = 3;
+    Image image = 4;
+}
+
+message ListNearByPetifiesRequest {
+    PetifiesType type = 1;
+    double longitude = 2;
+    double latitude = 3;
+    double radius = 4;
+    int32 page_size = 5;
+    int32 offset = 6;
+}
+
+message ListNearByPetifiesResponse {
+    repeated PetifiesWithUserInfo petifies = 1;
+}
+
+message ListPetifiesByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListPetifiesByUserIdResponse {
+    repeated PetifiesWithUserInfo petifies = 1;
+}
+
+message ListSessionsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListSessionsByPetifiesIdResponse  {
+    repeated UserPetifiesSession sessions = 1;
+}
+
+message ListProposalsBySessionIdRequest {
+    string session_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsBySessionIdResponse  {
+    repeated PetifiesProposalWithUserInfo proposals = 1;
+}
+
+message ListProposalsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListProposalsByUserIdResponse  {
+    repeated PetifiesProposalWithUserInfo proposals = 1;
+}
+
+message ListReviewsByPetifiesIdRequest {
+    string petifies_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByPetifiesIdResponse  {
+    repeated ReviewWithUserInfo reviews = 1;
+}
+
+message ListReviewsByUserIdRequest {
+    string user_id = 1 [(validate.rules).string.uuid = true];
+    int32 page_size = 2;
+    string after_id = 3;
+}
+
+message ListReviewsByUserIdResponse  {
+    repeated ReviewWithUserInfo reviews = 1;
+}
+
 service AuthGateway {
     rpc GetMyInfo(GetMyInfoRequest) returns (User) {}
+    rpc UserCreatePost(UserCreatePostRequest) returns (PostWithUserInfo) {}
+    rpc UserCreateComment(UserCreateCommentRequest) returns (CommentWithUserInfo) {}
+    rpc UserEditPost(UserEditPostRequest) returns (PostWithUserInfo) {}
+    rpc UserEditComment(UserEditCommentRequest) returns (CommentWithUserInfo) {}
+    rpc RemoveFileByURI(RemoveFileByURIRequest) returns (RemoveFileByURIResponse) {}
+    rpc UserToggleLoveReact(UserToggleLoveRequest) returns (UserToggleLoveResponse) {}
+    rpc StreamLoveCount(StreamLoveCountRequest) returns (stream StreamLoveCountResponse) {}
+    rpc StreamCommentCount(StreamCommentCountRequest) returns (stream StreamCommentCountResponse) {}
+    rpc UserUploadFile(stream UploadFileRequest) returns (UploadFileResponse) {}
+    rpc ListNewFeeds(stream ListNewFeedsRequest) returns (stream ListNewFeedsResponse) {}
+    rpc UserListCommentsByParentID(stream UserListCommentsByParentIDRequest) returns (stream UserListCommentsByParentIDResponse) {}
+    // rpc UserGetPostByID(UserGetPostByIDRequest) returns (UserGetPostByIDResponse) {}
+    // rpc UserListCommentAncestors(UserListCommentAncestorsRequest) returns (UserListCommentAncestorsResponse) {}
+    rpc UserCreatePetifies(UserCreatePetifiesRequest) returns (PetifiesWithUserInfo) {}
+    rpc UserCreatePetifiesSession(UserCreatePetifiesSessionRequest) returns (UserPetifiesSession) {}
+    rpc UserCreatePetifiesProposal(UserCreatePetifiesProposalRequest) returns (PetifiesProposalWithUserInfo) {}
+    rpc UserCreateReview(UserCreateReviewRequest) returns (ReviewWithUserInfo) {}
+    rpc ListNearByPetifies(ListNearByPetifiesRequest) returns (ListNearByPetifiesResponse) {}
+    rpc ListPetifiesByUserId(ListPetifiesByUserIdRequest) returns (ListPetifiesByUserIdResponse) {}
+    rpc ListSessionsByPetifiesId(ListSessionsByPetifiesIdRequest) returns (ListSessionsByPetifiesIdResponse) {}
+    rpc ListProposalsBySessionId(ListProposalsBySessionIdRequest) returns (ListProposalsBySessionIdResponse) {}
+    rpc ListProposalsByUserId(ListProposalsByUserIdRequest) returns (ListProposalsByUserIdResponse) {}
+    rpc ListReviewsByPetifiesId(ListReviewsByPetifiesIdRequest) returns (ListReviewsByPetifiesIdResponse) {}
+    rpc ListReviewsByUserId(ListReviewsByUserIdRequest) returns (ListReviewsByUserIdResponse) {}
 }

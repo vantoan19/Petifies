@@ -9,7 +9,7 @@ services:
     volumes:
       - ../../../build/server/newfeedService:/app/newfeedService
     ports:
-      - "83:8888"
+      - "93:8888"
     environment:
       - SERVER_MODE=development
     networks:

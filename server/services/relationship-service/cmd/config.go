@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	common "github.com/vantoan19/Petifies/server/libs/common-utils"
 	config "github.com/vantoan19/Petifies/server/libs/config-utils"
 	"github.com/vantoan19/Petifies/server/libs/logging-config"
@@ -43,7 +41,6 @@ func initializeConfig() error {
 		logger.Info("Executing initializeConfig: PRODUCTION environment")
 	}
 
-	fmt.Println(Conf)
 	logger.Info("Finished initializeConfig: SUCCESSFUL")
 	return nil
 }

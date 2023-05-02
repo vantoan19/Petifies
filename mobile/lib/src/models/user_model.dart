@@ -4,34 +4,55 @@ import 'dart:convert';
 class UserModel {
   final String id;
   final String email;
+  final String? userAvatar;
+  final String? userWallpaper;
+  final String? bio;
   final String firstName;
   final String lastName;
-  final bool isAuthenticated;
   final bool isActivated;
+  final int countPost;
+  final int followers;
+  final int following;
+
   UserModel({
     required this.id,
     required this.email,
+    this.userAvatar = null,
+    this.userWallpaper,
+    this.bio,
     required this.firstName,
     required this.lastName,
-    required this.isAuthenticated,
     required this.isActivated,
+    this.countPost = 0,
+    this.followers = 0,
+    this.following = 0,
   });
 
   UserModel copyWith({
     String? id,
     String? email,
+    String? userAvatar,
+    String? userWallpaper,
+    String? bio,
     String? firstName,
     String? lastName,
-    bool? isAuthenticated,
     bool? isActivated,
+    int? countPost,
+    int? followers,
+    int? following,
   }) {
     return UserModel(
       id: id ?? this.id,
       email: email ?? this.email,
+      userAvatar: userAvatar ?? this.userAvatar,
+      userWallpaper: userWallpaper ?? this.userWallpaper,
+      bio: bio ?? this.bio,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isActivated: isActivated ?? this.isActivated,
+      countPost: countPost ?? this.countPost,
+      followers: followers ?? this.followers,
+      following: following ?? this.following,
     );
   }
 
@@ -39,10 +60,15 @@ class UserModel {
     return <String, dynamic>{
       'id': id,
       'email': email,
+      'userAvatar': userAvatar,
+      'userWallpaper': userWallpaper,
+      'bio': bio,
       'firstName': firstName,
       'lastName': lastName,
-      'isAuthenticated': isAuthenticated,
       'isActivated': isActivated,
+      'countPost': countPost,
+      'followers': followers,
+      'following': following,
     };
   }
 
@@ -50,10 +76,17 @@ class UserModel {
     return UserModel(
       id: map['id'] as String,
       email: map['email'] as String,
+      userAvatar:
+          map['userAvatar'] != null ? map['userAvatar'] as String : null,
+      userWallpaper:
+          map['userWallpaper'] != null ? map['userWallpaper'] as String : null,
+      bio: map['bio'] != null ? map['bio'] as String : null,
       firstName: map['firstName'] as String,
       lastName: map['lastName'] as String,
-      isAuthenticated: map['isAuthenticated'] as bool,
       isActivated: map['isActivated'] as bool,
+      countPost: map['countPost'] as int,
+      followers: map['followers'] as int,
+      following: map['following'] as int,
     );
   }
 
@@ -64,7 +97,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, isAuthenticated: $isAuthenticated, isActivated: $isActivated)';
+    return 'UserModel(id: $id, email: $email, userAvatar: $userAvatar, userWallpaper: $userWallpaper, bio: $bio, firstName: $firstName, lastName: $lastName, isActivated: $isActivated, countPost: $countPost, followers: $followers, following: $following)';
   }
 
   @override
@@ -73,19 +106,29 @@ class UserModel {
 
     return other.id == id &&
         other.email == email &&
+        other.userAvatar == userAvatar &&
+        other.userWallpaper == userWallpaper &&
+        other.bio == bio &&
         other.firstName == firstName &&
         other.lastName == lastName &&
-        other.isAuthenticated == isAuthenticated &&
-        other.isActivated == isActivated;
+        other.isActivated == isActivated &&
+        other.countPost == countPost &&
+        other.followers == followers &&
+        other.following == following;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
         email.hashCode ^
+        userAvatar.hashCode ^
+        userWallpaper.hashCode ^
+        bio.hashCode ^
         firstName.hashCode ^
         lastName.hashCode ^
-        isAuthenticated.hashCode ^
-        isActivated.hashCode;
+        isActivated.hashCode ^
+        countPost.hashCode ^
+        followers.hashCode ^
+        following.hashCode;
   }
 }
